@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管弦樂與作曲家閃卡 - 父子卡學習</title>
+<style>
+:root {
+  --primary: #4255ff; --primary-dark: #3043d4; --primary-light: #e8ebff;
+  --accent: #ff6b6b; --success: #22c55e; --warning: #f59e0b; --error: #ef4444;
+  --bg: #f5f7fb; --card-bg: #ffffff; --text: #1a1a2e; --text-secondary: #6b7280;
+  --border: #e5e7eb; --shadow: 0 2px 8px rgba(0,0,0,0.08); --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  --radius: 12px; --radius-lg: 20px;
+}
+[data-theme="dark"] {
+  --primary: #6b7eff; --primary-dark: #4255ff; --primary-light: #1e2550;
+  --bg: #0f0f1a; --card-bg: #1a1a2e; --text: #e2e8f0; --text-secondary: #94a3b8;
+  --border: #2d2d44; --shadow: 0 2px 8px rgba(0,0,0,0.3); --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans SC',Roboto,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; transition:background 0.3s,color 0.3s; }
+.header { background:var(--card-bg); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:var(--shadow); gap:12px; flex-wrap:wrap; }
+.header-left { display:flex; align-items:center; gap:12px; flex:1; min-width:0; }
+.logo { font-size:24px; }
+.deck-selector { padding:8px 12px; border:2px solid var(--border); border-radius:8px; font-size:14px; background:var(--card-bg); color:var(--text); outline:none; cursor:pointer; max-width:300px; }
+.header-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.icon-btn { padding:8px; border:none; border-radius:8px; background:var(--card-bg); cursor:pointer; font-size:18px; color:var(--text); transition:background 0.2s; }
+.icon-btn:hover { background:var(--primary-light); }
+.modes { display:flex; gap:4px; padding:8px 24px; background:var(--card-bg); border-bottom:1px solid var(--border); overflow-x:auto; flex-wrap:wrap; }
+.mode-btn { padding:8px 16px; border:none; background:transparent; color:var(--text-secondary); cursor:pointer; border-radius:8px; font-size:14px; white-space:nowrap; transition:all 0.2s; display:flex; align-items:center; gap:6px; }
+.mode-btn:hover { background:var(--primary-light); color:var(--primary); }
+.mode-btn.active { background:var(--primary); color:white; }
+.mode-icon { font-size:16px; }
+.main { padding:24px; max-width:900px; margin:0 auto; }
+.hidden { display:none !important; }
+
+/* Tag filter */
+.tag-filter { background:var(--card-bg); border-radius:var(--radius); padding:12px; margin-bottom:16px; box-shadow:var(--shadow); }
+.tag-filter-title { font-size:12px; font-weight:700; color:var(--text-secondary); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px; }
+.tag-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.tag-chip { padding:4px 10px; border:1px solid var(--border); border-radius:16px; font-size:12px; cursor:pointer; background:var(--bg); color:var(--text-secondary); transition:all 0.2s; }
+.tag-chip:hover { border-color:var(--primary); color:var(--primary); }
+.tag-chip.active { background:var(--primary); color:white; border-color:var(--primary); }
+.tag-group-label { font-size:11px; font-weight:600; color:var(--text-secondary); margin:8px 0 4px 0; }
+
+/* Flashcard */
+.flashcard-area { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.card-counter { font-size:14px; color:var(--text-secondary); }
+.progress-bar { width:100%; max-width:500px; height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
+.progress-fill { height:100%; background:var(--primary); transition:width 0.3s; }
+.flashcard { width:100%; max-width:500px; min-height:280px; perspective:1000px; cursor:pointer; }
+.flashcard-inner { position:relative; width:100%; height:100%; min-height:280px; transition:transform 0.6s; transform-style:preserve-3d; }
+.flashcard.flipped .flashcard-inner { transform:rotateY(180deg); }
+.flashcard-front, .flashcard-back { position:absolute; width:100%; min-height:280px; backface-visibility:hidden; -webkit-backface-visibility:hidden; background:var(--card-bg); border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px; }
+.flashcard-back { transform:rotateY(180deg); }
+.card-parent-name { font-size:24px; font-weight:700; text-align:center; margin-bottom:4px; }
+.card-parent-zh { font-size:16px; color:var(--text-secondary); text-align:center; margin-bottom:2px; }
+.card-parent-years { font-size:14px; color:var(--text-secondary); margin-bottom:16px; }
+.card-dim-label { font-size:14px; color:var(--primary); font-weight:600; margin-bottom:12px; padding:4px 12px; background:var(--primary-light); border-radius:16px; }
+.card-content { font-size:18px; text-align:center; line-height:1.6; white-space:pre-line; }
+.card-content .star { color:var(--warning); font-weight:700; }
+.card-tags { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; margin-top:16px; }
+.card-tag { font-size:10px; padding:2px 8px; border-radius:8px; background:var(--bg); color:var(--text-secondary); }
+.flip-hint { font-size:12px; color:var(--text-secondary); margin-top:8px; }
+.card-nav { display:flex; gap:8px; align-items:center; }
+.nav-btn { width:40px; height:40px; border-radius:50%; border:2px solid var(--border); background:var(--card-bg); cursor:pointer; font-size:18px; color:var(--text); transition:all 0.2s; }
+.nav-btn:hover { border-color:var(--primary); color:var(--primary); }
+.nav-btn:disabled { opacity:0.3; cursor:not-allowed; }
+
+/* Dimension tabs */
+.dim-tabs { display:flex; gap:4px; flex-wrap:wrap; justify-content:center; margin-bottom:8px; }
+.dim-tab { padding:6px 14px; border:1px solid var(--border); border-radius:8px; font-size:12px; cursor:pointer; background:var(--bg); color:var(--text-secondary); transition:all 0.2s; }
+.dim-tab:hover { border-color:var(--primary); }
+.dim-tab.active { background:var(--primary); color:white; border-color:var(--primary); }
+
+/* Mastery */
+.mastery-row { display:flex; align-items:center; gap:8px; margin-top:12px; }
+.mastery-label { font-size:12px; color:var(--text-secondary); }
+.mastery-btn { padding:6px 16px; border-radius:8px; border:2px solid; cursor:pointer; font-size:13px; font-weight:600; transition:all 0.2s; }
+.mastery-btn.correct { border-color:var(--success); color:var(--success); background:transparent; }
+.mastery-btn.correct:hover { background:var(--success); color:white; }
+.mastery-btn.wrong { border-color:var(--error); color:var(--error); background:transparent; }
+.mastery-btn.wrong:hover { background:var(--error); color:white; }
+
+/* Quiz/Weakness */
+.quiz-area { display:flex; flex-direction:column; align-items:center; gap:16px; }
+.quiz-card { width:100%; max-width:500px; min-height:200px; background:var(--card-bg); border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); padding:32px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; }
+
+/* Options (learn/test) */
+.options { display:flex; flex-direction:column; gap:8px; width:100%; max-width:500px; }
+.option-btn { padding:12px 16px; border:2px solid var(--border); border-radius:12px; background:var(--card-bg); color:var(--text); cursor:pointer; font-size:14px; text-align:left; transition:all 0.2s; }
+.option-btn:hover { border-color:var(--primary); background:var(--primary-light); }
+.option-btn.correct { border-color:var(--success); background:#dcfce7; }
+.option-btn.wrong { border-color:var(--error); background:#fee2e2; }
+
+/* Match */
+.match-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; max-width:600px; width:100%; }
+.match-card { padding:14px 8px; background:var(--card-bg); border:2px solid var(--border); border-radius:10px; text-align:center; cursor:pointer; font-size:13px; transition:all 0.2s; min-height:60px; display:flex; align-items:center; justify-content:center; color:var(--text); }
+.match-card.selected { border-color:var(--primary); background:var(--primary-light); }
+.match-card.matched { opacity:0.3; pointer-events:none; }
+
+/* List */
+.list-area { display:flex; flex-direction:column; gap:8px; }
+.list-search { padding:10px 16px; border:2px solid var(--border); border-radius:8px; font-size:14px; background:var(--card-bg); color:var(--text); outline:none; width:100%; }
+.list-item { background:var(--card-bg); border-radius:8px; padding:12px; box-shadow:var(--shadow); }
+.list-parent { font-weight:700; font-size:16px; cursor:pointer; color:var(--primary); }
+.list-children { margin-top:8px; padding-left:16px; border-left:2px solid var(--border); }
+.list-child { font-size:13px; padding:4px 0; color:var(--text-secondary); }
+.list-child strong { color:var(--text); }
+
+/* Dashboard */
+.dash-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+.dash-card { background:var(--card-bg); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow); text-align:center; }
+.dash-number { font-size:32px; font-weight:700; color:var(--primary); }
+.dash-label { font-size:12px; color:var(--text-secondary); margin-top:4px; }
+
+/* Write */
+.write-input { width:100%; padding:12px; border:2px solid var(--border); border-radius:8px; font-size:16px; background:var(--bg); color:var(--text); outline:none; }
+.write-input:focus { border-color:var(--primary); }
+
+/* Toast */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--card-bg); border-radius:8px; padding:12px 24px; box-shadow:var(--shadow-lg); z-index:2000; font-size:14px; transition:opacity 0.3s; opacity:0; pointer-events:none; }
+.toast.show { opacity:1; }
+
+/* Back link */
+.back-link { display:inline-block; margin-bottom:16px; padding:8px 16px; background:var(--primary-light); color:var(--primary); border-radius:8px; text-decoration:none; font-size:14px; font-weight:600; }
+
+/* Help overlay */
+.help-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; display:none; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; }
+.help-overlay.show { display:flex; }
+.help-modal { background:var(--card-bg); border-radius:16px; max-width:560px; width:100%; padding:28px 24px; margin:auto; box-shadow:0 8px 32px rgba(0,0,0,0.2); }
+.help-title { font-size:22px; font-weight:800; text-align:center; margin-bottom:8px; color:var(--text); }
+.help-subtitle { font-size:14px; text-align:center; color:var(--text-secondary); margin-bottom:20px; }
+.help-first-hint { background:var(--primary-light); border-radius:10px; padding:12px 16px; font-size:14px; line-height:1.6; margin-bottom:20px; color:var(--text); }
+.help-section { margin-bottom:18px; }
+.help-section-title { font-size:15px; font-weight:700; margin-bottom:10px; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:6px; }
+.help-item { display:flex; gap:10px; margin-bottom:8px; font-size:13px; line-height:1.5; color:var(--text); }
+.help-item-icon { flex-shrink:0; width:24px; text-align:center; font-size:16px; }
+.help-close-btn { display:block; margin:24px auto 0; padding:12px 32px; background:var(--primary); color:white; border:none; border-radius:10px; font-size:16px; font-weight:700; cursor:pointer; }
+.help-close-btn:hover { opacity:0.9; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <span class="logo">🎼</span>
+    <select class="deck-selector" id="deckSelector" onchange="switchDeck(this.value)"></select>
+  </div>
+  <div class="header-right">
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    <button class="icon-btn" onclick="toggleLang()" id="langBtn">中</button>
+    <button class="icon-btn" onclick="speakCurrent()">🔊</button>
+    <button class="icon-btn" onclick="openHelp()">❓</button>
+  </div>
+</div>
+
+<div class="modes">
+  <button class="mode-btn active" data-mode="flashcard" onclick="switchMode('flashcard')"><span class="mode-icon">🎴</span>閃卡</button>
+  <button class="mode-btn" data-mode="quiz" onclick="switchMode('quiz')"><span class="mode-icon">📖</span>學習</button>
+  <button class="mode-btn" data-mode="weakness" onclick="switchMode('weakness')"><span class="mode-icon">⚡</span>弱點</button>
+  <button class="mode-btn" data-mode="learn" onclick="switchMode('learn')"><span class="mode-icon">🧠</span>測驗</button>
+  <button class="mode-btn" data-mode="match" onclick="switchMode('match')"><span class="mode-icon">🎯</span>配對</button>
+  <button class="mode-btn" data-mode="list" onclick="switchMode('list')"><span class="mode-icon">📋</span>列表</button>
+  <button class="mode-btn" data-mode="dashboard" onclick="switchMode('dashboard')"><span class="mode-icon">📊</span>儀表板</button>
+</div>
+
+<div class="main">
+  <!-- Tag filter (collapsible) -->
+  <div class="tag-filter" id="tagFilter">
+    <div class="tag-filter-header" onclick="toggleTagFilter()" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;">
+      <span style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;">🏷️ 標籤篩選 (AND)</span>
+      <span id="tagFilterToggle" style="font-size:14px;color:var(--text-secondary);">▼ 展開</span>
+    </div>
+    <div id="tagChips" class="tag-chips" style="display:none;"></div>
+  </div>
+
+  <!-- Flashcard mode -->
+  <div id="flashcardMode" class="flashcard-area">
+    <div class="card-counter"><span id="cardCurrent">1</span> / <span id="cardTotal">0</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="flashProgress" style="width:0%"></div></div>
+    <div class="flashcard" id="flashcard" onclick="flipCard()">
+      <div class="flashcard-inner">
+        <div class="flashcard-front">
+          <div class="dim-tabs" id="dimTabs"></div>
+          <div class="card-parent-name" id="cardParent"></div>
+          <div class="card-parent-zh" id="cardParentZh"></div>
+          <div class="card-parent-years" id="cardYears"></div>
+          <div class="card-dim-label" id="cardDimLabel"></div>
+          <div class="card-content" id="cardFront"></div>
+          <div class="card-tags" id="cardTags"></div>
+          <div class="flip-hint">點擊翻面</div>
+        </div>
+        <div class="flashcard-back">
+          <div class="card-dim-label" id="cardDimLabelBack"></div>
+          <div class="card-content" id="cardBack"></div>
+          <div class="flip-hint">點擊翻回</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-nav">
+      <button class="nav-btn" id="prevBtn" onclick="prevCard()">←</button>
+      <button class="nav-btn" onclick="shuffleCards()">🔀</button>
+      <button class="nav-btn" id="nextBtn" onclick="nextCard()">→</button>
+    </div>
+    <div class="mastery-row">
+      <span class="mastery-label">掌握度:</span>
+      <button class="mastery-btn wrong" onclick="markMastery(false)">❌ 不會</button>
+      <button class="mastery-btn correct" onclick="markMastery(true)">✅ 會</button>
+    </div>
+  </div>
+
+  <!-- Quiz mode -->
+  <div id="quizMode" class="quiz-area hidden">
+    <div class="card-counter"><span id="quizCurrent">1</span> / <span id="quizTotal">0</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="quizProgress" style="width:0%"></div></div>
+    <div id="quizContent"></div>
+  </div>
+
+  <!-- Weakness mode -->
+  <div id="weaknessMode" class="quiz-area hidden">
+    <div class="card-counter"><span id="weakCurrent">1</span> / <span id="weakTotal">0</span></div>
+    <div id="weakContent"></div>
+  </div>
+
+  <!-- Learn mode -->
+  <div id="learnMode" class="hidden">
+    <div id="learnContent"></div>
+  </div>
+
+  <!-- Match mode -->
+  <div id="matchMode" class="hidden" style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+    <div style="display:flex;gap:24px;align-items:center;">
+      <span style="font-size:20px;font-weight:700;color:var(--primary);" id="matchTimer">⏱️ 00:00</span>
+      <button class="icon-btn" onclick="startMatch()">🔄 重新開始</button>
+    </div>
+    <div class="match-grid" id="matchGrid"></div>
+  </div>
+
+  <!-- List mode -->
+  <div id="listMode" class="list-area hidden">
+    <input type="text" class="list-search" id="listSearch" placeholder="🔍 搜索..." oninput="filterList()">
+    <div id="listItems"></div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboardMode" class="hidden">
+    <div class="dash-stats" id="dashStats"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== DATA ====================
+const ORCHESTRA_DATA = [{"parent": "Piccolo", "parent_zh": "短笛", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds 8va higher than written", "zh": "實音高八度", "tags": ["#woodwind", "#piccolo", "#transposition", "#transposing", "#8ve-transposing"]}, {"dim": "range", "en": "D5–C8 (concert pitch)", "zh": "D5–C8（實音）", "tags": ["#woodwind", "#piccolo", "#range"]}, {"dim": "clef", "en": "Treble clef", "zh": "高音譜號", "tags": ["#woodwind", "#piccolo", "#clef"]}, {"dim": "reed", "en": "Air reed (side-blown flute)", "zh": "氣簧（橫吹長笛式）", "tags": ["#woodwind", "#piccolo", "#reed"]}, {"dim": "ensemble", "en": "1 (doubled by flute player)", "zh": "1 名（由長笛手兼奏）", "tags": ["#woodwind", "#piccolo", "#ensemble", "#doubling"]}]}, {"parent": "Flute", "parent_zh": "長笛", "parent_years": "", "dims": [{"dim": "range", "en": "C4–D7 (concert pitch)", "zh": "C4–D7（實音）", "tags": ["#woodwind", "#flute", "#range"]}, {"dim": "clef", "en": "Treble clef", "zh": "高音譜號", "tags": ["#woodwind", "#flute", "#clef"]}, {"dim": "reed", "en": "Air reed (side-blown)", "zh": "氣簧（橫吹）", "tags": ["#woodwind", "#flute", "#reed"]}, {"dim": "ensemble", "en": "2 (standard pair, 1st & 2nd)", "zh": "2 名（標準配對，第一、二長笛）", "tags": ["#woodwind", "#flute", "#ensemble", "#non-transposing"]}]}, {"parent": "Oboe", "parent_zh": "雙簧管", "parent_years": "", "dims": [{"dim": "range", "en": "B♭3–A6 (concert pitch)", "zh": "B♭3–A6（實音）", "tags": ["#woodwind", "#oboe", "#range"]}, {"dim": "clef", "en": "Treble clef", "zh": "高音譜號", "tags": ["#woodwind", "#oboe", "#clef"]}, {"dim": "reed", "en": "Double reed", "zh": "雙簧片", "tags": ["#woodwind", "#oboe", "#reed", "#double-reed"]}, {"dim": "ensemble", "en": "2 (standard pair)", "zh": "2 名（標準配對）", "tags": ["#woodwind", "#oboe", "#ensemble", "#non-transposing", "#double-reed"]}]}, {"parent": "English Horn (Cor Anglais)", "parent_zh": "英國管", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds P5 lower (in F)", "zh": "實音低純五度（F 調）", "tags": ["#woodwind", "#english-horn", "#transposition", "#transposing", "#interval-transposing"]}, {"dim": "range", "en": "E3–A5 (written B3–E6)", "zh": "E3–A5（實音）/ B3–E6（記譜）", "tags": ["#woodwind", "#english-horn", "#range"]}, {"dim": "clef", "en": "Treble clef", "zh": "高音譜號", "tags": ["#woodwind", "#english-horn", "#clef"]}, {"dim": "reed", "en": "Double reed", "zh": "雙簧片", "tags": ["#woodwind", "#english-horn", "#reed", "#double-reed"]}, {"dim": "ensemble", "en": "1 (doubled by oboe player)", "zh": "1 名（由雙簧管手兼奏）", "tags": ["#woodwind", "#english-horn", "#ensemble", "#doubling", "#double-reed"]}]}, {"parent": "Clarinet in B♭", "parent_zh": "B♭ 單簧管", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds M2 lower (in B♭)", "zh": "實音低大二度（B♭ 調）", "tags": ["#woodwind", "#clarinet", "#transposition", "#transposing", "#interval-transposing"]}, {"dim": "range", "en": "D3–B♭6 (written E3–C7)", "zh": "D3–B♭6（實音）/ E3–C7（記譜）", "tags": ["#woodwind", "#clarinet", "#range"]}, {"dim": "clef", "en": "Treble clef", "zh": "高音譜號", "tags": ["#woodwind", "#clarinet", "#clef"]}, {"dim": "reed", "en": "Single reed", "zh": "單簧片", "tags": ["#woodwind", "#clarinet", "#reed", "#single-reed"]}, {"dim": "ensemble", "en": "2 (standard pair)", "zh": "2 名（標準配對）", "tags": ["#woodwind", "#clarinet", "#ensemble", "#single-reed"]}]}, {"parent": "Clarinet in A", "parent_zh": "A 單簧管", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds m3 lower (in A)", "zh": "實音低小三度（A 調）", "tags": ["#woodwind", "#clarinet", "#transposition", "#transposing", "#interval-transposing"]}, {"dim": "range", "en": "C♯3–A6 (written E3–C7)", "zh": "C♯3–A6（實音）/ E3–C7（記譜）", "tags": ["#woodwind", "#clarinet", "#range"]}, {"dim": "clef", "en": "Treble clef", "zh": "高音譜號", "tags": ["#woodwind", "#clarinet", "#clef"]}, {"dim": "reed", "en": "Single reed", "zh": "單簧片", "tags": ["#woodwind", "#clarinet", "#reed", "#single-reed"]}, {"dim": "ensemble", "en": "1 (doubled by clarinetist)", "zh": "1 名（需要暗色調時用，由單簧管手兼奏）", "tags": ["#woodwind", "#clarinet", "#ensemble", "#doubling", "#single-reed"]}]}, {"parent": "Clarinet in E♭", "parent_zh": "E♭ 單簧管", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds m3 higher (in E♭)", "zh": "實音高小三度（E♭ 調）", "tags": ["#woodwind", "#clarinet", "#transposition", "#transposing", "#interval-transposing"]}, {"dim": "range", "en": "A♭3–E♭7 (written F3–C7)", "zh": "A♭3–E♭7（實音）/ F3–C7（記譜）", "tags": ["#woodwind", "#clarinet", "#range"]}, {"dim": "clef", "en": "Treble clef", "zh": "高音譜號", "tags": ["#woodwind", "#clarinet", "#clef"]}, {"dim": "reed", "en": "Single reed", "zh": "單簧片", "tags": ["#woodwind", "#clarinet", "#reed", "#single-reed"]}, {"dim": "ensemble", "en": "1 (rare, used in band/military)", "zh": "1 名（罕見，多用於軍樂隊）", "tags": ["#woodwind", "#clarinet", "#ensemble", "#single-reed"]}]}, {"parent": "Bass Clarinet", "parent_zh": "低音單簧管", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds M9 lower = 8ve+M2 (in B♭)", "zh": "實音低大九度（B♭ 調，= 八度+大二度）", "tags": ["#woodwind", "#bass-clarinet", "#clarinet", "#transposition", "#transposing", "#interval-transposing"]}, {"dim": "range", "en": "D2–B♭5 (written E3–C7)", "zh": "D2–B♭5（實音）/ E3–C7（記譜）", "tags": ["#woodwind", "#bass-clarinet", "#clarinet", "#range"]}, {"dim": "clef", "en": "Treble clef", "zh": "高音譜號", "tags": ["#woodwind", "#bass-clarinet", "#clarinet", "#clef"]}, {"dim": "reed", "en": "Single reed", "zh": "單簧片", "tags": ["#woodwind", "#bass-clarinet", "#clarinet", "#reed", "#single-reed"]}, {"dim": "ensemble", "en": "1 (doubled by clarinetist)", "zh": "1 名（由單簧管手兼奏）", "tags": ["#woodwind", "#bass-clarinet", "#clarinet", "#ensemble", "#doubling", "#single-reed"]}]}, {"parent": "Bassoon", "parent_zh": "巴松管", "parent_years": "", "dims": [{"dim": "range", "en": "B♭1–E♭5 (concert pitch)", "zh": "B♭1–E♭5（實音）", "tags": ["#woodwind", "#bassoon", "#range"]}, {"dim": "clef", "en": "Bass clef (tenor clef in high register)", "zh": "低音譜號（高音域用次中音譜號）", "tags": ["#woodwind", "#bassoon", "#clef"]}, {"dim": "reed", "en": "Double reed", "zh": "雙簧片", "tags": ["#woodwind", "#bassoon", "#reed", "#double-reed"]}, {"dim": "ensemble", "en": "2 (standard pair)", "zh": "2 名（標準配對）", "tags": ["#woodwind", "#bassoon", "#ensemble", "#non-transposing", "#double-reed"]}]}, {"parent": "Contrabassoon", "parent_zh": "倍低音巴松管", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds 8va lower", "zh": "實音低八度", "tags": ["#woodwind", "#contrabassoon", "#bassoon", "#transposition", "#transposing", "#8ve-transposing"]}, {"dim": "range", "en": "B♭0–B♭3 (written B♭1–B♭4)", "zh": "B♭0–B♭3（實音）/ B♭1–B♭4（記譜）", "tags": ["#woodwind", "#contrabassoon", "#bassoon", "#range"]}, {"dim": "clef", "en": "Bass clef", "zh": "低音譜號", "tags": ["#woodwind", "#contrabassoon", "#bassoon", "#clef"]}, {"dim": "reed", "en": "Double reed", "zh": "雙簧片", "tags": ["#woodwind", "#contrabassoon", "#bassoon", "#reed", "#double-reed"]}, {"dim": "ensemble", "en": "1 (doubled by bassoonist)", "zh": "1 名（由巴松管手兼奏）", "tags": ["#woodwind", "#contrabassoon", "#bassoon", "#ensemble", "#doubling", "#double-reed"]}]}, {"parent": "Alto Saxophone (E♭)", "parent_zh": "中音薩克斯風", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds M6 lower (in E♭)", "zh": "實音低大六度（E♭ 調）", "tags": ["#woodwind", "#sax", "#saxophone", "#transposition", "#transposing", "#interval-transposing"]}, {"dim": "range", "en": "D♭3–A♭5 (written B♭3–E♭6)", "zh": "D♭3–A♭5（實音）/ B♭3–E♭6（記譜）", "tags": ["#woodwind", "#sax", "#saxophone", "#range"]}, {"dim": "clef", "en": "Treble clef", "zh": "高音譜號", "tags": ["#woodwind", "#sax", "#saxophone", "#clef"]}, {"dim": "reed", "en": "Single reed", "zh": "單簧片", "tags": ["#woodwind", "#sax", "#saxophone", "#reed", "#single-reed"]}, {"dim": "ensemble", "en": "1 (rare in orchestra, common in wind band)", "zh": "1 名（管弦樂罕見，管樂隊常見）", "tags": ["#woodwind", "#sax", "#saxophone", "#ensemble", "#single-reed"]}]}, {"parent": "Tenor Saxophone (B♭)", "parent_zh": "次中音薩克斯風", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds M9 lower = 8ve+M2 (in B♭)", "zh": "實音低大九度（B♭ 調）", "tags": ["#woodwind", "#sax", "#saxophone", "#transposition", "#transposing", "#interval-transposing"]}, {"dim": "range", "en": "A♭2–E♭5 (written B♭3–E♭6)", "zh": "A♭2–E♭5（實音）/ B♭3–E♭6（記譜）", "tags": ["#woodwind", "#sax", "#saxophone", "#range"]}, {"dim": "clef", "en": "Treble clef", "zh": "高音譜號", "tags": ["#woodwind", "#sax", "#saxophone", "#clef"]}, {"dim": "reed", "en": "Single reed", "zh": "單簧片", "tags": ["#woodwind", "#sax", "#saxophone", "#reed", "#single-reed"]}, {"dim": "ensemble", "en": "1 (rare in orchestra)", "zh": "1 名（管弦樂罕見）", "tags": ["#woodwind", "#sax", "#saxophone", "#ensemble", "#single-reed"]}]}, {"parent": "Baritone Saxophone (E♭)", "parent_zh": "上低音薩克斯風", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds 8ve+M6 lower (in E♭)", "zh": "實音低八度+大六度（E♭ 調）", "tags": ["#woodwind", "#sax", "#saxophone", "#transposition", "#transposing", "#interval-transposing"]}, {"dim": "range", "en": "D♭2–A♭4 (written B♭3–E♭6)", "zh": "D♭2–A♭4（實音）/ B♭3–E♭6（記譜）", "tags": ["#woodwind", "#sax", "#saxophone", "#range"]}, {"dim": "clef", "en": "Treble clef", "zh": "高音譜號", "tags": ["#woodwind", "#sax", "#saxophone", "#clef"]}, {"dim": "reed", "en": "Single reed", "zh": "單簧片", "tags": ["#woodwind", "#sax", "#saxophone", "#reed", "#single-reed"]}, {"dim": "ensemble", "en": "1 (very rare in orchestra)", "zh": "1 名（管弦樂極罕見）", "tags": ["#woodwind", "#sax", "#saxophone", "#ensemble", "#single-reed"]}]}, {"parent": "Trumpet in B♭", "parent_zh": "B♭ 小號", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds M2 lower (in B♭)", "zh": "實音低大二度（B♭ 調）", "tags": ["#brass", "#trumpet", "#transposition", "#transposing", "#interval-transposing"]}, {"dim": "range", "en": "E3–D6 (written F♯3–E6)", "zh": "E3–D6（實音）/ F♯3–E6（記譜）", "tags": ["#brass", "#trumpet", "#range"]}, {"dim": "clef", "en": "Treble clef", "zh": "高音譜號", "tags": ["#brass", "#trumpet", "#clef"]}, {"dim": "reed", "en": "3 valves, cup mouthpiece", "zh": "三活塞，杯狀吹嘴", "tags": ["#brass", "#trumpet", "#reed"]}, {"dim": "ensemble", "en": "2-3 (standard)", "zh": "2-3 名（標準）", "tags": ["#brass", "#trumpet", "#ensemble"]}]}, {"parent": "Horn in F", "parent_zh": "F 法國號", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds P5 lower (in F)", "zh": "實音低純五度（F 調）", "tags": ["#brass", "#horn", "#transposition", "#transposing", "#interval-transposing"]}, {"dim": "range", "en": "B1–F5 (written F2–C6)", "zh": "B1–F5（實音）/ F2–C6（記譜）", "tags": ["#brass", "#horn", "#range"]}, {"dim": "clef", "en": "Treble clef (bass clef for low notes)", "zh": "高音譜號（低音用低音譜號）", "tags": ["#brass", "#horn", "#clef"]}, {"dim": "reed", "en": "3-4 rotary valves, funnel mouthpiece", "zh": "三至四旋轉閥，漏斗狀吹嘴", "tags": ["#brass", "#horn", "#reed"]}, {"dim": "ensemble", "en": "2-4 (standard 4 in Romantic)", "zh": "2-4 名（浪漫時期標準 4 名）", "tags": ["#brass", "#horn", "#ensemble"]}]}, {"parent": "Trombone", "parent_zh": "長號", "parent_years": "", "dims": [{"dim": "range", "en": "E2–B♭4 (concert pitch)", "zh": "E2–B♭4（實音）", "tags": ["#brass", "#trombone", "#range"]}, {"dim": "clef", "en": "Bass clef (tenor clef in high register)", "zh": "低音譜號（高音域用次中音譜號）", "tags": ["#brass", "#trombone", "#clef"]}, {"dim": "reed", "en": "Slide (7 positions), cup mouthpiece", "zh": "滑管（七個把位），杯狀吹嘴", "tags": ["#brass", "#trombone", "#reed"]}, {"dim": "ensemble", "en": "3 (standard: 2 tenor + 1 bass)", "zh": "3 名（標準：2 次中音 + 1 低音）", "tags": ["#brass", "#trombone", "#ensemble", "#non-transposing"]}]}, {"parent": "Bass Trombone", "parent_zh": "低音長號", "parent_years": "", "dims": [{"dim": "range", "en": "B♭1–B♭4 (concert pitch)", "zh": "B♭1–B♭4（實音）", "tags": ["#brass", "#bass-trombone", "#trombone", "#range"]}, {"dim": "clef", "en": "Bass clef", "zh": "低音譜號", "tags": ["#brass", "#bass-trombone", "#trombone", "#clef"]}, {"dim": "reed", "en": "Slide + 1-2 valves, cup mouthpiece", "zh": "滑管 + 1-2 活塞，杯狀吹嘴", "tags": ["#brass", "#bass-trombone", "#trombone", "#reed"]}, {"dim": "ensemble", "en": "1 (part of standard 3-trombone section)", "zh": "1 名（標準三長號組之一）", "tags": ["#brass", "#bass-trombone", "#trombone", "#ensemble", "#non-transposing"]}]}, {"parent": "Tuba", "parent_zh": "低音號", "parent_years": "", "dims": [{"dim": "range", "en": "D1–G4 (concert pitch)", "zh": "D1–G4（實音）", "tags": ["#brass", "#tuba", "#range"]}, {"dim": "clef", "en": "Bass clef", "zh": "低音譜號", "tags": ["#brass", "#tuba", "#clef"]}, {"dim": "reed", "en": "3-5 valves, cup mouthpiece", "zh": "三至五活塞，杯狀吹嘴", "tags": ["#brass", "#tuba", "#reed"]}, {"dim": "ensemble", "en": "1 (standard)", "zh": "1 名（標準）", "tags": ["#brass", "#tuba", "#ensemble", "#non-transposing"]}]}, {"parent": "Violin", "parent_zh": "小提琴", "parent_years": "", "dims": [{"dim": "range", "en": "G3–A7 (concert pitch)", "zh": "G3–A7（實音）", "tags": ["#strings", "#violin", "#range"]}, {"dim": "clef", "en": "Treble clef", "zh": "高音譜號", "tags": ["#strings", "#violin", "#clef"]}, {"dim": "tuning", "en": "G3–D4–A4–E5 (P5 intervals)", "zh": "G3–D4–A4–E5（純五度）", "tags": ["#strings", "#violin", "#tuning"]}, {"dim": "ensemble", "en": "16-14 (1st violins 16, 2nd violins 14)", "zh": "16-14 名（第一小提琴 16，第二 14）", "tags": ["#strings", "#violin", "#ensemble", "#non-transposing"]}]}, {"parent": "Viola", "parent_zh": "中提琴", "parent_years": "", "dims": [{"dim": "range", "en": "C3–E6 (concert pitch)", "zh": "C3–E6（實音）", "tags": ["#strings", "#viola", "#range"]}, {"dim": "clef", "en": "Alto clef (treble clef in high register)", "zh": "中音譜號（高音域用高音譜號）", "tags": ["#strings", "#viola", "#clef"]}, {"dim": "tuning", "en": "C3–G3–D4–A4 (P5 intervals)", "zh": "C3–G3–D4–A4（純五度）", "tags": ["#strings", "#viola", "#tuning"]}, {"dim": "ensemble", "en": "12 (standard)", "zh": "12 名（標準）", "tags": ["#strings", "#viola", "#ensemble", "#non-transposing"]}]}, {"parent": "Cello", "parent_zh": "大提琴", "parent_years": "", "dims": [{"dim": "range", "en": "C2–C6 (concert pitch)", "zh": "C2–C6（實音）", "tags": ["#strings", "#cello", "#range"]}, {"dim": "clef", "en": "Bass → Tenor → Treble clef", "zh": "低音→次中音→高音譜號", "tags": ["#strings", "#cello", "#clef"]}, {"dim": "tuning", "en": "C2–G2–D3–A3 (P5 intervals)", "zh": "C2–G2–D3–A3（純五度）", "tags": ["#strings", "#cello", "#tuning"]}, {"dim": "ensemble", "en": "10 (standard)", "zh": "10 名（標準）", "tags": ["#strings", "#cello", "#ensemble", "#non-transposing"]}]}, {"parent": "Double Bass", "parent_zh": "低音提琴", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds 8va lower than written", "zh": "實音低八度（記譜比實音高八度）", "tags": ["#strings", "#double-bass", "#bass", "#transposition", "#transposing", "#8ve-transposing"]}, {"dim": "range", "en": "E1–B♭3 (written E2–B♭4)", "zh": "E1–B♭3（實音）/ E2–B♭4（記譜）", "tags": ["#strings", "#double-bass", "#bass", "#range"]}, {"dim": "clef", "en": "Bass clef", "zh": "低音譜號", "tags": ["#strings", "#double-bass", "#bass", "#clef"]}, {"dim": "tuning", "en": "E1–A1–D2–G2 (P4 intervals, exception to P5 rule)", "zh": "E1–A1–D2–G2（純四度，五度規則的例外）", "tags": ["#strings", "#double-bass", "#bass", "#tuning"]}, {"dim": "ensemble", "en": "8 (standard)", "zh": "8 名（標準）", "tags": ["#strings", "#double-bass", "#bass", "#ensemble"]}]}, {"parent": "Harp", "parent_zh": "豎琴", "parent_years": "", "dims": [{"dim": "range", "en": "C1–G7 (concert pitch)", "zh": "C1–G7（實音）", "tags": ["#strings", "#harp", "#range"]}, {"dim": "clef", "en": "Grand staff (treble + bass clef)", "zh": "大譜表（高音+低音譜號）", "tags": ["#strings", "#harp", "#clef"]}, {"dim": "reed", "en": "47 strings, 7 pedals (each adjusts pitch by semitone)", "zh": "47 弦，7 踏板（每踏板調半音）", "tags": ["#strings", "#harp", "#reed"]}, {"dim": "ensemble", "en": "1-2 (1 standard, 2 in large Romantic works)", "zh": "1-2 名（標準 1 名，大型浪漫作品 2 名）", "tags": ["#strings", "#harp", "#ensemble", "#non-transposing"]}]}, {"parent": "Piano", "parent_zh": "鋼琴", "parent_years": "", "dims": [{"dim": "range", "en": "A0–C8 (88 keys, concert pitch)", "zh": "A0–C8（88 鍵，實音）", "tags": ["#keyboard", "#piano", "#range"]}, {"dim": "clef", "en": "Grand staff (treble + bass clef)", "zh": "大譜表（高音+低音譜號）", "tags": ["#keyboard", "#piano", "#clef"]}, {"dim": "reed", "en": "Hammers strike strings", "zh": "槌擊弦", "tags": ["#keyboard", "#piano", "#reed"]}, {"dim": "ensemble", "en": "1 (solo/concerto), 2-4 (keyboard section)", "zh": "1 名（獨奏/協奏），2-4 名（鍵盤組）", "tags": ["#keyboard", "#piano", "#ensemble", "#non-transposing"]}]}, {"parent": "Celesta", "parent_zh": "鋼片琴", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds 8va higher than written", "zh": "實音高八度（記譜比實音低八度）", "tags": ["#keyboard", "#celesta", "#transposition", "#transposing", "#8ve-transposing"]}, {"dim": "range", "en": "C3–C8 (written C2–C7)", "zh": "C3–C8（實音）/ C2–C7（記譜）", "tags": ["#keyboard", "#celesta", "#range"]}, {"dim": "clef", "en": "Grand staff (treble + bass clef)", "zh": "大譜表（高音+低音譜號）", "tags": ["#keyboard", "#celesta", "#clef"]}, {"dim": "reed", "en": "Hammers strike steel bars", "zh": "槌擊鋼片", "tags": ["#keyboard", "#celesta", "#reed"]}, {"dim": "ensemble", "en": "1 (played by keyboardist/pianist)", "zh": "1 名（由鍵盤手/鋼琴手演奏）", "tags": ["#keyboard", "#celesta", "#ensemble"]}]}, {"parent": "Organ", "parent_zh": "管風琴", "parent_years": "", "dims": [{"dim": "range", "en": "Full piano range + pedals (C2–C7 on pedals)", "zh": "全鋼琴音域 + 踏板（C2–C7 踏板）", "tags": ["#keyboard", "#organ", "#range"]}, {"dim": "clef", "en": "Grand staff (sometimes 3 staves with pedal)", "zh": "大譜表（有時三行含踏板）", "tags": ["#keyboard", "#organ", "#clef"]}, {"dim": "reed", "en": "Air through pipes (flue pipes + reed pipes)", "zh": "氣流過管（哨管+簧管）", "tags": ["#keyboard", "#organ", "#reed"]}, {"dim": "ensemble", "en": "1", "zh": "1 名", "tags": ["#keyboard", "#organ", "#ensemble", "#non-transposing"]}]}, {"parent": "Harpsichord", "parent_zh": "大鍵琴", "parent_years": "", "dims": [{"dim": "range", "en": "F1–F6 (typically 5 octaves, concert pitch)", "zh": "F1–F6（約五個八度，實音）", "tags": ["#keyboard", "#harpsichord", "#range"]}, {"dim": "clef", "en": "Grand staff (treble + bass clef)", "zh": "大譜表（高音+低音譜號）", "tags": ["#keyboard", "#harpsichord", "#clef"]}, {"dim": "reed", "en": "Plectrum plucks strings", "zh": "撥子撥弦", "tags": ["#keyboard", "#harpsichord", "#reed"]}, {"dim": "ensemble", "en": "1 (continuo in Baroque)", "zh": "1 名（巴洛克數字低音）", "tags": ["#keyboard", "#harpsichord", "#ensemble", "#non-transposing"]}]}, {"parent": "Timpani", "parent_zh": "定音鼓", "parent_years": "", "dims": [{"dim": "range", "en": "D2–A3 (tunable, typically 4 drums)", "zh": "D2–A3（可調音，通常 4 個鼓）", "tags": ["#percussion", "#timpani", "#range"]}, {"dim": "clef", "en": "Bass clef", "zh": "低音譜號", "tags": ["#percussion", "#timpani", "#clef"]}, {"dim": "reed", "en": "Sticks strike membrane over copper bowl", "zh": "鼓棒擊打銅碗上薄膜", "tags": ["#percussion", "#timpani", "#reed"]}, {"dim": "ensemble", "en": "1 (sometimes 2 in large works)", "zh": "1 名（大型作品有時 2 名）", "tags": ["#percussion", "#timpani", "#ensemble", "#non-transposing"]}]}, {"parent": "Xylophone", "parent_zh": "木琴", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds 8va higher than written", "zh": "實音高八度", "tags": ["#percussion", "#xylophone", "#transposition", "#transposing", "#8ve-transposing"]}, {"dim": "range", "en": "F4–C8 (written F3–C7)", "zh": "F4–C8（實音）/ F3–C7（記譜）", "tags": ["#percussion", "#xylophone", "#range"]}, {"dim": "clef", "en": "Treble clef", "zh": "高音譜號", "tags": ["#percussion", "#xylophone", "#clef"]}, {"dim": "reed", "en": "Hard mallets strike wooden bars", "zh": "硬槌擊木片", "tags": ["#percussion", "#xylophone", "#reed"]}, {"dim": "ensemble", "en": "1 (percussionist)", "zh": "1 名（打擊樂手）", "tags": ["#percussion", "#xylophone", "#ensemble"]}]}, {"parent": "Glockenspiel", "parent_zh": "鐘琴", "parent_years": "", "dims": [{"dim": "transposition", "en": "Sounds 15ma higher (two octaves)", "zh": "實音高兩個八度", "tags": ["#percussion", "#glockenspiel", "#transposition", "#transposing", "#8ve-transposing"]}, {"dim": "range", "en": "G5–C8 (written G3–C5)", "zh": "G5–C8（實音）/ G3–C5（記譜）", "tags": ["#percussion", "#glockenspiel", "#range"]}, {"dim": "clef", "en": "Treble clef", "zh": "高音譜號", "tags": ["#percussion", "#glockenspiel", "#clef"]}, {"dim": "reed", "en": "Hard mallets strike steel bars", "zh": "硬槌擊鋼片", "tags": ["#percussion", "#glockenspiel", "#reed"]}, {"dim": "ensemble", "en": "1 (percussionist)", "zh": "1 名（打擊樂手）", "tags": ["#percussion", "#glockenspiel", "#ensemble"]}]}, {"parent": "Marimba", "parent_zh": "馬林巴木琴", "parent_years": "", "dims": [{"dim": "range", "en": "C2–C7 (5 octaves, concert pitch)", "zh": "C2–C7（五個八度，實音）", "tags": ["#percussion", "#marimba", "#range"]}, {"dim": "clef", "en": "Grand staff (treble + bass clef)", "zh": "大譜表（高音+低音譜號）", "tags": ["#percussion", "#marimba", "#clef"]}, {"dim": "reed", "en": "Yarn/soft mallets strike wooden bars, resonators below", "zh": "紗槌擊木片，下方有共鳴管", "tags": ["#percussion", "#marimba", "#reed"]}, {"dim": "ensemble", "en": "1 (percussionist)", "zh": "1 名（打擊樂手）", "tags": ["#percussion", "#marimba", "#ensemble", "#non-transposing"]}]}, {"parent": "Cymbals", "parent_zh": "鈸", "parent_years": "", "dims": [{"dim": "clef", "en": "Unpitched (no clef)", "zh": "無固定音高（無譜號）", "tags": ["#percussion", "#cymbals", "#clef"]}, {"dim": "reed", "en": "Crash/strike metal discs", "zh": "撞擊金屬圓盤", "tags": ["#percussion", "#cymbals", "#reed"]}, {"dim": "ensemble", "en": "1 (percussionist)", "zh": "1 名（打擊樂手）", "tags": ["#percussion", "#cymbals", "#ensemble", "#non-transposing"]}]}, {"parent": "Snare Drum", "parent_zh": "小軍鼓", "parent_years": "", "dims": [{"dim": "clef", "en": "Unpitched (no clef)", "zh": "無固定音高（無譜號）", "tags": ["#percussion", "#snare-drum", "#clef"]}, {"dim": "reed", "en": "Sticks strike membrane with snare wires below", "zh": "鼓棒擊打帶響弦的鼓膜", "tags": ["#percussion", "#snare-drum", "#reed"]}, {"dim": "ensemble", "en": "1 (percussionist)", "zh": "1 名（打擊樂手）", "tags": ["#percussion", "#snare-drum", "#ensemble", "#non-transposing"]}]}, {"parent": "Bass Drum", "parent_zh": "大鼓", "parent_years": "", "dims": [{"dim": "clef", "en": "Unpitched (no clef)", "zh": "無固定音高（無譜號）", "tags": ["#percussion", "#bass-drum", "#clef"]}, {"dim": "reed", "en": "Soft mallets strike large membrane", "zh": "軟槌擊打大鼓膜", "tags": ["#percussion", "#bass-drum", "#reed"]}, {"dim": "ensemble", "en": "1 (percussionist)", "zh": "1 名（打擊樂手）", "tags": ["#percussion", "#bass-drum", "#ensemble", "#non-transposing"]}]}, {"parent": "4 Orchestral Families", "parent_zh": "四大樂器家族", "parent_years": "concept", "dims": [{"dim": "concept", "en": "Woodwind, Brass, Strings, Percussion. Organized by how sound is produced, not by material.", "zh": "木管、銅管、弦樂、打擊。按發聲方式分類，不按材質", "tags": ["#concept", "#woodwind", "#brass", "#strings", "#percussion"]}]}, {"parent": "Section order (score layout)", "parent_zh": "總譜排列順序", "parent_years": "concept", "dims": [{"dim": "concept", "en": "Woodwinds → Brass → Percussion → Strings (top to bottom in score, also conductor's left to right)", "zh": "木管→銅管→打擊→弦樂（樂譜由上至下，指揮左至右）", "tags": ["#concept"]}]}, {"parent": "Interchangeable Group 1: Treble non-transposing", "parent_zh": "可互換第一組：高音非移調", "parent_years": "concept", "dims": [{"dim": "concept", "en": "Flute, Oboe, Violin — all read treble clef at concert pitch. Can share the same part.", "zh": "長笛、雙簧管、小提琴（高音譜表非移調，可共用同一分譜）", "tags": ["#concept", "#non-transposing"]}]}, {"parent": "Interchangeable Group 2: Bass non-transposing", "parent_zh": "可互換第二組：低音非移調", "parent_years": "concept", "dims": [{"dim": "concept", "en": "Bassoon, Cello, Trombone, Tuba — all read bass clef at concert pitch. Can share the same part.", "zh": "巴松管、大提琴、長號、低音號（低音譜表非移調，可共用同一分譜）", "tags": ["#concept", "#non-transposing"]}]}, {"parent": "Interchangeable Group 3: Treble B♭ transposing", "parent_zh": "可互換第三組：B♭ 移調", "parent_years": "concept", "dims": [{"dim": "concept", "en": "Trumpet & Clarinet (both in B♭, both read treble clef) — can share the same part, sounding M2 lower.", "zh": "小號、單簧管（皆 B♭ 移調，高音譜表，可共用分譜，實音低大二度）", "tags": ["#concept", "#transposing"]}]}, {"parent": "Solo-clef instruments", "parent_zh": "獨立譜號樂器", "parent_years": "concept", "dims": [{"dim": "concept", "en": "Viola (only alto clef), Horn (only F transposition), Double Bass (only 8vb), Timpani (single notes only)", "zh": "中提琴（唯一中音譜表）、法國號（唯一 F 調）、低音提琴（唯一低八度）、定音鼓（單音）", "tags": ["#concept"]}]}, {"parent": "String tuning rule", "parent_zh": "弦樂調弦規則", "parent_years": "concept", "dims": [{"dim": "concept", "en": "Violin/Viola/Cello tuned in P5; Double Bass tuned in P4 (exception)", "zh": "小提琴/中提琴/大提琴調純五度；低音提琴調純四度（例外）", "tags": ["#concept", "#strings"]}]}, {"parent": "Oboe gives A440", "parent_zh": "雙簧管給 A440 調音", "parent_years": "concept", "dims": [{"dim": "concept", "en": "The oboe plays A4 (440Hz) for the whole orchestra to tune before performance", "zh": "雙簧管吹 A4（440Hz）供全團調音", "tags": ["#concept", "#woodwind", "#oboe"]}]}, {"parent": "Woodwind doubling chain", "parent_zh": "木管兼奏鏈", "parent_years": "concept", "dims": [{"dim": "concept", "en": "1st Fl→Piccolo; Oboe→English Horn; Clarinet→Bass Clarinet/E♭ Clarinet; Bassoon→Contrabassoon", "zh": "第一長笛→短笛；雙簧管→英國管；單簧管→低音單簧管/E♭單簧管；巴松管→倍低音巴松管", "tags": ["#concept", "#doubling", "#woodwind"]}]}];
+const COMPOSERS_DATA = [{"parent": "C. Monteverdi", "parent_zh": "克勞迪歐·蒙台威爾第", "parent_years": "1567-1643", "period": "baroque", "dims": [{"dim": "period", "en": "Baroque (1600-1750)", "zh": "巴洛克 (1600-1750)", "tags": ["#baroque", "#monteverdi", "#period"]}, {"dim": "style", "en": "Seconda prattica, expressive dissonance, operatic monody", "zh": "第二實踐、表現性不協和音、歌劇獨唱", "tags": ["#baroque", "#monteverdi", "#style"]}, {"dim": "work", "en": "L'Orfeo", "zh": "奧菲歐", "tags": ["#baroque", "#monteverdi", "#work"]}, {"dim": "title", "en": "Venetian school / pioneer of opera", "zh": "威尼斯樂派 / 歌劇開山宗師", "tags": ["#baroque", "#monteverdi", "#title"]}, {"dim": "relation", "en": "→ Heinrich Schütz (海因里希·許茲) [teacher-student] ★", "zh": "→ 海因里希·許茲 [師徒] ★", "tags": ["#baroque", "#monteverdi", "#relation", "#teacher-student"]}, {"dim": "anecdote", "en": "His L'Orfeo (1607) is the earliest opera still regularly performed today.", "zh": "他的《奧菲歐》(1607) 是迄今仍定期上演的最早歌劇。", "tags": ["#baroque", "#monteverdi", "#anecdote"]}]}, {"parent": "H. Purcell", "parent_zh": "亨利·普賽爾", "parent_years": "1659-1695", "period": "baroque", "dims": [{"dim": "period", "en": "Baroque (1600-1750)", "zh": "巴洛克 (1600-1750)", "tags": ["#baroque", "#purcell", "#period"]}, {"dim": "style", "en": "English Baroque, chromatic ground bass, declamatory vocal style", "zh": "英國巴洛克、半音固定低音、朗誦式聲樂", "tags": ["#baroque", "#purcell", "#style"]}, {"dim": "work", "en": "Dido and Aeneas", "zh": "狄多與埃涅阿斯", "tags": ["#baroque", "#purcell", "#work"]}, {"dim": "title", "en": "Foundation of English Baroque", "zh": "英國巴洛克奠基人", "tags": ["#baroque", "#purcell", "#title"]}, {"dim": "anecdote", "en": "Died at 36, possibly of tuberculosis. His 'Dido's Lament' uses a chromatic ground bass that influenced later composers for centuries.", "zh": "36 歲早逝，可能死於肺結核。其「狄多哀歌」使用的半音固定低音影響後世數百年。", "tags": ["#baroque", "#purcell", "#anecdote"]}]}, {"parent": "A. Vivaldi", "parent_zh": "安東尼奧·韋瓦第", "parent_years": "1678-1741", "period": "baroque", "dims": [{"dim": "period", "en": "Baroque (1600-1750)", "zh": "巴洛克 (1600-1750)", "tags": ["#baroque", "#vivaldi", "#period"]}, {"dim": "style", "en": "Venetian school, programmatic concertos, vigorous ritornello", "zh": "威尼斯樂派、標題協奏曲、活力利都奈洛", "tags": ["#baroque", "#vivaldi", "#style"]}, {"dim": "work", "en": "The Four Seasons", "zh": "四季", "tags": ["#baroque", "#vivaldi", "#work"]}, {"dim": "title", "en": "Concerto master", "zh": "協奏曲大師", "tags": ["#baroque", "#vivaldi", "#title"]}, {"dim": "relation", "en": "→ J.S. Bach (巴赫) [influence] ★ — Bach transcribed Vivaldi's concertos", "zh": "→ 巴赫 [影響] ★ — 巴赫改編韋瓦第協奏曲", "tags": ["#baroque", "#vivaldi", "#relation", "#influence"]}, {"dim": "anecdote", "en": "A red-haired priest ('Il Prete Rosso'), he taught at the Ospedale della Pietà, an orphanage girls' music school in Venice.", "zh": "紅髮神父（Il Prete Rosso），在威尼斯仁愛音樂院孤兒女孩學校任教。", "tags": ["#baroque", "#vivaldi", "#anecdote"]}]}, {"parent": "J.S. Bach", "parent_zh": "約翰·塞巴斯蒂安·巴赫", "parent_years": "1685-1750", "period": "baroque", "dims": [{"dim": "period", "en": "Baroque (1600-1750)", "zh": "巴洛克 (1600-1750)", "tags": ["#baroque", "#bach", "#period"]}, {"dim": "style", "en": "Sacred polyphony, perfect counterpoint, fugue mastery", "zh": "神聖複調、完美對位、賦格登峰", "tags": ["#baroque", "#bach", "#style"]}, {"dim": "work", "en": "Brandenburg Concertos", "zh": "勃蘭登堡協奏曲", "tags": ["#baroque", "#bach", "#work"]}, {"dim": "title", "en": "Summit of German counterpoint, Father of Music", "zh": "德奧對位法最高峰 / 音樂之父", "tags": ["#baroque", "#bach", "#title"]}, {"dim": "relation", "en": "→ Handel (韓德爾) [other] same year born, never met ★\n→ Telemann (泰勒曼) [friend] ★\n→ Villa-Lobos (維拉-羅伯斯) [influence]\n← Buxtehude (布克斯特胡德) [influence]\n← Mendelssohn (孟德爾頌) [other] rediscovered Bach in 1829 ★\n← Vivaldi (韋瓦第) [influence]", "zh": "→ 韓德爾 [其他] 同年出生從未見面 ★\n→ 泰勒曼 [友人] ★\n→ 維拉-羅伯斯 [影響]\n← 布克斯特胡德 [影響]\n← 孟德爾頌 [其他] 1829年復興巴赫 ★\n← 韋瓦第 [影響]", "tags": ["#baroque", "#bach", "#relation", "#friend", "#influence", "#other"]}, {"dim": "anecdote", "en": "Bach and Handel were born in the same year (1685) in Germany, but never met. Bach walked 200 miles to hear Buxtehude play.", "zh": "巴赫與韓德爾同年生於德國，但從未見面。巴赫曾步行 200 英里聽布克斯特胡德演奏。", "tags": ["#baroque", "#bach", "#anecdote"]}]}, {"parent": "G.F. Handel", "parent_zh": "喬治·弗里德里希·韓德爾", "parent_years": "1685-1759", "period": "baroque", "dims": [{"dim": "period", "en": "Baroque (1600-1750)", "zh": "巴洛克 (1600-1750)", "tags": ["#baroque", "#handel", "#period"]}, {"dim": "style", "en": "Grand oratorio, dramatic choruses, Italian opera style", "zh": "宏偉清唱劇、戲劇性合唱、義大利歌劇風格", "tags": ["#baroque", "#handel", "#style"]}, {"dim": "work", "en": "Messiah", "zh": "彌賽亞", "tags": ["#baroque", "#handel", "#work"]}, {"dim": "title", "en": "Master of English oratorio", "zh": "英式巴洛克清唱劇大師", "tags": ["#baroque", "#handel", "#title"]}, {"dim": "relation", "en": "→ Bach (巴赫) [other] same year born ★\n→ Telemann (泰勒曼) [friend] ★", "zh": "→ 巴赫 [其他] 同年出生 ★\n→ 泰勒曼 [友人] ★", "tags": ["#baroque", "#handel", "#relation", "#friend", "#other"]}, {"dim": "anecdote", "en": "Born same year as Bach, both in Germany. Handel moved to London and became a British citizen. He wrote Messiah in 24 days.", "zh": "與巴赫同年生於德國。韓德爾移居倫敦並入籍英國。24 天寫完《彌賽亞》。", "tags": ["#baroque", "#handel", "#anecdote"]}]}, {"parent": "C.W. Gluck", "parent_zh": "克里斯托夫·維利巴爾德·格魯克", "parent_years": "1714-1787", "period": "classical", "dims": [{"dim": "period", "en": "Classical (1730-1820)", "zh": "古典 (1730-1820)", "tags": ["#classical", "#gluck", "#period"]}, {"dim": "style", "en": "Operatic reform, drama over virtuosity, simplicity and emotional truth", "zh": "歌劇改革、戲劇凌駕炫技、簡樸與情感真實", "tags": ["#classical", "#gluck", "#style"]}, {"dim": "work", "en": "Orfeo ed Euridice", "zh": "奧菲歐與尤麗狄絲", "tags": ["#classical", "#gluck", "#work"]}, {"dim": "title", "en": "Pioneer of operatic reform", "zh": "古典歌劇改革先驅", "tags": ["#classical", "#gluck", "#title"]}, {"dim": "anecdote", "en": "He reformed opera by stripping away vocal virtuosity to serve dramatic truth, paving the way for Wagner's music drama a century later.", "zh": "他改革歌劇，去除聲樂炫技以服務戲劇真實，為百年後華格納的樂劇鋪路。", "tags": ["#classical", "#gluck", "#anecdote"]}]}, {"parent": "C.P.E. Bach", "parent_zh": "卡爾·菲利普·埃馬努埃爾·巴赫", "parent_years": "1714-1788", "period": "classical", "dims": [{"dim": "period", "en": "Classical (1730-1820)", "zh": "古典 (1730-1820)", "tags": ["#classical", "#cpe-bach", "#bach", "#period"]}, {"dim": "style", "en": "Empfindsamer Stil (sensitive style), sudden emotional shifts, sonata form pioneer", "zh": "敏感風格、突發情感轉換、奏鳴曲式先驅", "tags": ["#classical", "#cpe-bach", "#bach", "#style"]}, {"dim": "work", "en": "Prussian Sonatas", "zh": "普魯士奏鳴曲集", "tags": ["#classical", "#cpe-bach", "#bach", "#work"]}, {"dim": "title", "en": "Pioneer of Empfindsamkeit", "zh": "敏感風格先驅", "tags": ["#classical", "#cpe-bach", "#bach", "#title"]}, {"dim": "anecdote", "en": "J.S. Bach's second son. His 'Essay on the True Art of Playing Keyboard Instruments' influenced Haydn, Mozart, and Beethoven.", "zh": "巴赫次子。其《鍵盤樂器演奏真諦論》影響海頓、莫札特、貝多芬。", "tags": ["#classical", "#cpe-bach", "#bach", "#anecdote"]}]}, {"parent": "F.J. Haydn", "parent_zh": "弗朗茨·約瑟夫·海頓", "parent_years": "1732-1809", "period": "classical", "dims": [{"dim": "period", "en": "Classical (1730-1820)", "zh": "古典 (1730-1820)", "tags": ["#classical", "#haydn", "#period"]}, {"dim": "style", "en": "Wit, structural perfection, thematic development", "zh": "幽默智巧、結構完美、主題發展", "tags": ["#classical", "#haydn", "#style"]}, {"dim": "work", "en": "Symphony No. 94 'Surprise'", "zh": "第94交響曲「驚愕」", "tags": ["#classical", "#haydn", "#work"]}, {"dim": "title", "en": "Father of Symphony and String Quartet", "zh": "交響樂與四重奏之父", "tags": ["#classical", "#haydn", "#title"]}, {"dim": "relation", "en": "→ Beethoven (貝多芬) [teacher-student] ★\n→ Mozart (莫札特) [friend] ★", "zh": "→ 貝多芬 [師徒] ★\n→ 莫札特 [友人] ★", "tags": ["#classical", "#haydn", "#relation", "#teacher-student", "#friend", "#vienna-classical-trio"]}, {"dim": "anecdote", "en": "Worked 30 years for the Esterházy family in relative isolation, forcing him to be original. He and Mozart were close friends despite 24-year age gap.", "zh": "為埃斯特哈齊家族服務 30 年，相對孤立迫使他保持原創。與莫札特相差 24 歲卻是摯友。", "tags": ["#classical", "#haydn", "#anecdote", "#vienna-classical-trio"]}]}, {"parent": "W.A. Mozart", "parent_zh": "沃爾夫岡·阿瑪多伊斯·莫札特", "parent_years": "1756-1791", "period": "classical", "dims": [{"dim": "period", "en": "Classical (1730-1820)", "zh": "古典 (1730-1820)", "tags": ["#classical", "#mozart", "#period"]}, {"dim": "style", "en": "Melodic perfection, classical balance, opera with deep character psychology", "zh": "旋律完美、古典均衡、歌劇角色心理深刻", "tags": ["#classical", "#mozart", "#style"]}, {"dim": "work", "en": "Eine kleine Nachtmusik", "zh": "小夜曲", "tags": ["#classical", "#mozart", "#work"]}, {"dim": "title", "en": "Genius incarnate", "zh": "天才代名詞", "tags": ["#classical", "#mozart", "#title"]}, {"dim": "relation", "en": "← Salieri (薩里耶利) [other] depicted as rivals in 'Amadeus' ★\n← Haydn (海頓) [friend] ★\n← Beethoven (貝多芬) [influence]\n→ Constanze (康絲坦策) [other] married", "zh": "← 薩里耶利 [其他] 電影《阿瑪迪斯》描繪為對手 ★\n← 海頓 [友人] ★\n← 貝多芬 [影響]\n→ 康絲坦策 [其他] 結婚", "tags": ["#classical", "#mozart", "#relation", "#friend", "#influence", "#other", "#vienna-classical-trio"]}, {"dim": "anecdote", "en": "Died at 35 in poverty, buried in a common grave. The rivalry with Salieri in the film 'Amadeus' is largely fictional.", "zh": "35 歲窮困而終，葬於公墓。電影《阿瑪迪斯》中與薩里耶利的對立多為虛構。", "tags": ["#classical", "#mozart", "#anecdote", "#vienna-classical-trio"]}]}, {"parent": "L. van Beethoven", "parent_zh": "路德維希·范·貝多芬", "parent_years": "1770-1827", "period": "classical", "dims": [{"dim": "period", "en": "Classical → Romantic (bridge figure)", "zh": "古典→浪漫（橋樑人物）", "tags": ["#classical", "#romantic", "#beethoven", "#period"]}, {"dim": "style", "en": "Heroic struggle, motivic development, expansion of form", "zh": "英雄意志、動機發展、形式擴張", "tags": ["#classical", "#romantic", "#beethoven", "#style"]}, {"dim": "work", "en": "Symphony No. 5 'Fate'", "zh": "第五交響曲「命運」", "tags": ["#classical", "#romantic", "#beethoven", "#work"]}, {"dim": "title", "en": "Summit of Classical, gatekeeper of Romantic", "zh": "古典最高峰 / 開啟浪漫主義", "tags": ["#classical", "#romantic", "#beethoven", "#title"]}, {"dim": "relation", "en": "← Haydn (海頓) [teacher-student] ★\n← Salieri (薩里耶利) [teacher-student]\n→ Schubert (舒伯特) [influence] ★\n→ Mozart (莫札特) [influence]", "zh": "← 海頓 [師徒] ★\n← 薩里耶利 [師徒]\n→ 舒伯特 [影響] ★\n→ 莫札特 [影響]", "tags": ["#classical", "#romantic", "#beethoven", "#relation", "#teacher-student", "#influence", "#vienna-classical-trio"]}, {"dim": "anecdote", "en": "Went deaf gradually from age 28, yet composed his greatest works (including the 9th Symphony) while completely deaf. He never heard his own Ode to Joy.", "zh": "28 歲起漸聾，最偉大的作品（含第九交響曲）全在完全失聰後寫成。他從未聽過自己的《歡樂頌》。", "tags": ["#classical", "#romantic", "#beethoven", "#anecdote", "#vienna-classical-trio"]}]}, {"parent": "F. Schubert", "parent_zh": "弗朗茨·舒伯特", "parent_years": "1797-1828", "period": "romantic", "dims": [{"dim": "period", "en": "Romantic (1815-1910)", "zh": "浪漫 (1815-1910)", "tags": ["#romantic", "#schubert", "#period"]}, {"dim": "style", "en": "Lieder master, heavenly melody, harmonic surprise", "zh": "藝術歌曲之王、神授旋律、和聲意外", "tags": ["#romantic", "#schubert", "#style"]}, {"dim": "work", "en": "Serenade", "zh": "小夜曲", "tags": ["#romantic", "#schubert", "#work"]}, {"dim": "title", "en": "King of Lied", "zh": "歌曲之王", "tags": ["#romantic", "#schubert", "#title"]}, {"dim": "relation", "en": "← Salieri (薩里耶利) [teacher-student] ★\n← Beethoven (貝多芬) [influence] ★", "zh": "← 薩里耶利 [師徒] ★\n← 貝多芬 [影響] ★", "tags": ["#romantic", "#schubert", "#relation", "#teacher-student", "#influence"]}, {"dim": "anecdote", "en": "Died at 31. He was a torchbearer at Beethoven's funeral only months before his own death. Wrote over 600 Lieder.", "zh": "31 歲早逝。他在貝多芬葬禮執紼後僅數月便離世。一生寫了 600+ 首藝術歌曲。", "tags": ["#romantic", "#schubert", "#anecdote"]}]}, {"parent": "F. Mendelssohn", "parent_zh": "費利克斯·孟德爾頌", "parent_years": "1809-1847", "period": "romantic", "dims": [{"dim": "period", "en": "Romantic (1815-1910)", "zh": "浪漫 (1815-1910)", "tags": ["#romantic", "#mendelssohn", "#period"]}, {"dim": "style", "en": "Elegant restraint, classical clarity in Romantic era, Bach revival", "zh": "優雅克制、浪漫中的古典清晰、巴赫復興", "tags": ["#romantic", "#mendelssohn", "#style"]}, {"dim": "work", "en": "A Midsummer Night's Dream Overture (incl. Wedding March)", "zh": "仲夏夜之夢序曲（含婚禮進行曲）", "tags": ["#romantic", "#mendelssohn", "#work"]}, {"dim": "title", "en": "Bach reviver", "zh": "巴赫復興者", "tags": ["#romantic", "#mendelssohn", "#title"]}, {"dim": "relation", "en": "→ J.S. Bach (巴赫) [other] conducted St. Matthew Passion 1829 ★\n← R. Schumann (舒曼) [friend] ★", "zh": "→ 巴赫 [其他] 1829年指揮《馬太受難曲》復興巴赫 ★\n← 舒曼 [友人] ★", "tags": ["#romantic", "#mendelssohn", "#relation", "#friend", "#other"]}, {"dim": "anecdote", "en": "He was 20 when he conducted the St. Matthew Passion in 1829 — the first performance since Bach's death in 1750. This single concert resurrected Bach's music for the world.", "zh": "1829 年指揮《馬太受難曲》時年僅 20 歲——這是巴赫 1750 年去世後的首次演出。這一場音樂會讓巴赫音樂重見天日。", "tags": ["#romantic", "#mendelssohn", "#anecdote"]}]}, {"parent": "R. Schumann", "parent_zh": "羅伯特·舒曼", "parent_years": "1810-1856", "period": "romantic", "dims": [{"dim": "period", "en": "Romantic (1815-1910)", "zh": "浪漫 (1815-1910)", "tags": ["#romantic", "#schumann", "#period"]}, {"dim": "style", "en": "Poetic character pieces, literary influence, dual personality (Florestan/Eusebius)", "zh": "詩意性格小品、文學影響、雙重人格（弗洛雷斯坦/尤塞比烏斯）", "tags": ["#romantic", "#schumann", "#style"]}, {"dim": "work", "en": "Kinderszenen (incl. Träumerei)", "zh": "童年情景（含夢幻曲）", "tags": ["#romantic", "#schumann", "#work"]}, {"dim": "title", "en": "Master of poetic Romanticism", "zh": "詩意浪漫極峰", "tags": ["#romantic", "#schumann", "#title"]}, {"dim": "relation", "en": "→ Chopin (蕭邦) [influence] ★\n→ Brahms (布拉姆斯) [influence] ★\n→ Mendelssohn (孟德爾頌) [friend] ★\n← Clara Schumann (克拉拉) [other] married ★\n← Brahms (布拉姆斯) [influence]", "zh": "→ 蕭邦 [影響] ★\n→ 布拉姆斯 [影響] ★\n→ 孟德爾頌 [友人] ★\n← 克拉拉 [其他] 結婚 ★\n← 布拉姆斯 [影響]", "tags": ["#romantic", "#schumann", "#relation", "#friend", "#influence", "#other"]}, {"dim": "anecdote", "en": "Married Clara Wieck against her father's wishes. After a suicide attempt (jumping into the Rhine), he was sent to an asylum in Endenich, where he died two years later.", "zh": "不顧克拉拉父親反對與之結婚。精神惡化，投萊茵河自盡未遂後被送入安養院（Endenich），兩年後去世。", "tags": ["#romantic", "#schumann", "#anecdote"]}]}, {"parent": "F. Chopin", "parent_zh": "弗雷德里克·蕭邦", "parent_years": "1810-1849", "period": "romantic", "dims": [{"dim": "period", "en": "Romantic (1815-1910)", "zh": "浪漫 (1815-1910)", "tags": ["#romantic", "#chopin", "#period"]}, {"dim": "style", "en": "Piano poetry, rubato, bel canto melody on piano, Polish nationalism", "zh": "鋼琴詩人、彈性速度、鋼琴上的美聲、波蘭民族主義", "tags": ["#romantic", "#chopin", "#style"]}, {"dim": "work", "en": "Nocturne Op. 9 No. 2", "zh": "夜曲 Op. 9 No. 2", "tags": ["#romantic", "#chopin", "#work"]}, {"dim": "title", "en": "Poet of the Piano", "zh": "鋼琴詩人", "tags": ["#romantic", "#chopin", "#title"]}, {"dim": "relation", "en": "← R. Schumann (舒曼) [influence] ★\n→ Liszt (李斯特) [friend] ★\n← Bellini (貝里尼) [influence]", "zh": "← 舒曼 [影響] ★\n→ 李斯特 [友人] ★\n← 貝里尼 [影響]", "tags": ["#romantic", "#chopin", "#relation", "#friend", "#influence"]}, {"dim": "anecdote", "en": "Polish-French. Lived in Paris from age 21. Relationship with writer George Sand. Died at 39 of tuberculosis. His heart was smuggled to Warsaw in a jar.", "zh": "波蘭-法國人。21 歲起定居巴黎。與作家喬治·桑的戀情。39 歲死於肺結核。心臟被裝在罐中偷運回華沙。", "tags": ["#romantic", "#chopin", "#anecdote"]}]}, {"parent": "F. Liszt", "parent_zh": "弗朗茨·李斯特", "parent_years": "1811-1886", "period": "romantic", "dims": [{"dim": "period", "en": "Romantic (1815-1910)", "zh": "浪漫 (1815-1910)", "tags": ["#romantic", "#liszt", "#period"]}, {"dim": "style", "en": "Piano virtuosity supreme, symphonic poem invention, chromatic harmony", "zh": "鋼琴炫技極致、交響詩發明、半音和聲", "tags": ["#romantic", "#liszt", "#style"]}, {"dim": "work", "en": "Hungarian Rhapsody No. 2", "zh": "匈牙利狂想曲第二號", "tags": ["#romantic", "#liszt", "#work"]}, {"dim": "title", "en": "King of Piano, inventor of symphonic poem", "zh": "鋼琴之王 / 交響詩首創者", "tags": ["#romantic", "#liszt", "#title"]}, {"dim": "relation", "en": "← Salieri (薩里耶利) [teacher-student] ★\n← Paganini (帕格尼尼) [influence] ★\n← Chopin (蕭邦) [friend] ★\n→ Wagner (華格納) [friend] ★\n→ Cosima (柯西瑪) [other] his daughter married Wagner ★", "zh": "← 薩里耶利 [師徒] ★\n← 帕格尼尼 [影響] ★\n← 蕭邦 [友人] ★\n→ 華格納 [友人] ★\n→ 柯西瑪 [其他] 之女嫁給華格納 ★", "tags": ["#romantic", "#liszt", "#relation", "#teacher-student", "#influence", "#friend", "#other", "#new-german-school"]}, {"dim": "anecdote", "en": "His daughter Cosima married Richard Wagner — Liszt and Wagner were friends but this caused tension. He invented the term 'symphonic poem' and the masterclass format.", "zh": "女兒柯西瑪嫁給華格納——李斯特與華格納是朋友但此婚姻造成緊張。他發明了「交響詩」一詞和大師班教學形式。", "tags": ["#romantic", "#liszt", "#anecdote", "#new-german-school"]}]}, {"parent": "J. Brahms", "parent_zh": "約翰內斯·布拉姆斯", "parent_years": "1833-1897", "period": "romantic", "dims": [{"dim": "period", "en": "Romantic (1815-1910)", "zh": "浪漫 (1815-1910)", "tags": ["#romantic", "#brahms", "#period"]}, {"dim": "style", "en": "Absolute music, motivic development, classical forms in Romantic era", "zh": "絕對音樂、動機發展、浪漫中的古典形式", "tags": ["#romantic", "#brahms", "#style"]}, {"dim": "work", "en": "Symphony No. 1", "zh": "第一交響曲", "tags": ["#romantic", "#brahms", "#work"]}, {"dim": "title", "en": "Guardian of Classical tradition, absolute music pope", "zh": "古典守望者 / 絕對音樂教皇", "tags": ["#romantic", "#brahms", "#title"]}, {"dim": "relation", "en": "← R. Schumann (舒曼) [influence] ★ — 'Neue Bahnen' article\n← Clara Schumann (克拉拉) [other] ★\n→ Dvořák (德弗札克) [other] ★\n→ Wagner (華格納) [other] ★ mutual antagonism", "zh": "← 舒曼 [影響] ★ — 文章《新路》\n← 克拉拉 [其他] ★\n→ 德弗札克 [其他] ★\n→ 華格納 [其他] ★ 互相對立", "tags": ["#romantic", "#brahms", "#relation", "#influence", "#other"]}, {"dim": "anecdote", "en": "Played piano in brothels as a teenager. Deeply attached to Clara Schumann after Robert's institutionalization — he never married. His 1st Symphony took 14 years, called 'Beethoven's Tenth.'", "zh": "少年在妓院彈鋼琴謀生。舒曼入院後與克拉拉情深，終身未娶。第一交響曲寫了 14 年，被稱「貝多芬第十」。", "tags": ["#romantic", "#brahms", "#anecdote"]}]}, {"parent": "R. Wagner", "parent_zh": "理查·華格納", "parent_years": "1813-1883", "period": "romantic", "dims": [{"dim": "period", "en": "Romantic (1815-1910)", "zh": "浪漫 (1815-1910)", "tags": ["#romantic", "#wagner", "#period"]}, {"dim": "style", "en": "Gesamtkunstwerk, leitmotif, endless melody, chromatic harmony", "zh": "總體藝術、主導動機、無盡旋律、半音和聲", "tags": ["#romantic", "#wagner", "#style"]}, {"dim": "work", "en": "The Ring of the Nibelung", "zh": "尼伯龍根的指環", "tags": ["#romantic", "#wagner", "#work"]}, {"dim": "title", "en": "Opera revolutionary, Gesamtkunstwerk pioneer", "zh": "歌劇革命家 / 整體藝術首創者", "tags": ["#romantic", "#wagner", "#title"]}, {"dim": "relation", "en": "← Weber (韋伯) [influence] ★\n← Liszt (李斯特) [friend] ★\n→ Cosima (柯西瑪) [other] married Liszt's daughter ★\n→ Brahms (布拉姆斯) [other] ★ mutual antagonism\n→ Verdi (威爾第) [other] born same year 1813 ★", "zh": "← 韋伯 [影響] ★\n← 李斯特 [友人] ★\n→ 柯西瑪 [其他] 娶李斯特之女 ★\n→ 布拉姆斯 [其他] ★ 互相對立\n→ 威爾第 [其他] 同年出生（1813）★", "tags": ["#romantic", "#wagner", "#relation", "#influence", "#friend", "#other", "#new-german-school"]}, {"dim": "anecdote", "en": "Married Cosima, daughter of Liszt. Built his own opera house (Bayreuth) to stage the Ring. His anti-Semitic writings later influenced Nazi ideology.", "zh": "娶李斯特（摯友）之女柯西瑪。自建拜羅伊特歌劇院上演《指環》。其反猶著作後來影響納粹思想。", "tags": ["#romantic", "#wagner", "#anecdote", "#new-german-school"]}]}, {"parent": "P.I. Tchaikovsky", "parent_zh": "彼得·伊里奇·柴可夫斯基", "parent_years": "1840-1893", "period": "romantic", "dims": [{"dim": "period", "en": "Romantic (1815-1910)", "zh": "浪漫 (1815-1910)", "tags": ["#romantic", "#tchaikovsky", "#period"]}, {"dim": "style", "en": "Russian melancholy, melodic gift, ballet orchestration", "zh": "俄國憂鬱、旋律天賦、芭蕾管弦配器", "tags": ["#romantic", "#tchaikovsky", "#style"]}, {"dim": "work", "en": "Symphony No. 6 'Pathétique'", "zh": "第六交響曲「悲愴」", "tags": ["#romantic", "#tchaikovsky", "#work"]}, {"dim": "title", "en": "Russian Romantic master of melody", "zh": "旋律大師", "tags": ["#romantic", "#tchaikovsky", "#title"]}, {"dim": "relation", "en": "← St. Petersburg Conservatory (聖彼得堡音樂院) [teacher-student] ★\n→ Moscow Conservatory (莫斯科音樂院) [other] taught ★\n← Nadezhda von Meck (梅克夫人) [other] patron 13 yrs, never met ★", "zh": "← 聖彼得堡音樂院 [師徒] ★\n→ 莫斯科音樂院 [其他] 任教 ★\n← 梅克夫人 [其他] 贊助13年從未見面 ★", "tags": ["#romantic", "#tchaikovsky", "#relation", "#teacher-student", "#other"]}, {"dim": "anecdote", "en": "His patron von Meck supported him for 13 years on condition they never meet. They exchanged hundreds of letters but never saw each other. Died 9 days after premiering the Pathétique.", "zh": "贊助人梅克夫人資助他 13 年，條件是永不相見。兩人通信數百封但從未謀面。首演《悲愴》後 9 天去世。", "tags": ["#romantic", "#tchaikovsky", "#anecdote"]}]}, {"parent": "G. Mahler", "parent_zh": "古斯塔夫·馬勒", "parent_years": "1860-1911", "period": "romantic", "dims": [{"dim": "period", "en": "Late Romantic → Modern", "zh": "晚期浪漫→現代", "tags": ["#romantic", "#modern", "#mahler", "#period"]}, {"dim": "style", "en": "Symphonic universality, death obsession, folk song integration, massive orchestration", "zh": "包羅萬象、死亡陰影、民歌融入、龐大編制", "tags": ["#romantic", "#modern", "#mahler", "#style"]}, {"dim": "work", "en": "Symphony No. 2 'Resurrection'", "zh": "第二交響曲「復活」", "tags": ["#romantic", "#modern", "#mahler", "#work"]}, {"dim": "title", "en": "Late Romantic symphonic giant", "zh": "晚期浪漫交響巨擘", "tags": ["#romantic", "#modern", "#mahler", "#title"]}, {"dim": "relation", "en": "→ Alma Mahler (阿爾瑪) [other] married ★", "zh": "→ 阿爾瑪 [其他] 結婚 ★", "tags": ["#romantic", "#modern", "#mahler", "#relation", "#other"]}, {"dim": "anecdote", "en": "Also a great opera conductor (director of Vienna Court Opera and NY Philharmonic). He said 'A symphony must be like the world — it must contain everything.'", "zh": "他也是偉大的歌劇指揮（維也納宮廷歌劇院總監、紐約愛樂指揮）。他說「交響曲必須像世界——必須包含一切。」", "tags": ["#romantic", "#modern", "#mahler", "#anecdote"]}]}, {"parent": "C. Debussy", "parent_zh": "阿希爾-克勞德·德布西", "parent_years": "1862-1918", "period": "modern", "dims": [{"dim": "period", "en": "Modern (1890-present)", "zh": "現代 (1890-present)", "tags": ["#modern", "#debussy", "#period"]}, {"dim": "style", "en": "Impressionism, tone color revolution, whole-tone and pentatonic scales", "zh": "印象主義、音色革命、全音階與五聲音階", "tags": ["#modern", "#debussy", "#style"]}, {"dim": "work", "en": "Prélude à l'après-midi d'un faune", "zh": "牧神午後前奏曲", "tags": ["#modern", "#debussy", "#work"]}, {"dim": "title", "en": "Master of Impressionism", "zh": "印象主義宗師", "tags": ["#modern", "#debussy", "#title"]}, {"dim": "relation", "en": "← Guiraud (吉羅) [teacher-student] ★\n← Satie (薩提) [friend] ★\n← Ballets Russes (俄羅斯芭蕾舞團) [other] commissioned ★", "zh": "← 吉羅 [師徒] ★\n← 薩提 [友人] ★\n← 俄羅斯芭蕾舞團 [其他] 委託 ★", "tags": ["#modern", "#debussy", "#relation", "#teacher-student", "#friend", "#other"]}, {"dim": "anecdote", "en": "His Prélude (1894) is considered the beginning of modern music. He hated the term 'Impressionism.' Influenced by Javanese gamelan at 1889 Paris Exposition.", "zh": "《牧神午後前奏曲》(1894) 被視為現代音樂的起點。他討厭「印象主義」標籤。1889 巴黎博覽會受爪哇甘美蘭影響。", "tags": ["#modern", "#debussy", "#anecdote"]}]}, {"parent": "M. Ravel", "parent_zh": "莫里斯·拉威爾", "parent_years": "1875-1937", "period": "modern", "dims": [{"dim": "period", "en": "Modern (1890-present)", "zh": "現代 (1890-present)", "tags": ["#modern", "#ravel", "#period"]}, {"dim": "style", "en": "Orchestral precision (Swiss watchmaker), neoclassical clarity, exoticism", "zh": "管弦樂精密（瑞士鐘錶匠）、新古典清晰、異國風情", "tags": ["#modern", "#ravel", "#style"]}, {"dim": "work", "en": "Boléro", "zh": "波萊羅舞曲", "tags": ["#modern", "#ravel", "#work"]}, {"dim": "title", "en": "Master of orchestration", "zh": "精巧管弦樂巨匠", "tags": ["#modern", "#ravel", "#title"]}, {"dim": "relation", "en": "← Fauré (佛瑞) [teacher-student] ★\n← Gershwin (蓋希文) [other] ★ — wanted to be Ravel's student; declined\n→ Vaughan Williams (佛漢·威廉斯) [teacher-student] ★\n→ Mussorgsky (穆索斯基) [other] orchestrated Pictures at an Exhibition ★", "zh": "← 佛瑞 [師徒] ★\n← 蓋希文 [其他] ★ — 想拜師被拒\n→ 佛漢·威廉斯 [師徒] ★\n→ 穆索斯基 [其他] 改編《展覽會之畫》 ★", "tags": ["#modern", "#ravel", "#relation", "#teacher-student", "#other"]}, {"dim": "anecdote", "en": "Boléro is one melody repeated with growing orchestration — he called it 'an experiment in a very special and limited direction.' He had dementia in his final years.", "zh": "《波萊羅》是一段旋律重複配器漸增——他自稱「一個非常特殊且有限方向的實驗」。晚年失智。", "tags": ["#modern", "#ravel", "#anecdote"]}]}, {"parent": "S. Rachmaninoff", "parent_zh": "謝爾蓋·拉赫曼尼諾夫", "parent_years": "1873-1943", "period": "modern", "dims": [{"dim": "period", "en": "Modern (Late Romantic)", "zh": "現代（晚期浪漫）", "tags": ["#modern", "#rachmaninoff", "#period"]}, {"dim": "style", "en": "Massive chords, Russian Orthodox bells, sweeping melodies, piano virtuosity", "zh": "巨手和弦、東正教鐘聲、寬廣旋律、鋼琴炫技", "tags": ["#modern", "#rachmaninoff", "#style"]}, {"dim": "work", "en": "Piano Concerto No. 2 (Op. 18)", "zh": "第二鋼琴協奏曲 Op. 18", "tags": ["#modern", "#rachmaninoff", "#work"]}, {"dim": "title", "en": "Last Russian Romantic", "zh": "晚期俄羅斯浪漫豐碑", "tags": ["#modern", "#rachmaninoff", "#title"]}, {"dim": "relation", "en": "← Scriabin (史克里亞賓) [friend] ★ — classmates at Moscow Conservatory\n← Moscow Conservatory (莫斯科音樂院) [teacher-student] ★", "zh": "← 史克里亞賓 [友人] ★ — 莫斯科音樂院同學\n← 莫斯科音樂院 [師徒] ★", "tags": ["#modern", "#rachmaninoff", "#relation", "#friend", "#teacher-student"]}, {"dim": "anecdote", "en": "After his 1st Symphony's disastrous premiere (1897), he fell into depression for 3 years. A hypnotherapist helped him recover, and he wrote his 2nd Piano Concerto as a comeback. He had huge hands spanning a 13th (octave + sixth).", "zh": "第一交響曲首演慘敗（1897）後抑鬱三年。催眠師幫他恢復，之後寫出第二鋼琴協奏曲東山再起。手極大，可跨十三度（八度+六度）。", "tags": ["#modern", "#rachmaninoff", "#anecdote"]}]}, {"parent": "B. Bartók", "parent_zh": "貝拉·巴爾托克", "parent_years": "1881-1945", "period": "modern", "dims": [{"dim": "period", "en": "Modern (1890-present)", "zh": "現代 (1890-present)", "tags": ["#modern", "#bartok", "#period"]}, {"dim": "style", "en": "Folk-inspired modernism, primitivist rhythm, golden ratio proportion", "zh": "民間原始律動、原始主義節奏、黃金分割比例", "tags": ["#modern", "#bartok", "#style"]}, {"dim": "work", "en": "Concerto for Orchestra (Sz. 116)", "zh": "管弦樂協奏曲 Sz. 116", "tags": ["#modern", "#bartok", "#work"]}, {"dim": "title", "en": "Pioneer of ethnomusicology", "zh": "民族音樂學先驅", "tags": ["#modern", "#bartok", "#title"]}, {"dim": "relation", "en": "→ Kodály (柯達伊) [friend] ★ — lifelong friend and fellow ethnomusicologist", "zh": "→ 柯達伊 [友人] ★ — 終生摯友與同為民族音樂學家", "tags": ["#modern", "#bartok", "#relation", "#friend"]}, {"dim": "anecdote", "en": "He and Kodály traveled with a phonograph recording peasant songs. He fled Nazi-allied Hungary to New York in 1940, where he died in poverty.", "zh": "他與柯達伊帶留聲機錄製農民歌。1940 年逃離親納粹匈牙利至紐約，在貧困中去世。", "tags": ["#modern", "#bartok", "#anecdote"]}]}, {"parent": "I. Stravinsky", "parent_zh": "伊果·史特拉汶斯基", "parent_years": "1882-1971", "period": "modern", "dims": [{"dim": "period", "en": "Modern (1890-present)", "zh": "現代 (1890-present)", "tags": ["#modern", "#stravinsky", "#period"]}, {"dim": "style", "en": "Primitivism → Neoclassicism → Serialism (style chameleon), rhythmic violence", "zh": "原始主義→新古典→序列主義（變色龍）、節奏暴力", "tags": ["#modern", "#stravinsky", "#style"]}, {"dim": "work", "en": "The Rite of Spring", "zh": "春之祭", "tags": ["#modern", "#stravinsky", "#work"]}, {"dim": "title", "en": "20th century chameleon", "zh": "二十世紀變色龍", "tags": ["#modern", "#stravinsky", "#title"]}, {"dim": "relation", "en": "← Rimsky-Korsakov (林姆斯基-高沙可夫) [teacher-student] ★\n← Ballets Russes (俄羅斯芭蕾舞團) [other] ★ — commissioned The Rite of Spring", "zh": "← 林姆斯基-高沙可夫 [師徒] ★\n← 俄羅斯芭蕾舞團 [其他] ★ — 委託《春之祭》", "tags": ["#modern", "#stravinsky", "#relation", "#teacher-student", "#other"]}, {"dim": "anecdote", "en": "The premiere of The Rite of Spring (1913) caused a riot in Paris — audience screamed, fought, and police were called.", "zh": "《春之祭》首演（1913）在巴黎引發暴動——觀眾尖叫、鬥毆、警察到場。", "tags": ["#modern", "#stravinsky", "#anecdote"]}]}, {"parent": "A. Schoenberg", "parent_zh": "阿諾德·荀白克", "parent_years": "1874-1951", "period": "modern", "dims": [{"dim": "period", "en": "Modern (1890-present)", "zh": "現代 (1890-present)", "tags": ["#modern", "#schoenberg", "#period"]}, {"dim": "style", "en": "Free atonality → Twelve-tone serialism, emancipation of dissonance", "zh": "自由無調性→十二音序列、不協和音解放", "tags": ["#modern", "#schoenberg", "#style"]}, {"dim": "work", "en": "Verklärte Nacht", "zh": "升華之夜", "tags": ["#modern", "#schoenberg", "#work"]}, {"dim": "title", "en": "Revolutionary of atonality", "zh": "無調性革命者", "tags": ["#modern", "#schoenberg", "#title"]}, {"dim": "relation", "en": "→ Berg (貝爾格) [teacher-student] ★\n→ Webern (魏本) [teacher-student] ★\n→ Zemlinsky (策姆林斯基) [teacher-student]", "zh": "→ 貝爾格 [師徒] ★\n→ 魏本 [師徒] ★\n→ 策姆林斯基 [師徒]", "tags": ["#modern", "#schoenberg", "#relation", "#teacher-student", "#second-vienna-school"]}, {"dim": "anecdote", "en": "He had triskaidekaphobia (fear of 13). Born on Sept 13, died on July 13, 1951. His twelve-tone method influenced nearly all 20th century art music.", "zh": "他有十三恐懼症。生於 9 月 13 日，卒於 1951 年 7 月 13 日。十二音方法影響了幾乎所有二十世紀藝術音樂。", "tags": ["#modern", "#schoenberg", "#anecdote", "#second-vienna-school"]}]}, {"parent": "D. Shostakovich", "parent_zh": "德米特里·蕭士塔高維奇", "parent_years": "1906-1975", "period": "modern", "dims": [{"dim": "period", "en": "Modern (1890-present)", "zh": "現代 (1890-present)", "tags": ["#modern", "#shostakovich", "#period"]}, {"dim": "style", "en": "Soviet Socialist Realism, irony, DSCH motif (D-E♭-C-B), death and terror", "zh": "蘇維埃現實主義、諷刺、DSCH 密碼、死亡與恐懼", "tags": ["#modern", "#shostakovich", "#style"]}, {"dim": "work", "en": "Symphony No. 5 (Op. 47)", "zh": "第五交響曲 Op. 47", "tags": ["#modern", "#shostakovich", "#work"]}, {"dim": "title", "en": "Symphony giant under the Iron Curtain", "zh": "鐵幕交響巨匠", "tags": ["#modern", "#shostakovich", "#title"]}, {"dim": "relation", "en": "← St. Petersburg Conservatory (聖彼得堡音樂院) [teacher-student] ★\n→ Khachaturian (哈察都量) [friend] ★", "zh": "← 聖彼得堡音樂院 [師徒] ★\n→ 哈察都量 [友人] ★", "tags": ["#modern", "#shostakovich", "#relation", "#teacher-student", "#friend"]}, {"dim": "anecdote", "en": "His opera Lady Macbeth was condemned by Stalin in Pravda (1936) as 'muddle instead of music.' He slept with a packed suitcase expecting arrest. His 5th Symphony was his 'creative reply.'", "zh": "歌劇《姆欽斯克的馬克白夫人》被史大林在《真理報》(1936) 批為「混亂而非音樂」。他帶著行李箱睡覺等被捕。第五交響曲是「創作回應」。", "tags": ["#modern", "#shostakovich", "#anecdote"]}]}, {"parent": "J. Williams", "parent_zh": "約翰·威廉姆斯", "parent_years": "1932-present", "period": "modern", "dims": [{"dim": "period", "en": "Modern (1890-present)", "zh": "現代 (1890-present)", "tags": ["#modern", "#williams", "#period"]}, {"dim": "style", "en": "Symphonic film scoring, leitmotif revival, Romantic orchestral language", "zh": "交響電影配樂、主導動機復興、浪漫管弦語言", "tags": ["#modern", "#williams", "#style"]}, {"dim": "work", "en": "Star Wars", "zh": "星球大戰主題交響曲", "tags": ["#modern", "#williams", "#work"]}, {"dim": "title", "en": "Hollywood symphonic giant", "zh": "好萊塢交響巨擘", "tags": ["#modern", "#williams", "#title"]}, {"dim": "anecdote", "en": "He revived the Romantic orchestral tradition in film, drawing directly from Wagner. 54 Oscar nominations (most of any living person). His leitmotif approach in Star Wars directly echoes Wagner's Ring.", "zh": "他在電影中復興浪漫管弦傳統，直接承襲華格納。54 次奧斯卡提名（在世最多）。《星戰》主導動機呼應華格納《指環》。", "tags": ["#modern", "#williams", "#anecdote"]}]}, {"parent": "P. Glass", "parent_zh": "菲利普·格拉斯", "parent_years": "1937-present", "period": "modern", "dims": [{"dim": "period", "en": "Modern (1890-present)", "zh": "現代 (1890-present)", "tags": ["#modern", "#glass", "#period"]}, {"dim": "style", "en": "Minimalism, repetitive modular structures, hypnotic accumulation", "zh": "極簡主義、重複模組結構、催眠疊加", "tags": ["#modern", "#glass", "#style"]}, {"dim": "work", "en": "Einstein on the Beach", "zh": "海灘上的愛因斯坦歌劇", "tags": ["#modern", "#glass", "#work"]}, {"dim": "title", "en": "Master of minimalism", "zh": "極簡主義宗師", "tags": ["#modern", "#glass", "#title"]}, {"dim": "anecdote", "en": "He worked as a plumber and taxi driver while composing in his 30s. Einstein on the Beach (1976) was 5 hours with no intermission and no plot.", "zh": "30 多歲時一邊作曲一邊做水管工和計程車司機。《海灘上的愛因斯坦》(1976) 長 5 小時無中場休息無劇情。", "tags": ["#modern", "#glass", "#anecdote"]}]}, {"parent": "Yo-Yo Ma", "parent_zh": "馬友友", "parent_years": "1955-present", "period": "modern", "dims": [{"dim": "period", "en": "Modern (1890-present)", "zh": "現代 (1890-present)", "tags": ["#modern", "#yo-yo-ma", "#period"]}, {"dim": "style", "en": "Cross-genre cello, Silk Road fusion, cultural diplomacy", "zh": "跨界大提琴、絲路融合、文化外交", "tags": ["#modern", "#yo-yo-ma", "#style"]}, {"dim": "work", "en": "Crouching Tiger, Hidden Dragon Cello Concerto (with Tan Dun)", "zh": "臥虎藏龍大提琴協奏曲（與譚盾合作）", "tags": ["#modern", "#yo-yo-ma", "#work"]}, {"dim": "title", "en": "Cello crossover master", "zh": "大提琴跨界宗師", "tags": ["#modern", "#yo-yo-ma", "#title"]}, {"dim": "anecdote", "en": "Born in Paris to Chinese parents, raised in USA. Child prodigy who played for JFK at age 7. Has recorded over 90 albums spanning Bach to Silk Road Ensemble to bluegrass.", "zh": "生於巴黎，中國父母，在美國長大。7 歲為甘迺迪總統演奏。錄製 90+ 專輯，橫跨巴赫到絲路合奏團到藍草音樂。", "tags": ["#modern", "#yo-yo-ma", "#anecdote"]}]}, {"parent": "Tan Dun", "parent_zh": "譚盾", "parent_years": "1957-present", "period": "modern", "dims": [{"dim": "period", "en": "Modern (1890-present)", "zh": "現代 (1890-present)", "tags": ["#modern", "#tan-dun", "#period"]}, {"dim": "style", "en": "Organic music, East-West fusion, multimedia spectacle", "zh": "有機樂派、東西融合、多媒體奇觀", "tags": ["#modern", "#tan-dun", "#style"]}, {"dim": "work", "en": "Crouching Tiger, Hidden Dragon film score", "zh": "臥虎藏龍電影配樂", "tags": ["#modern", "#tan-dun", "#work"]}, {"dim": "title", "en": "Organic music pioneer", "zh": "有機樂派宗師", "tags": ["#modern", "#tan-dun", "#title"]}, {"dim": "anecdote", "en": "He uses water, paper, and stone as instruments ('organic music'). Won Oscar for Crouching Tiger score. Studied at Beijing Central Conservatory, then Columbia University.", "zh": "他用水、紙、石頭當樂器（有機音樂）。以《臥虎藏龍》配樂獲奧斯卡。先後就讀北京中央音樂院和哥倫比亞大學。", "tags": ["#modern", "#tan-dun", "#anecdote"]}]}];
+
+const DECKS = [
+  { id:'orchestra', name:'管弦樂樂器', data:ORCHESTRA_DATA },
+  { id:'composers', name:'作曲家圖譜', data:COMPOSERS_DATA }
+];
+
+// ==================== STATE ====================
+let currentDeckId = 'orchestra';
+let currentParentIdx = 0;
+let currentDimIdx = 0;
+let activeTags = [];
+let isZh = true;
+let cardOrder = [];
+let masteryData = {}; // {deckId: {parentIdx_dimIdx: {level, nextReview}}
+
+// Quiz state
+let quizCards = [];
+let quizIdx = 0;
+
+// Match state
+let matchSelected = [];
+let matchMatched = 0;
+let matchStartTime = 0;
+let matchTimerInterval = null;
+
+// ==================== INIT ====================
+function init() {
+  loadMastery();
+  populateDeckSelector();
+  buildTagFilter();
+  resetCardOrder();
+  updateFlashcard();
+  // Theme
+  const savedTheme = localStorage.getItem('orchestra_theme') || 'light';
+  if (savedTheme === 'dark') document.body.setAttribute('data-theme','dark');
+  document.getElementById('themeBtn').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+  // Lang
+  const savedLang = localStorage.getItem('orchestra_lang');
+  if (savedLang) isZh = savedLang === 'zh';
+  document.getElementById('langBtn').textContent = isZh ? '中' : 'EN';
+}
+
+function getDeck() { return DECKS.find(d => d.id === currentDeckId); }
+function getData() { return getDeck().data; }
+
+function populateDeckSelector() {
+  const sel = document.getElementById('deckSelector');
+  sel.innerHTML = DECKS.map(d => `<option value="${d.id}" ${d.id===currentDeckId?'selected':''}>${d.name} (${d.data.length})</option>`).join('');
+}
+
+function switchDeck(id) {
+  currentDeckId = id;
+  currentParentIdx = 0;
+  currentDimIdx = 0;
+  activeTags = [];
+  resetCardOrder();
+  buildTagFilter();
+  updateFlashcard();
+  // Re-apply mode
+  const mode = document.querySelector('.mode-btn.active');
+  if (mode) switchMode(mode.dataset.mode);
+}
+
+// ==================== CARD ORDER ====================
+function resetCardOrder() {
+  const data = getData();
+  cardOrder = [];
+  for (let p = 0; p < data.length; p++) {
+    for (let d = 0; d < data[p].dims.length; d++) {
+      cardOrder.push({parent:p, dim:d});
+    }
+  }
+  // Shuffle
+  for (let i = cardOrder.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cardOrder[i], cardOrder[j]] = [cardOrder[j], cardOrder[i]];
+  }
+}
+
+function getFilteredCards() {
+  if (activeTags.length === 0) return cardOrder;
+  return cardOrder.filter(c => {
+    const card = getData()[c.parent].dims[c.dim];
+    return activeTags.every(tag => (card.tags || []).includes(tag));
+  });
+}
+
+// ==================== TAG FILTER ====================
+function buildTagFilter() {
+  const data = getData();
+  const allTags = new Set();
+  data.forEach(parent => {
+    parent.dims.forEach(dim => {
+      (dim.tags || []).forEach(tag => allTags.add(tag));
+    });
+  });
+  // Group tags
+  const groups = {};
+  const tagOrder = ['#woodwind','#brass','#strings','#percussion','#keyboard','#sax','#baroque','#classical','#romantic','#modern','#transposition','#range','#clef','#reed','#tuning','#ensemble','#period','#style','#work','#title','#relation','#anecdote','#concept'];
+  const sortedTags = [...allTags].sort((a,b) => {
+    const ia = tagOrder.indexOf(a); const ib = tagOrder.indexOf(b);
+    if (ia !== -1 && ib !== -1) return ia - ib;
+    if (ia !== -1) return -1;
+    if (ib !== -1) return 1;
+    return a.localeCompare(b);
+  });
+  const chips = sortedTags.map(tag => {
+    const active = activeTags.includes(tag) ? ' active' : '';
+    return `<span class="tag-chip${active}" onclick="toggleTag('${tag}')">${tag}</span>`;
+  }).join('');
+  document.getElementById('tagChips').innerHTML = chips;
+}
+
+function toggleTagFilter() {
+  const chips = document.getElementById('tagChips');
+  const toggle = document.getElementById('tagFilterToggle');
+  if (chips.style.display === 'none') {
+    chips.style.display = 'flex';
+    toggle.textContent = '▲ 收合';
+  } else {
+    chips.style.display = 'none';
+    toggle.textContent = '▼ 展開';
+  }
+}
+
+function updateTagFilterToggle() {
+  const toggle = document.getElementById('tagFilterToggle');
+  const chips = document.getElementById('tagChips');
+  const count = activeTags.length;
+  if (chips.style.display === 'none') {
+    toggle.textContent = count > 0 ? '▼ 展開 (' + count + ' 已選)' : '▼ 展開';
+  } else {
+    toggle.textContent = '▲ 收合';
+  }
+}
+
+function toggleTag(tag) {
+  const idx = activeTags.indexOf(tag);
+  if (idx >= 0) activeTags.splice(idx, 1);
+  else activeTags.push(tag);
+  buildTagFilter();
+  // Update toggle text to show active count
+  updateTagFilterToggle();
+  // Reset to first card in filtered set
+  const filtered = getFilteredCards();
+  if (filtered.length > 0) {
+    currentParentIdx = filtered[0].parent;
+    currentDimIdx = filtered[0].dim;
+  }
+  updateFlashcard();
+}
+
+// ==================== FLASHCARD ====================
+function updateFlashcard() {
+  const data = getData();
+  const filtered = getFilteredCards();
+  
+  if (filtered.length === 0) {
+    document.getElementById('cardParent').textContent = '無符合卡片';
+    document.getElementById('cardFront').textContent = '請調整標籤篩選';
+    document.getElementById('cardBack').textContent = '';
+    document.getElementById('cardTotal').textContent = '0';
+    document.getElementById('dimTabs').innerHTML = '';
+    return;
+  }
+  
+  // Find current card in filtered list
+  let currentCardIdx = filtered.findIndex(c => c.parent === currentParentIdx && c.dim === currentDimIdx);
+  if (currentCardIdx < 0) currentCardIdx = 0;
+  const card = filtered[currentCardIdx];
+  currentParentIdx = card.parent;
+  currentDimIdx = card.dim;
+  
+  const parent = data[currentParentIdx];
+  const dim = parent.dims[currentDimIdx];
+  
+  // Dimension tabs
+  const tabs = parent.dims.map((d, i) => {
+    const active = i === currentDimIdx ? ' active' : '';
+    return `<span class="dim-tab${active}" onclick="selectDim(${i})">${isZh ? d.dim : d.dim}</span>`;
+  }).join('');
+  document.getElementById('dimTabs').innerHTML = tabs;
+  
+  // Parent info
+  document.getElementById('cardParent').textContent = parent.parent;
+  document.getElementById('cardParentZh').textContent = parent.parent_zh || '';
+  document.getElementById('cardYears').textContent = parent.parent_years || '';
+  
+  // Dimension label
+  const dimLabel = dim.dim.charAt(0).toUpperCase() + dim.dim.slice(1);
+  document.getElementById('cardDimLabel').textContent = dimLabel;
+  document.getElementById('cardDimLabelBack').textContent = dimLabel;
+  
+  // Content: front = question only, back = answer (both languages)
+  const frontText = '?';  // Just a question mark, the question is already shown by parent name + dim label
+  const backText = '<div style="font-size:18px;font-weight:600;margin-bottom:8px;">' + dim.zh + '</div><div style="font-size:14px;color:var(--text-secondary);">' + dim.en + '</div>';
+  document.getElementById('cardFront').innerHTML = frontText;
+  document.getElementById('cardBack').innerHTML = backText;
+  
+  // Tags
+  document.getElementById('cardTags').innerHTML = (dim.tags || []).map(t => `<span class="card-tag">${t}</span>`).join('');
+  
+  // Counter
+  document.getElementById('cardCurrent').textContent = currentCardIdx + 1;
+  document.getElementById('cardTotal').textContent = filtered.length;
+  document.getElementById('flashProgress').style.width = ((currentCardIdx + 1) / filtered.length * 100) + '%';
+  
+  // Nav buttons
+  document.getElementById('prevBtn').disabled = currentCardIdx === 0;
+  document.getElementById('nextBtn').disabled = currentCardIdx === filtered.length - 1;
+  
+  // Unflip
+  document.getElementById('flashcard').classList.remove('flipped');
+  
+  // Mastery indicator
+  const m = getMastery(currentDeckId, currentParentIdx, currentDimIdx);
+  // Could add visual indicator here
+}
+
+function selectDim(idx) {
+  currentDimIdx = idx;
+  updateFlashcard();
+}
+
+function flipCard() {
+  document.getElementById('flashcard').classList.toggle('flipped');
+}
+
+function nextCard() {
+  const filtered = getFilteredCards();
+  let idx = filtered.findIndex(c => c.parent === currentParentIdx && c.dim === currentDimIdx);
+  if (idx < filtered.length - 1) {
+    idx++;
+    currentParentIdx = filtered[idx].parent;
+    currentDimIdx = filtered[idx].dim;
+    updateFlashcard();
+  }
+}
+
+function prevCard() {
+  const filtered = getFilteredCards();
+  let idx = filtered.findIndex(c => c.parent === currentParentIdx && c.dim === currentDimIdx);
+  if (idx > 0) {
+    idx--;
+    currentParentIdx = filtered[idx].parent;
+    currentDimIdx = filtered[idx].dim;
+    updateFlashcard();
+  }
+}
+
+function shuffleCards() {
+  resetCardOrder();
+  updateFlashcard();
+  showToast('已洗牌');
+}
+
+// ==================== MASTERY ====================
+function loadMastery() {
+  try {
+    const saved = localStorage.getItem('orchestra_mastery');
+    if (saved) masteryData = JSON.parse(saved);
+  } catch(e) { masteryData = {}; }
+}
+
+function saveMastery() {
+  localStorage.setItem('orchestra_mastery', JSON.stringify(masteryData));
+}
+
+function getMastery(deckId, parentIdx, dimIdx) {
+  const key = deckId + '_' + parentIdx + '_' + dimIdx;
+  return masteryData[key] || { level: 0, nextReview: 0 };
+}
+
+function markMastery(correct) {
+  const key = currentDeckId + '_' + currentParentIdx + '_' + currentDimIdx;
+  const m = masteryData[key] || { level: 0, nextReview: 0 };
+  if (correct) {
+    m.level = Math.min(4, m.level + 1);
+  } else {
+    m.level = Math.max(0, m.level - 2);
+  }
+  const now = Date.now();
+  const intervals = [0, 1, 3, 7, 14, 30]; // days
+  m.nextReview = now + (intervals[m.level] || 0) * 86400000;
+  masteryData[key] = m;
+  saveMastery();
+  showToast(correct ? '✅ 已標記會' : '❌ 已標記不會');
+  nextCard();
+}
+
+// ==================== MODE SWITCHING ====================
+function switchMode(mode) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`[data-mode="${mode}"]`);
+  if (btn) btn.classList.add('active');
+  
+  document.querySelectorAll('.main > div').forEach(d => {
+    if (d.id !== 'tagFilter') d.classList.add('hidden');
+  });
+  
+  const modeMap = {
+    flashcard:'flashcardMode', quiz:'quizMode', weakness:'weaknessMode',
+    learn:'learnMode', match:'matchMode', list:'listMode', dashboard:'dashboardMode'
+  };
+  const el = document.getElementById(modeMap[mode]);
+  if (el) el.classList.remove('hidden');
+  
+  if (mode === 'quiz') startQuiz(false);
+  if (mode === 'weakness') startQuiz(true);
+  if (mode === 'learn') startLearn();
+  if (mode === 'match') startMatch();
+  if (mode === 'list') initList();
+  if (mode === 'dashboard') updateDashboard();
+}
+
+// ==================== QUIZ ====================
+function startQuiz(weakOnly) {
+  const filtered = getFilteredCards();
+  quizCards = weakOnly ? filtered.filter(c => {
+    const m = getMastery(currentDeckId, c.parent, c.dim);
+    return m.level < 3;
+  }) : filtered.slice();
+  
+  if (quizCards.length === 0) {
+    const el = document.getElementById(weakOnly ? 'weakContent' : 'quizContent');
+    el.innerHTML = '<div class="quiz-card"><p>沒有卡片！🎉</p></div>';
+    return;
+  }
+  
+  // Shuffle
+  for (let i = quizCards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [quizCards[i], quizCards[j]] = [quizCards[j], quizCards[i]];
+  }
+  
+  quizIdx = 0;
+  renderQuizCard(weakOnly);
+}
+
+function renderQuizCard(weakOnly) {
+  const data = getData();
+  const card = quizCards[quizIdx];
+  const parent = data[card.parent];
+  const dim = parent.dims[card.dim];
+  
+  const prefix = weakOnly ? 'weak' : 'quiz';
+  document.getElementById(prefix + 'Current').textContent = quizIdx + 1;
+  document.getElementById(prefix + 'Total').textContent = quizCards.length;
+  const progEl = document.getElementById(prefix + 'Progress');
+  if (progEl) progEl.style.width = ((quizIdx + 1) / quizCards.length * 100) + '%';
+  
+  const dimLabel = dim.dim.charAt(0).toUpperCase() + dim.dim.slice(1);
+  // Front: question only (no answer shown). Back: answer in both languages
+  const answerText = '<div style="font-size:18px;font-weight:600;margin-bottom:8px;">' + dim.zh + '</div><div style="font-size:14px;color:var(--text-secondary);">' + dim.en + '</div>';
+  
+  const el = document.getElementById(weakOnly ? 'weakContent' : 'quizContent');
+  el.innerHTML = `
+    <div class="quiz-card">
+      <div class="card-parent-name">${parent.parent}</div>
+      <div class="card-parent-zh">${parent.parent_zh || ''} ${parent.parent_years || ''}</div>
+      <div class="card-dim-label">${dimLabel}</div>
+      <div id="${prefix}FlipBtn" style="margin-top:16px;">
+        <button class="mastery-btn correct" onclick="document.getElementById('${prefix}Answer').classList.remove('hidden');document.getElementById('${prefix}FlipBtn').classList.add('hidden');">👁️ 看答案</button>
+      </div>
+      <div id="${prefix}Answer" class="hidden" style="margin-top:12px;">
+        <div class="card-content" style="color:var(--primary);font-weight:600;">${answerText}</div>
+        <div style="display:flex;gap:8px;margin-top:16px;justify-content:center;">
+          <button class="mastery-btn wrong" onclick="quizAnswer(false,${weakOnly})">❌ 不會</button>
+          <button class="mastery-btn correct" onclick="quizAnswer(true,${weakOnly})">✅ 會</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function quizAnswer(correct, weakOnly) {
+  const card = quizCards[quizIdx];
+  const key = currentDeckId + '_' + card.parent + '_' + card.dim;
+  const m = masteryData[key] || { level:0, nextReview:0 };
+  if (correct) m.level = Math.min(4, m.level + 1);
+  else m.level = Math.max(0, m.level - 2);
+  const intervals = [0,1,3,7,14,30];
+  m.nextReview = Date.now() + (intervals[m.level]||0) * 86400000;
+  masteryData[key] = m;
+  saveMastery();
+  
+  quizIdx++;
+  if (quizIdx >= quizCards.length) {
+    const el = document.getElementById(weakOnly ? 'weakContent' : 'quizContent');
+    el.innerHTML = `<div class="quiz-card"><h2>完成！🎉</h2><p>${quizCards.length} 張卡片已完成</p></div>`;
+  } else {
+    renderQuizCard(weakOnly);
+  }
+}
+
+// ==================== LEARN (4-choice) ====================
+function startLearn() {
+  const filtered = getFilteredCards();
+  if (filtered.length < 4) {
+    document.getElementById('learnContent').innerHTML = '<div class="quiz-card"><p>需要至少 4 張卡片才能進行學習模式</p></div>';
+    return;
+  }
+  
+  const idx = Math.floor(Math.random() * filtered.length);
+  const card = filtered[idx];
+  const parent = getData()[card.parent];
+  const dim = parent.dims[card.dim];
+  const correctAnswer = dim.zh + ' / ' + dim.en;
+  const dimLabel = dim.dim.charAt(0).toUpperCase() + dim.dim.slice(1);
+  
+  // Generate 3 wrong answers from same dimension only
+  const sameDimPool = filtered.filter(c => {
+    const cd = getData()[c.parent].dims[c.dim];
+    return cd.dim === dim.dim;
+  });
+  const pool = sameDimPool.length >= 4 ? sameDimPool : filtered;
+  const wrongs = [];
+  let attempts = 0;
+  while (wrongs.length < 3 && attempts < 50) {
+    const r = pool[Math.floor(Math.random() * pool.length)];
+    const rDim = getData()[r.parent].dims[r.dim];
+    const rAns = rDim.zh + ' / ' + rDim.en;
+    if (rAns !== correctAnswer && !wrongs.includes(rAns)) wrongs.push(rAns);
+    attempts++;
+  }
+  
+  const options = [correctAnswer, ...wrongs].sort(() => Math.random() - 0.5);
+  
+  document.getElementById('learnContent').innerHTML = `
+    <div class="quiz-card">
+      <div class="card-parent-name">${parent.parent}</div>
+      <div class="card-parent-zh">${parent.parent_zh || ''} ${parent.parent_years || ''}</div>
+      <div class="card-dim-label">${dimLabel}</div>
+      <p style="font-size:14px;color:var(--text-secondary);margin-top:12px;">選出正確答案：</p>
+      <div class="options">
+        ${options.map((opt, i) => `<button class="option-btn" onclick="learnAnswer(${i},${options.indexOf(correctAnswer)},this)">${opt}</button>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function learnAnswer(selected, correct, btn) {
+  const buttons = document.querySelectorAll('.option-btn');
+  buttons.forEach(b => b.disabled = true);
+  if (selected === correct) {
+    btn.classList.add('correct');
+    showToast('✅ 正確！');
+  } else {
+    btn.classList.add('wrong');
+    buttons[correct].classList.add('correct');
+    showToast('❌ 正確答案: ' + buttons[correct].textContent);
+  }
+  setTimeout(startLearn, 2000);
+}
+
+// ==================== MATCH ====================
+function startMatch() {
+  const filtered = getFilteredCards();
+  if (filtered.length < 6) {
+    document.getElementById('matchGrid').innerHTML = '<p style="text-align:center;">需要至少 6 張卡片</p>';
+    return;
+  }
+  
+  // Pick 6 random cards, ensure unique answers
+  const pool = [];
+  const seen = new Set();
+  const shuffled = filtered.slice().sort(() => Math.random() - 0.5);
+  for (const c of shuffled) {
+    const dim = getData()[c.parent].dims[c.dim];
+    const ans = dim.zh + ' / ' + dim.en;
+    const term = (getData()[c.parent].parent + ' — ' + dim.dim);
+    if (!seen.has(ans)) {
+      seen.add(ans);
+      pool.push({term, answer: ans});
+    }
+    if (pool.length >= 6) break;
+  }
+  
+  if (pool.length < 6) {
+    document.getElementById('matchGrid').innerHTML = '<p style="text-align:center;">卡片答案重複過多，無法配對</p>';
+    return;
+  }
+  
+  const terms = pool.map((p, i) => ({text: p.term, type: 'term', idx: i}));
+  const answers = pool.map((p, i) => ({text: p.answer, type: 'answer', idx: i}));
+  const all = [...terms, ...answers].sort(() => Math.random() - 0.5);
+  
+  matchSelected = [];
+  matchMatched = 0;
+  matchStartTime = Date.now();
+  if (matchTimerInterval) clearInterval(matchTimerInterval);
+  matchTimerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - matchStartTime) / 1000);
+    const min = String(Math.floor(elapsed / 60)).padStart(2, '0');
+    const sec = String(elapsed % 60).padStart(2, '0');
+    document.getElementById('matchTimer').textContent = '⏱️ ' + min + ':' + sec;
+  }, 1000);
+  
+  document.getElementById('matchGrid').innerHTML = all.map((c, i) => 
+    `<div class="match-card" data-idx="${c.idx}" data-type="${c.type}" data-pos="${i}" onclick="matchClick(${i})">${c.text}</div>`
+  ).join('');
+}
+
+function matchClick(pos) {
+  const card = document.querySelector(`.match-card[data-pos="${pos}"]`);
+  if (card.classList.contains('matched') || card.classList.contains('selected')) return;
+  
+  card.classList.add('selected');
+  matchSelected.push(pos);
+  
+  if (matchSelected.length === 2) {
+    const c1 = document.querySelector(`.match-card[data-pos="${matchSelected[0]}"]`);
+    const c2 = document.querySelector(`.match-card[data-pos="${matchSelected[1]}"]`);
+    
+    if (c1.dataset.idx === c2.dataset.idx && c1.dataset.type !== c2.dataset.type) {
+      c1.classList.add('matched');
+      c2.classList.add('matched');
+      matchMatched++;
+      if (matchMatched === 6) {
+        clearInterval(matchTimerInterval);
+        showToast('🎉 全部配對完成！');
+      }
+    } else {
+      setTimeout(() => {
+        c1.classList.remove('selected');
+        c2.classList.remove('selected');
+      }, 500);
+    }
+    matchSelected = [];
+  }
+}
+
+// ==================== LIST ====================
+function initList() {
+  const data = getData();
+  const search = document.getElementById('listSearch').value.toLowerCase();
+  const items = data.map((parent, pi) => {
+    const matchParent = !search || parent.parent.toLowerCase().includes(search) || (parent.parent_zh || '').toLowerCase().includes(search);
+    const childMatch = parent.dims.some(d => {
+      const en = (d.en || '').toLowerCase();
+      const zh = (d.zh || '').toLowerCase();
+      return en.includes(search) || zh.includes(search);
+    });
+    if (search && !matchParent && !childMatch) return '';
+    const children = parent.dims.map((d, di) => {
+      const show = !search || (d.en || '').toLowerCase().includes(search) || (d.zh || '').toLowerCase().includes(search) || matchParent;
+      if (!show) return '';
+      return `<div class="list-child"><strong>${d.dim}:</strong> ${isZh ? d.zh : d.en} ${!isZh ? '(' + d.zh + ')' : '(' + d.en + ')'}</div>`;
+    }).join('');
+    return `<div class="list-item">
+      <div class="list-parent" onclick="this.nextElementSibling.classList.toggle('hidden')">${parent.parent} ${parent.parent_zh ? '(' + parent.parent_zh + ')' : ''} ${parent.parent_years ? parent.parent_years : ''}</div>
+      <div class="list-children">${children}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('listItems').innerHTML = items || '<p>無結果</p>';
+}
+
+function filterList() { initList(); }
+
+// ==================== DASHBOARD ====================
+function updateDashboard() {
+  const data = getData();
+  let total = 0, mastered = 0, stable = 0, unstable = 0, unseen = 0;
+  data.forEach((parent, pi) => {
+    parent.dims.forEach((dim, di) => {
+      total++;
+      const m = getMastery(currentDeckId, pi, di);
+      if (m.level === 0) unseen++;
+      else if (m.level === 1) unstable++;
+      else if (m.level === 2) unstable++;
+      else if (m.level === 3) stable++;
+      else if (m.level >= 4) mastered++;
+    });
+  });
+  
+  document.getElementById('dashStats').innerHTML = `
+    <div class="dash-card"><div class="dash-number">${total}</div><div class="dash-label">總子卡數</div></div>
+    <div class="dash-card"><div class="dash-number" style="color:var(--text-secondary)">${unseen}</div><div class="dash-label">🔴 未見過</div></div>
+    <div class="dash-card"><div class="dash-number" style="color:var(--warning)">${unstable}</div><div class="dash-label">🟡 不穩</div></div>
+    <div class="dash-card"><div class="dash-number" style="color:var(--success)">${stable}</div><div class="dash-label">🟢 穩定</div></div>
+    <div class="dash-card"><div class="dash-number" style="color:var(--primary)">${mastered}</div><div class="dash-label">✅ 已掌握</div></div>
+  `;
+}
+
+// ==================== UI HELPERS ====================
+function toggleTheme() {
+  const isDark = document.body.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    document.body.removeAttribute('data-theme');
+    localStorage.setItem('orchestra_theme', 'light');
+    document.getElementById('themeBtn').textContent = '🌙';
+  } else {
+    document.body.setAttribute('data-theme', 'dark');
+    localStorage.setItem('orchestra_theme', 'dark');
+    document.getElementById('themeBtn').textContent = '☀️';
+  }
+}
+
+function toggleLang() {
+  isZh = !isZh;
+  localStorage.setItem('orchestra_lang', isZh ? 'zh' : 'en');
+  document.getElementById('langBtn').textContent = isZh ? '中' : 'EN';
+  updateFlashcard();
+}
+
+function speakCurrent() {
+  if (!('speechSynthesis' in window)) return;
+  const data = getData();
+  const card = data[currentParentIdx];
+  const dim = card.dims[currentDimIdx];
+  const text = isZh ? dim.zh : dim.en;
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = isZh ? 'zh-CN' : 'en-US';
+  try { speechSynthesis.cancel(); speechSynthesis.speak(utter); } catch(e) {}
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ==================== HELP ====================
+function openHelp(){const o=document.getElementById('helpOverlay');if(o)o.classList.add('show');}
+function closeHelp(){const o=document.getElementById('helpOverlay');if(o)o.classList.remove('show');}
+
+// First-time visitor: show help automatically
+if(!localStorage.getItem('orchestra_visited')){
+  setTimeout(()=>openHelp(),500);
+  localStorage.setItem('orchestra_visited','1');
+}
+
+// ==================== START ====================
+init();
+</script>
+
+<!-- Help Overlay -->
+<div class="help-overlay" id="helpOverlay" onclick="if(event.target===this)closeHelp()">
+  <div class="help-modal">
+    <div class="help-title">🎼 管弦樂閃卡 — 樂器 × 作曲家雙牌組</div>
+    <div class="help-subtitle">每張卡不是孤立的「術語→翻譯」，而是「主題 × 維度」的知識網格</div>
+    <div class="help-first-hint">
+      💡 <strong>第一次使用？</strong>上方下拉選單切換牌組（管弦樂器 / 作曲家圖譜）→ 進入「閃卡」模式翻卡 → 每張卡正面顯示主題名+維度標籤，翻面看答案。按 ❌/✅ 記錄掌握度，系統自動安排複習。
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">🎴 七種學習模式</div>
+      <div class="help-item"><div class="help-item-icon">🎴</div><div class="help-item-text"><strong>閃卡</strong>：逐張翻卡學習。正面 = 主題名 + 維度標籤 + ❓；翻面 = 中英雙語答案。按 ✅/❌ 標記掌握度。</div></div>
+      <div class="help-item"><div class="help-item-icon">📖</div><div class="help-item-text"><strong>學習</strong>：4 選 1 選擇題。看主題+維度選答案，選項從同維度卡片中抽取（類型相同、長度接近才難猜）。</div></div>
+      <div class="help-item"><div class="help-item-icon">⚡</div><div class="help-item-text"><strong>弱點專練</strong>：只抽掌握度為 🔴 未見過 / 🟡 不穩 的卡片，集中衝刺。</div></div>
+      <div class="help-item"><div class="help-item-icon">🧠</div><div class="help-item-text"><strong>測驗</strong>：逐張翻卡自評 ✅/❌，系統追蹤掌握度並安排間隔複習。</div></div>
+      <div class="help-item"><div class="help-item-icon">🎯</div><div class="help-item-text"><strong>配對</strong>：計時配對遊戲。把術語和答案翻牌配對，挑戰最短時間。</div></div>
+      <div class="help-item"><div class="help-item-icon">📋</div><div class="help-item-text"><strong>列表</strong>：一次性瀏覽所有卡片的正面+背面，快速掃讀。</div></div>
+      <div class="help-item"><div class="help-item-icon">📊</div><div class="help-item-text"><strong>儀表板</strong>：顯示當前牌組的掌握度分佈（🔴未見過→🟡不穩→🟢穩定），以及總卡片數。</div></div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">🧩 核心系統：維度制</div>
+      <div class="help-item"><div class="help-item-icon">📐</div><div class="help-item-text"><strong>什麼是維度？</strong>每個主題（如「小提琴」「巴赫」）不只有一個答案，而是由多個維度組成。例如小提琴的維度：音域、移調、譜號、運弓、演奏人數等。</div></div>
+      <div class="help-item"><div class="help-item-icon">🔀</div><div class="help-item-text"><strong>測驗選項邏輯</strong>：4 選 1 的錯誤選項只從「同一維度」的其他卡片抽取，而非全部卡池。這樣選項類型相同、長度接近，無法靠排除法猜對。</div></div>
+      <div class="help-item"><div class="help-item-icon">🏷️</div><div class="help-item-text"><strong>標籤篩選</strong>：頁面頂部的標籤欄可按標籤篩選卡片（如 #woodwind、#baroque、#transposing）。收合/展開點擊標題列即可。</div></div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">📊 掌握度三色系統</div>
+      <div class="help-item"><div class="help-item-icon">🔴</div><div class="help-item-text"><strong>未見過</strong>：從未翻過這張卡。預設狀態。</div></div>
+      <div class="help-item"><div class="help-item-icon">🟡</div><div class="help-item-text"><strong>不穩</strong>：翻過但答錯過，或掌握度尚未穩定。需要複習。</div></div>
+      <div class="help-item"><div class="help-item-icon">🟢</div><div class="help-item-text"><strong>穩定</strong>：多次答對，已進入間隔複習排程（1天→3天→7天→14天→30天）。</div></div>
+      <div class="help-item"><div class="help-item-icon">💾</div><div class="help-item-text"><strong>自動儲存</strong>：所有掌握度數據存在瀏覽器 localStorage，下次打開自動恢復。換裝置需重新累積。</div></div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">📚 兩個牌組簡介</div>
+      <div class="help-item"><div class="help-item-icon">🎻</div><div class="help-item-text"><strong>管弦樂器</strong>：木管、銅管、弦樂、打擊樂四大家族，每件樂器含音域、移調、譜號、簧片類型、編制人數等維度。附帶樂器間兼奏原則、移調對照表等概念卡。</div></div>
+      <div class="help-item"><div class="help-item-icon">👤</div><div class="help-item-text"><strong>作曲家圖譜</strong>：從蒙台威爾第到譚盾，31位作曲家的時期、風格、代表作、師徒關係、軼事。關係維度串起作曲家之間的影響鏈。</div></div>
+    </div>
+
+    <button class="help-close-btn" onclick="closeHelp()">開始使用！</button>
+  </div>
+</div>
+
+</body>
+</html>
