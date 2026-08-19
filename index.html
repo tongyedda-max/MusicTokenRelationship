@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的多網站導航平台</title>
+    <title>音樂學習與代幣平台</title>
     <style>
-        /* 讓整個視窗沒有邊距，隱藏瀏覽器預設滾動條 */
         html, body {
             margin: 0;
             padding: 0;
@@ -13,27 +12,152 @@
             height: 100%;
             overflow: hidden;
             font-family: Arial, sans-serif;
+            background-color: #000;
         }
 
-        /* 💡 上方滿版的大框框，用來顯示各個網站 */
+        /* 上方網頁顯示區域（扣除底部控制條的 50px） */
         .site-container {
             width: 100%;
-            /* 扣除底部導覽列 60px 的高度，其餘全滿 */
-            height: calc(100% - 60px); 
+            height: calc(100% - 50px); 
             border: none;
+            background-color: #fff;
         }
 
-        /* 💡 永遠固定在最下方的導覽列 */
-        .bottom-nav {
+        /* 💡 永遠固定在最底部的「選單開關控制條」 */
+        .menu-trigger-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 60px;
-            background-color: #4a4141;
+            height: 50px;
+            background-color: #111; /* 黑色高質感 */
+            color: #fff;
             display: flex;
-            justify-content: space-around;
+            justify-content: center;
             align-items: center;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10000; /* 保證在最上層 */
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+            border-top: 1px solid #333;
+        }
+
+        /* 💡 可摺疊的直式導覽選單（支援長文字，點擊展開） */
+        .foldable-nav {
+            position: fixed;
+            bottom: 50px; /* 從控制條上方開始 */
+            left: 0;
+            width: 100%;
+            max-height: calc(100% - 50px); /* 防止按鈕太多超出螢幕 */
+            overflow-y: auto; /* 按鈕如果太多可以上下滾動 */
+            background-color: #1a1a1a;
+            display: flex;
+            flex-direction: column; /* 直式排列，字再長都不會卡住 */
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+            z-index: 9999;
+            transition: transform 0.3s ease-in-out; /* 順暢的滑動動畫 */
+            transform: translateY(110%); /* 預設隱藏在螢幕下方 */
+        }
+
+        /* 當啟動 .show 時，選單會往上滑出顯示 */
+        .foldable-nav.show {
+            transform: translateY(0);
+        }
+
+        /* 選單內每個項目的樣式 */
+        .foldable-nav button, .foldable-nav a {
+            background: none;
+            border: none;
+            border-bottom: 1px solid #2a2a2a; /* 項目之間的分隔線 */
+            color: #bbb !important;
+            font-size: 16px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 15px 20px; /* 加大點擊範圍，手機更好按 */
+            box-sizing: border-box;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        /* 滑鼠移過去或選中時的高亮變色 */
+        .foldable-nav button:hover, .foldable-nav a:hover,
+        .foldable-nav button.active-btn {
+            color: #fff !important;
+            background-color: #333;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ─── 🌐 滿版網頁顯示視窗 ─── -->
+    <!-- 預設一進來載入 README.md (GitHub 會將其轉為首頁) -->
+    <iframe 
+        id="web-window" 
+        class="site-container" 
+        src="README.md">
+    </iframe>
+
+    <!-- ─── 💡 垂直摺疊選單（已包含您所有的 7 個項目） ─── -->
+    <nav id="my-nav" class="foldable-nav">
+        
+        <!-- 情況 A：同倉庫檔案，點擊直接在上方框框切換 -->
+        <button onclick="switchSite('README.md', this)" class="active-btn">🏠 Home (首頁)</button>
+        <button onclick="switchSite('violin_lesson_log_v2 (5).html', this)">🎻 上課紀錄表</button>
+        <button onclick="switchSite('orchestra.html', this)">🎼 作曲家 + 樂團閃卡</button>
+        <button onclick="switchSite('Musicterms.html', this)">📝 Music Term 閃卡</button>
+        <button onclick="switchSite('abrsm_dual_scoring_v2 (1).html', this)">📊 ABRSM 打分系統</button>
+        
+        <!-- 情況 B：外部網站，但允許被內嵌（點擊一樣在上方框框切換，不跳轉） -->
+        <button onclick="switchSite('https://music.school.nz/violin/', this)">🌐 Music School</button>
+        
+        <!-- 情況 C：會拒絕連線的限制網站（點擊直接整頁跳轉過去） -->
+        <a href="https://tonesavvy.com/music-practice-exercises/">🎹 音樂練習 (ToneSavvy)</a>
+
+    </nav>
+
+    <!-- 底部黑色的控制點擊列 -->
+    <div class="menu-trigger-bar" onclick="toggleMenu()">
+        <span id="menu-text">☰ 點擊展開網頁功能選單 (7)</span>
+    </div>
+
+    <!-- ─── ⚙️ 控制摺疊與切換的 JavaScript ─── -->
+    <script>
+        // 切換選單的展開與收合
+        function toggleMenu() {
+            const nav = document.getElementById('my-nav');
+            const text = document.getElementById('menu-text');
+            
+            nav.classList.toggle('show');
+            
+            if (nav.classList.contains('show')) {
+                text.innerHTML = "✕ 點擊關閉收起來";
+            } else {
+                text.innerHTML = "☰ 點擊展開網頁功能選單 (7)";
+            }
+        }
+
+        // 切換內嵌框框的網址
+        function switchSite(siteUrl, buttonElement) {
+            // 1. 讓上方的 iframe 載入新頁面
+            document.getElementById('web-window').src = siteUrl;
+
+            // 2. 清除所有按鈕的高亮狀態
+            const navItems = document.querySelectorAll('.foldable-nav button, .foldable-nav a');
+            navItems.forEach(item => item.classList.remove('active-btn'));
+
+            // 3. 讓當前按鈕變亮
+            buttonElement.classList.add('active-btn');
+
+            // 4. 選好網頁後，自動把選單收起來
+            toggleMenu();
+        }
+    </script>
+
+</body>
+</html>
             box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
             z-index: 9999; /* 確保導覽列永遠在最上層 */
         }
