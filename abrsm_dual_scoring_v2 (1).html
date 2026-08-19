@@ -1,0 +1,2244 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ABRSM 評分表 / Scoring Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ====== Reset & Base ====== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #FAF7F2;
+  color: #1A1A1A;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+body { overscroll-behavior-y: none; }
+button {
+  font-family: inherit;
+  font-size: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  touch-action: manipulation;
+}
+input, textarea, select {
+  font-family: inherit;
+  font-size: 16px; /* Prevents iOS zoom */
+  -webkit-appearance: none;
+  appearance: none;
+}
+h1, h2, h3, h4 {
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #1A1A1A;
+}
+
+/* ====== Variables ====== */
+:root {
+  --bg: #FAF7F2;
+  --bg-card: #FFFFFF;
+  --bg-soft: #F5F1E8;
+  --text-primary: #1A1A1A;
+  --text-secondary: #5C5C5C;
+  --text-tertiary: #8A8A8A;
+  --border: #E8E0D3;
+  --border-strong: #C9BFA8;
+  --accent: #B8941F;
+  --accent-soft: #F5E9C8;
+  --gold: #B8941F;
+  --silver: #6B7B8A;
+  --green: #4A7C59;
+  --orange: #B8814A;
+  --red: #A8484E;
+  --shadow-sm: 0 1px 3px rgba(60, 40, 0, 0.04);
+  --shadow-md: 0 2px 8px rgba(60, 40, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(60, 40, 0, 0.10);
+}
+
+/* ====== Layout ====== */
+.container {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+}
+
+/* ====== Top Navigation ====== */
+.top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mode-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-soft);
+  border-radius: 10px;
+  padding: 3px;
+  flex: 1;
+  max-width: 460px;
+}
+.mode-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all 0.18s ease;
+  text-align: center;
+  line-height: 1.2;
+}
+.mode-tab .zh-part { font-weight: 600; }
+.mode-tab .en-part { font-size: 0.78em; opacity: 0.7; margin-left: 3px; }
+.mode-tab.active {
+  background: white;
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+.lang-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-soft);
+  border-radius: 8px;
+  padding: 3px;
+  flex-shrink: 0;
+}
+.lang-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.18s ease;
+}
+.lang-btn.active {
+  background: var(--accent);
+  color: white;
+}
+
+/* ====== Sub Navigation ====== */
+.sub-nav {
+  position: sticky;
+  top: 49px;
+  z-index: 99;
+  background: rgba(250, 247, 242, 0.96);
+  backdrop-filter: saturate(180%) blur(8px);
+  -webkit-backdrop-filter: saturate(180%) blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 16px;
+}
+.sub-tabs {
+  display: flex;
+  gap: 6px;
+  max-width: 920px;
+  margin: 0 auto;
+}
+.sub-tab {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all 0.18s ease;
+}
+.sub-tab .zh-part { font-weight: 600; }
+.sub-tab .en-part { font-size: 0.85em; opacity: 0.7; margin-left: 3px; }
+.sub-tab.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ====== Page (sections) ====== */
+.page {
+  display: none;
+  padding-top: 16px;
+}
+.page.active { display: block; }
+
+/* ====== Card ====== */
+.card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
+  margin-bottom: 14px;
+}
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title .zh-part { font-weight: 700; }
+.card-title .en-part {
+  font-size: 0.78em;
+  opacity: 0.6;
+  font-weight: 500;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.card-title .badge-star {
+  color: var(--accent);
+  font-size: 1.1em;
+  margin-right: 2px;
+}
+
+/* ====== Info Grid ====== */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+}
+.info-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.info-field .label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.info-field .label .en-part {
+  font-size: 0.92em;
+  opacity: 0.7;
+  margin-left: 3px;
+}
+.info-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg-soft);
+  color: var(--text-primary);
+  font-size: 16px;
+  transition: all 0.15s ease;
+}
+.info-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: white;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* ====== Piece Card ====== */
+.piece-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.piece-header {
+  padding: 14px 16px 8px;
+  border-bottom: 1px dashed var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.piece-num {
+  flex-shrink: 0;
+  background: var(--accent);
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 600;
+  font-size: 14px;
+}
+.piece-name-input {
+  flex: 1;
+  min-width: 140px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg-soft);
+  font-size: 16px;
+  transition: all 0.15s ease;
+}
+.piece-name-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: white;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.piece-subtotal {
+  flex-shrink: 0;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-soft);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+.piece-subtotal .num { color: var(--accent); font-size: 1.1em; }
+
+/* ====== Criterion ====== */
+.criterion {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.criterion:last-child { border-bottom: none; }
+.criterion-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.criterion-name {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-weight: 500;
+  font-size: 15px;
+}
+.criterion-name .zh-part { color: var(--text-primary); font-weight: 600; }
+.criterion-name .en-part {
+  font-size: 0.85em;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+.lang-en .criterion-name .en-part { color: var(--text-primary); font-weight: 500; }
+
+.score-row {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.score-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--c, #ccc);
+  background: white;
+  color: var(--c, #ccc);
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 600;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.16s ease;
+  flex-shrink: 0;
+}
+.score-btn:active { transform: scale(0.92); }
+.score-btn.selected {
+  background: var(--c);
+  color: white;
+  transform: scale(1.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* ====== Detail Panel ====== */
+.detail-panel {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.25s ease, margin 0.25s ease, padding 0.25s ease;
+  margin-top: 0;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: var(--bg-soft);
+  border-left: 4px solid var(--c, var(--accent));
+}
+.detail-panel.expanded {
+  max-height: 320px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.detail-panel .band-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+.detail-panel .band-num {
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 700;
+  color: var(--c, var(--accent));
+  font-size: 18px;
+}
+.detail-panel .band-name { font-weight: 600; color: var(--text-primary); }
+.detail-panel .band-name .en-part { font-size: 0.85em; opacity: 0.7; margin-left: 3px; font-weight: 500; }
+.detail-panel .band-range {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  background: white;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.detail-panel .band-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+.detail-panel .band-desc .desc-zh { display: block; }
+.detail-panel .band-desc .desc-en {
+  display: block;
+  font-size: 0.92em;
+  color: var(--text-tertiary);
+  font-style: italic;
+  margin-top: 2px;
+}
+.lang-en .detail-panel .band-name .en-part { opacity: 1; }
+.lang-en .detail-panel .band-desc .desc-en { color: var(--text-secondary); font-style: normal; }
+.lang-en .detail-panel .band-desc .desc-zh { display: none; }
+.lang-en .detail-panel .band-desc .desc-en { font-size: 1em; margin-top: 0; }
+
+/* ====== Comment Input ====== */
+.comment-input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg-soft);
+  color: var(--text-primary);
+  font-size: 16px;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+.comment-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: white;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.comment-input::placeholder {
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+/* ====== Extra Section (Perf as Whole / Tech Tests) ====== */
+.extra-card {
+  background: linear-gradient(135deg, #FFFBF2 0%, #FFF8E8 100%);
+  border: 1px solid var(--accent-soft);
+}
+.extra-card .card-title { color: var(--accent); }
+
+/* ====== Summary ====== */
+.summary-card {
+  background: linear-gradient(135deg, #1A1A1A 0%, #2A2620 100%);
+  color: white;
+  border: none;
+  box-shadow: var(--shadow-lg);
+}
+.summary-card .card-title { color: white; }
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.summary-cell {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.summary-cell .label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.summary-cell .label .en-part { opacity: 0.8; margin-left: 2px; }
+.summary-cell .value {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+.summary-cell .value .denom { color: rgba(255, 255, 255, 0.5); font-size: 0.75em; }
+
+.summary-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+.summary-total {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+}
+.summary-total .grand-num {
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  margin: 0 4px;
+}
+.summary-total .grand-denom { color: rgba(255, 255, 255, 0.55); font-size: 0.85em; }
+
+.result-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 600;
+  font-size: 15px;
+  background: var(--pill-bg, #555);
+  color: white;
+  border: 2px solid var(--pill-border, transparent);
+}
+.result-pill .en-part { font-size: 0.85em; opacity: 0.85; margin-left: 4px; font-weight: 500; }
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.action-btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.18s ease;
+  border: 1px solid transparent;
+}
+.action-btn .icon { font-size: 16px; }
+.action-btn .en-part { font-size: 0.85em; opacity: 0.85; margin-left: 3px; }
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.btn-primary:active { transform: scale(0.97); }
+.btn-secondary {
+  background: white;
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+.btn-secondary:active { transform: scale(0.97); }
+
+/* ====== Sticky Summary (Criteria Page) ====== */
+.criteria-sticky {
+  position: sticky;
+  top: 86px;
+  z-index: 90;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: saturate(180%) blur(8px);
+  -webkit-backdrop-filter: saturate(180%) blur(8px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-md);
+}
+.criteria-sticky-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 12px;
+}
+.cs-cell {
+  background: var(--bg-soft);
+  border-radius: 6px;
+  padding: 5px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 60px;
+}
+.cs-cell .lbl { color: var(--text-tertiary); font-size: 10px; font-weight: 500; }
+.cs-cell .val { font-family: 'Noto Serif SC', serif; font-weight: 600; color: var(--text-primary); }
+.cs-cell .val .den { color: var(--text-tertiary); font-size: 0.85em; }
+.cs-pill {
+  margin-left: auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 12px;
+  color: white;
+  background: var(--pill-bg, #999);
+}
+
+/* ====== Criteria Reference Page ====== */
+.criteria-section {
+  margin-bottom: 18px;
+}
+.criteria-section-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 14px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--accent);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.criteria-section-title .en-part {
+  font-size: 0.78em;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.criteria-subsection {
+  margin-bottom: 16px;
+}
+.criteria-subsection-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 8px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.criteria-subsection-title .en-part {
+  font-size: 0.85em;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.criteria-subsection-title .extra-info {
+  font-size: 0.78em;
+  color: var(--text-tertiary);
+  margin-left: auto;
+  font-weight: 400;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+.band-row {
+  display: block;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  background: white;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--c, #ccc);
+  border-radius: 8px;
+  transition: all 0.18s ease;
+}
+.band-row.has-selection {
+  border-color: var(--c);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--c) 8%, white) 0%, white 50%);
+  box-shadow: 0 1px 6px color-mix(in srgb, var(--c) 25%, transparent);
+}
+.band-row-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.band-row .b-num {
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 700;
+  color: var(--c);
+  font-size: 18px;
+  min-width: 18px;
+}
+.band-row .b-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+.band-row .b-name .en-part {
+  font-size: 0.85em;
+  color: var(--text-tertiary);
+  margin-left: 3px;
+  font-weight: 500;
+}
+.band-row .b-range {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  background: var(--bg-soft);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.band-row .piece-tags {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.band-row .piece-tag {
+  background: var(--c);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Noto Serif SC', serif;
+}
+.band-row .b-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+.band-row .b-desc .desc-en {
+  display: block;
+  font-size: 0.92em;
+  color: var(--text-tertiary);
+  font-style: italic;
+  margin-top: 2px;
+}
+.lang-en .band-row .b-desc .desc-en { color: var(--text-secondary); font-style: normal; }
+.lang-en .band-row .b-desc .desc-zh { display: none; }
+.lang-en .band-row .b-desc .desc-en { font-size: 1em; margin-top: 0; }
+.lang-en .band-row .b-name .en-part { color: var(--text-primary); }
+
+/* Result band table (Section C) */
+.result-band-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px;
+  margin-bottom: 6px;
+  background: white;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--c);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+.result-band-row.is-current {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--c) 10%, white), white 60%);
+  border-color: var(--c);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--c) 30%, transparent);
+}
+.result-band-row .rb-range {
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 700;
+  color: var(--c);
+  font-size: 16px;
+  min-width: 80px;
+}
+.result-band-row .rb-pct {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  background: var(--bg-soft);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.result-band-row .rb-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+.result-band-row .rb-name .en-part {
+  font-size: 0.85em;
+  color: var(--text-tertiary);
+  margin-left: 3px;
+}
+.lang-en .result-band-row .rb-name .en-part { color: var(--text-primary); }
+.result-band-row .rb-current-tag {
+  margin-left: auto;
+  background: var(--c);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* ====== Modal ====== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: white;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.modal-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+}
+.modal-header h3 .en-part {
+  font-size: 0.82em;
+  opacity: 0.6;
+  margin-left: 4px;
+  font-weight: 500;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.modal-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+}
+.modal-close:active { background: var(--border); }
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 18px;
+}
+.modal-footer {
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.modal-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 8px;
+  text-align: center;
+}
+.modal-hint .en-part { margin-left: 3px; }
+
+#copy-textarea {
+  width: 100%;
+  height: 280px;
+  resize: none;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-soft);
+  font-family: 'Noto Sans SC', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  -webkit-overflow-scrolling: touch;
+}
+#copy-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: white;
+}
+
+.pdf-content {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  background: white;
+  padding: 4px 0;
+}
+.pdf-content .pdf-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: center;
+  margin-bottom: 8px;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 6px;
+}
+.pdf-content .pdf-divider {
+  border-top: 1px dashed var(--border-strong);
+  margin: 8px 0;
+}
+.pdf-content .pdf-section {
+  font-weight: 600;
+  color: var(--accent);
+  margin: 8px 0 4px;
+}
+.pdf-content .pdf-line {
+  padding-left: 12px;
+}
+
+/* ====== Print Area ====== */
+.print-area {
+  display: none;
+}
+@media print {
+  body { background: white; }
+  body * { visibility: hidden !important; }
+  .print-area, .print-area * { visibility: visible !important; }
+  .print-area {
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 24px;
+    background: white;
+    color: black;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .print-area .pa-title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    border-bottom: 2px solid #B8941F;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+  .print-area .pa-divider {
+    border-top: 1px dashed #999;
+    margin: 8px 0;
+  }
+  .print-area .pa-section {
+    font-weight: 700;
+    color: #B8941F;
+    margin: 10px 0 4px;
+  }
+  .print-area .pa-line {
+    padding-left: 16px;
+    margin: 2px 0;
+  }
+  .print-area .pa-total {
+    font-size: 14px;
+    font-weight: 700;
+    margin-top: 12px;
+    padding: 6px 0;
+    border-top: 2px solid #B8941F;
+  }
+  .modal-overlay { display: none !important; }
+  .mode-nav, .sub-nav { display: none !important; }
+}
+
+/* ====== Language Toggle Visibility ====== */
+.lang-zh .zh-part { display: inline; }
+.lang-zh .en-part { display: inline; }
+.lang-en .zh-part { display: none; }
+.lang-en .en-part { display: inline !important; }
+
+/* ====== Mobile responsive ====== */
+@media (max-width: 480px) {
+  .container { padding: 0 10px 24px; }
+  .top-nav { padding: 8px 10px; }
+  .mode-tab { font-size: 12px; padding: 7px 8px; }
+  .sub-nav { padding: 6px 10px; }
+  .sub-tab { font-size: 12px; padding: 6px 10px; }
+  .card { padding: 14px; border-radius: 12px; }
+  .piece-header { padding: 12px 14px 8px; }
+  .criterion { padding: 10px 14px; }
+  .criterion-head {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .criterion-name { font-size: 14px; flex: 1; min-width: 80px; }
+  .score-row { gap: 5px; }
+  .score-btn { width: 32px; height: 32px; font-size: 14px; }
+  .info-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  .summary-cell .value { font-size: 16px; }
+  .summary-total .grand-num { font-size: 24px; }
+  .action-btn { font-size: 13px; padding: 10px 12px; min-width: 120px; }
+  .modal { border-radius: 12px; }
+  .modal-body { padding: 14px; }
+  #copy-textarea { height: 240px; font-size: 12px; }
+}
+
+/* Smallest screens (e.g., iPhone SE first gen) */
+@media (max-width: 360px) {
+  .mode-tab .en-part { display: none; }
+  .lang-zh .mode-tab .en-part { display: none; }
+  .score-btn { width: 30px; height: 30px; font-size: 13px; }
+}
+
+/* Hide print elements normally */
+@media screen {
+  .print-area { display: none; }
+}
+</style>
+</head>
+<body class="lang-zh">
+
+<!-- ====== Top Navigation ====== -->
+<header class="top-nav">
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="performance">
+      <span class="zh-part">演奏等級</span><span class="en-part">Performance Grade</span>
+    </button>
+    <button class="mode-tab" data-mode="practical">
+      <span class="zh-part">實用等級</span><span class="en-part">Practical Grade</span>
+    </button>
+  </div>
+  <div class="lang-toggle">
+    <button class="lang-btn active" data-lang="zh">中</button>
+    <button class="lang-btn" data-lang="en">EN</button>
+  </div>
+</header>
+
+<!-- ====== Sub Navigation ====== -->
+<header class="sub-nav">
+  <div class="container" style="padding: 0; max-width: 920px;">
+    <div class="sub-tabs">
+      <button class="sub-tab active" data-sub="scoring">
+        <span class="zh-part">打分</span><span class="en-part">Scoring</span>
+      </button>
+      <button class="sub-tab" data-sub="criteria">
+        <span class="zh-part">評分標準</span><span class="en-part">Criteria</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ====== Main Content ====== -->
+<main class="container">
+
+  <!-- ===== Scoring Page ===== -->
+  <section class="page page-scoring active" id="page-scoring">
+    <!-- Info card -->
+    <div class="card">
+      <h2 class="card-title">
+        <span class="zh-part">考生資料</span><span class="en-part">Candidate Information</span>
+      </h2>
+      <div class="info-grid">
+        <div class="info-field">
+          <label class="label"><span class="zh-part">學生</span><span class="en-part">Student</span></label>
+          <input type="text" class="info-input" id="info-student" data-field="student">
+        </div>
+        <div class="info-field">
+          <label class="label"><span class="zh-part">日期</span><span class="en-part">Date</span></label>
+          <input type="text" class="info-input" id="info-date" data-field="date">
+        </div>
+        <div class="info-field">
+          <label class="label"><span class="zh-part">級別</span><span class="en-part">Grade</span></label>
+          <input type="text" class="info-input" id="info-grade" data-field="grade">
+        </div>
+        <div class="info-field">
+          <label class="label"><span class="zh-part">教師</span><span class="en-part">Teacher</span></label>
+          <input type="text" class="info-input" id="info-teacher" data-field="teacher">
+        </div>
+      </div>
+    </div>
+
+    <!-- Dynamic scoring content (pieces + extra) -->
+    <div id="scoring-content"></div>
+
+    <!-- Summary -->
+    <div class="summary-card" id="summary-card"></div>
+  </section>
+
+  <!-- ===== Criteria Page ===== -->
+  <section class="page page-criteria" id="page-criteria">
+    <div class="criteria-sticky" id="criteria-sticky"></div>
+    <div id="criteria-content"></div>
+  </section>
+
+</main>
+
+<!-- ====== Copy Modal ====== -->
+<div class="modal-overlay" id="copy-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><span class="zh-part">複製到剪貼簿</span><span class="en-part">Copy to Clipboard</span></h3>
+      <button class="modal-close" data-close="copy-modal">×</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="copy-textarea" readonly></textarea>
+      <p class="modal-hint">
+        <span class="zh-part">長按文字可手動選取並複製</span><span class="en-part">Long-press text to manually select and copy</span>
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="action-btn btn-secondary" data-close="copy-modal">
+        <span class="zh-part">關閉</span><span class="en-part">Close</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== PDF Preview Modal ====== -->
+<div class="modal-overlay" id="pdf-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><span class="zh-part">預覽結果</span><span class="en-part">PDF Preview</span></h3>
+      <button class="modal-close" data-close="pdf-modal">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="pdf-content" id="pdf-content"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="action-btn btn-secondary" data-close="pdf-modal">
+        <span class="zh-part">關閉</span><span class="en-part">Close</span>
+      </button>
+      <button class="action-btn btn-primary" id="print-btn">
+        <span class="icon">🖨️</span>
+        <span class="zh-part">列印/匯出PDF</span><span class="en-part">Print/Export PDF</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== Print Area (hidden until print) ====== -->
+<div class="print-area" id="print-area"></div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   DATA
+============================================================ */
+
+const SCORE_COLORS = {
+  5: '#B8941F',
+  4: '#6B7B8A',
+  3: '#4A7C59',
+  2: '#B8814A',
+  1: '#A8484E'
+};
+
+const BAND_NAMES = {
+  5: { zh: '優異', en: 'Distinction' },
+  4: { zh: '良好', en: 'Merit' },
+  3: { zh: '及格', en: 'Pass' },
+  2: { zh: '不及格', en: 'Below Pass' },
+  1: { zh: '嚴重不及格', en: 'Below Pass' }
+};
+
+const RESULT_BANDS = [
+  { id: 'distinction', range: '130–150', pct: '≥87%', zh: '優異', en: 'Distinction', color: '#B8941F', threshold: 0.87 },
+  { id: 'merit',       range: '120–129', pct: '80–86%', zh: '良好', en: 'Merit', color: '#6B7B8A', threshold: 0.80 },
+  { id: 'pass',         range: '100–119', pct: '67–79%', zh: '及格', en: 'Pass', color: '#4A7C59', threshold: 0.67 },
+  { id: 'below',        range: '<100',    pct: '<67%', zh: '不及格', en: 'Below', color: '#A8484E', threshold: 0 }
+];
+
+const CRITERIA_DATA = {
+  performance: {
+    name: { zh: '演奏等級', en: 'Performance Grade' },
+    pieces: {
+      count: 4,
+      criteria: [
+        {
+          id: 'pitch', zh: '音高', en: 'Pitch',
+          bands: [
+            { score: 5, range: '27–30', zh: '音高與音準高度準確', en: 'Highly accurate notes and intonation' },
+            { score: 4, range: '24–26', zh: '音高與音準大致準確', en: 'Largely accurate notes and intonation' },
+            { score: 3, range: '20–23', zh: '音高基本正確；音準足以維持調性', en: 'Generally correct notes; Sufficiently reliable intonation to maintain tonality' },
+            { score: 2, range: '17–19', zh: '頻繁音高錯誤；音準不足以維持調性', en: 'Frequent note errors; Insufficiently reliable intonation' },
+            { score: 1, range: '10–16', zh: '音高大體不準（13–16）；嚴重不準（10–12）', en: 'Largely inaccurate (13–16); Highly inaccurate (10–12)' }
+          ]
+        },
+        {
+          id: 'time', zh: '節拍與時值', en: 'Time',
+          bands: [
+            { score: 5, range: '27–30', zh: '流暢且靈活自如；節奏特徵充分展現', en: 'Fluent, with flexibility where appropriate; Rhythmic character well conveyed' },
+            { score: 4, range: '24–26', zh: '節拍持續有效；節奏感良好', en: 'Sustained, effective tempo; Good sense of rhythm' },
+            { score: 3, range: '20–23', zh: '節拍合適；脈搏基本穩定；整體節奏準確', en: 'Suitable tempo; Generally stable pulse; Overall rhythmic accuracy' },
+            { score: 2, range: '17–19', zh: '節拍不當或失控；脈搏不穩；節奏不準', en: 'Unsuitable and/or uncontrolled tempo; Irregular pulse; Inaccurate rhythm' },
+            { score: 1, range: '10–16', zh: '節拍紊亂（13–16）；混亂（10–12）', en: 'Erratic tempo and/or pulse (13–16); Incoherent (10–12)' }
+          ]
+        },
+        {
+          id: 'tone', zh: '音色', en: 'Tone',
+          bands: [
+            { score: 5, range: '27–30', zh: '音色投射良好；音色運用細膩敏感', en: 'Well projected; Sensitive use of tonal qualities' },
+            { score: 4, range: '24–26', zh: '音色控制基本一致；音色感知良好', en: 'Mainly controlled and consistent; Good tonal awareness' },
+            { score: 3, range: '20–23', zh: '音色基本可靠；音色感知尚可', en: 'Generally reliable; Adequate tonal awareness' },
+            { score: 2, range: '17–19', zh: '音色不均勻或不可靠；音色感知不足', en: 'Uneven and/or unreliable; Inadequate tonal awareness' },
+            { score: 1, range: '10–16', zh: '音色控制嚴重不足（13–16）；無音色控制（10–12）', en: 'Serious lack of tonal control (13–16); No tonal control (10–12)' }
+          ]
+        },
+        {
+          id: 'shape', zh: '音樂形態', en: 'Shape',
+          bands: [
+            { score: 5, range: '27–30', zh: '音樂形態富有表現力，細節到位，風格地道', en: 'Expressive, idiomatic musical shaping and detail' },
+            { score: 4, range: '24–26', zh: '音樂形態清晰，細節實現良好', en: 'Clear musical shaping, well-realised detail' },
+            { score: 3, range: '20–23', zh: '音樂形態與細節有一定呈現', en: 'Some realisation of musical shape and/or detail' },
+            { score: 2, range: '17–19', zh: '音樂形態與細節傳達不足', en: 'Musical shape and detail insufficiently conveyed' },
+            { score: 1, range: '10–16', zh: '形態與細節大體未呈現（13–16）；無形態或細節（10–12）', en: 'Largely unrealised (13–16); No shape or detail (10–12)' }
+          ]
+        },
+        {
+          id: 'performance', zh: '整體表現', en: 'Performance',
+          bands: [
+            { score: 5, range: '27–30', zh: '表現沉穩自信；完全投入；生動傳達音樂性格與風格', en: 'Assured; Fully committed; Vivid communication of character and style' },
+            { score: 4, range: '24–26', zh: '表現積極；具有音樂說服力；能傳達音樂性格與風格', en: 'Positive; Carrying musical conviction; Character and style communicated' },
+            { score: 3, range: '20–23', zh: '表現基本穩定，出錯能迅速恢復；有一定音樂投入', en: 'Generally secure, prompt recovery from slips; Some musical involvement' },
+            { score: 2, range: '17–19', zh: '表現不穩，出錯後恢復不力；音樂投入不足', en: 'Insecure, inadequate recovery from slips; Insufficient musical involvement' },
+            { score: 1, range: '10–16', zh: '缺乏連貫性，無音樂投入（13–16）；無法連續演奏（10–12）', en: 'Lacking continuity, no involvement (13–16); Unable to continue (10–12)' }
+          ]
+        }
+      ]
+    },
+    extra: {
+      title: { zh: '整體演奏表現', en: 'Performance as a Whole' },
+      symbol: '★',
+      criteria: [
+        {
+          id: 'communication', zh: '傳達力', en: 'Communication',
+          bands: [
+            { score: 5, range: '27–30', zh: '持續投射良好且投入，展現強烈的表演承諾與信念；曲目編排與節奏推進有效；表演意識與控制持續良好', en: 'Consistently well-projected and involved, showing strong performance commitment and conviction; Effective sequence and pacing; consistently good performance awareness and control' },
+            { score: 4, range: '24–26', zh: '投射與投入基本良好，展現積極的表演承諾；曲目編排與節奏推進大致有效；表演意識與控制基本良好', en: 'Mainly well-projected and involved, showing positive performance commitment; Largely effective sequence and pacing; mainly good performance awareness and control' },
+            { score: 3, range: '20–23', zh: '投射與投入足以維持整體表演感；曲目編排與節奏推進具備基本的表演意識與控制', en: 'Projection and involvement sufficient to maintain overall sense of performance; Sequence and pacing shows adequate performance awareness and control' },
+            { score: 2, range: '15–19', zh: '投射或投入感不足，難以維持表演感；曲目編排及/或節奏推進的表演意識或控制不足', en: 'Insufficient projection or sense of involvement; Sequence and/or pacing shows inadequate performance awareness or control' },
+            { score: 1, range: '10–14', zh: '表演感大體缺失', en: 'Sense of performance largely absent' }
+          ]
+        },
+        {
+          id: 'interpretation', zh: '詮釋力', en: 'Interpretation',
+          bands: [
+            { score: 5, range: '27–30', zh: '風格刻畫持續有效；充分滿足曲目的詮釋要求；織體與合奏意識及控制持續良好，聲部融合與平衡有效', en: 'Consistently effective stylistic characterisation; interpretative demands well met; Consistently good awareness and control of textures and ensemble, with effective blending and balancing' },
+            { score: 4, range: '24–26', zh: '風格實現大致有效；基本滿足曲目的詮釋要求；織體與合奏意識及控制基本良好，聲部融合與平衡恰當', en: 'Mostly effective stylistic realisation; interpretative demands largely well met; Mainly good awareness and control of textures and ensemble, with appropriate blending and balancing' },
+            { score: 3, range: '20–23', zh: '風格實現足以滿足曲目的詮釋要求；織體與合奏意識及控制尚可，聲部融合與平衡充足', en: 'Sufficient stylistic realisation to meet interpretative demands; Adequate awareness and control of textures and ensemble, with sufficient blending and balancing' },
+            { score: 2, range: '15–19', zh: '風格實現不足以滿足曲目的詮釋要求；織體與合奏意識或控制不足，及/或聲部融合與平衡不當', en: 'Stylistic realisation not equal to interpretative demands; Insufficient awareness or control of textures and ensemble, and/or unsuitable blending and balancing' },
+            { score: 1, range: '10–14', zh: '風格實現及/或織體與合奏控制大體缺失', en: 'Stylistic realisation and/or control of textures and ensemble largely absent' }
+          ]
+        },
+        {
+          id: 'delivery', zh: '執行力', en: 'Delivery',
+          bands: [
+            { score: 5, range: '27–30', zh: '持續沉穩受控；充分應對曲目的技術挑戰；樂器管理持續有效，完全適應表演情境', en: 'Consistently assured and controlled; technical challenges well met; Consistently effective instrument management, fully responsive to the performance situation' },
+            { score: 4, range: '24–26', zh: '控制有效；曲目的多數技術挑戰應對良好；樂器管理大致有效，基本適應表演情境', en: 'Effectively controlled; most technical challenges well met; Mostly effective instrument management, mainly responsive to the performance situation' },
+            { score: 3, range: '20–23', zh: '控制基本到位；曲目的技術挑戰整體應對穩妥；樂器管理足以應對表演情境', en: 'Generally controlled; technical challenges securely met overall; Sufficiently reliable instrument management to meet the demands of the performance situation' },
+            { score: 2, range: '15–19', zh: '控制穩定性不足以應對曲目的技術挑戰；樂器管理不足以應對表演情境', en: 'Consistency of control insufficient to meet technical challenges; Insufficiently reliable instrument management to meet the demands of the performance situation' },
+            { score: 1, range: '10–14', zh: '技術控制及/或樂器管理非常不穩', en: 'Very insecure technical control and/or instrument management' }
+          ]
+        }
+      ]
+    },
+    grandTotal: 115
+  },
+  practical: {
+    name: { zh: '實用等級', en: 'Practical Grade' },
+    pieces: {
+      count: 3,
+      criteria: [
+        {
+          id: 'pitch', zh: '音高', en: 'Pitch',
+          bands: [
+            { score: 5, range: '27–30', zh: '技術流暢；音高準確；自信的表現', en: 'Technical fluency; Accurate pitch; Confident performance' },
+            { score: 4, range: '24–26', zh: '音高大致準確；有力度與分句意識', en: 'Largely accurate; Attention to dynamics and phrasing' },
+            { score: 3, range: '20–23', zh: '音高基本安全；節奏基本正確', en: 'General security of notes; Suitable tempo' },
+            { score: 2, range: '17–19', zh: '音準略低於可接受標準；連貫性不足', en: 'Just under acceptable standard in accuracy; Inadequate continuity' },
+            { score: 1, range: '10–16', zh: '音高/節奏嚴重困難；頻繁停頓中斷', en: 'Serious difficulties with notes/time; Frequent stumbles and breaks' }
+          ]
+        },
+        {
+          id: 'rhythm', zh: '節奏', en: 'Rhythm',
+          bands: [
+            { score: 5, range: '27–30', zh: '節奏感強；音樂說服力的速度', en: 'Strong sense of rhythm; Musically convincing tempo' },
+            { score: 4, range: '24–26', zh: '節奏感良好；合適的持續速度', en: 'Good sense of rhythm; A suitable, sustained tempo' },
+            { score: 3, range: '20–23', zh: '整體節奏準確；合適速度', en: 'Overall rhythmic accuracy; Suitable tempo' },
+            { score: 2, range: '17–19', zh: '速度不合適或不持續', en: 'Unsuitable or unsustained tempo' },
+            { score: 1, range: '10–16', zh: '節奏嚴重困難；停頓不完整', en: 'Serious difficulties with time; Halting or incomplete performance' }
+          ]
+        },
+        {
+          id: 'tone', zh: '音色', en: 'Tone',
+          bands: [
+            { score: 5, range: '27–30', zh: '音色控制自信；敏感的音色運用', en: 'Confident tonal control; Sensitive use of tonal qualities' },
+            { score: 4, range: '24–26', zh: '有音色意識與控制', en: 'Evidence of tonal awareness and control' },
+            { score: 3, range: '20–23', zh: '有音樂意識，如力度、分句', en: 'Evidence of musical awareness, e.g. dynamics, phrasing' },
+            { score: 2, range: '17–19', zh: '缺乏力度、分句與 articulation', en: 'Absence of dynamics, phrasing and articulation' },
+            { score: 1, range: '10–16', zh: '嚴重缺乏音色控制', en: 'Serious lack of tonal control' }
+          ]
+        },
+        {
+          id: 'shape', zh: '音樂形態', en: 'Shape',
+          bands: [
+            { score: 5, range: '27–30', zh: '對音樂細節與情緒敏感；風格地道', en: 'Sensitivity to musical detail and mood; Idiomatic style' },
+            { score: 4, range: '24–26', zh: '有風格意識；注意音樂細節', en: 'Awareness of style; Attention to musical detail' },
+            { score: 3, range: '20–23', zh: '有基本音樂意識', en: 'Evidence of musical awareness' },
+            { score: 2, range: '17–19', zh: '缺乏音樂細節；風格不當', en: 'Absence of musical detail; Inappropriate style' },
+            { score: 1, range: '10–16', zh: '缺乏音樂細節', en: 'Absence of musical detail' }
+          ]
+        },
+        {
+          id: 'performance', zh: '整體表現', en: 'Performance',
+          bands: [
+            { score: 5, range: '27–30', zh: '自信的表演感；高技術水準；本能且具傳達力的表現', en: 'Confident sense of performance; High technical assurance; Instinctive and communicative sense of performance' },
+            { score: 4, range: '24–26', zh: '有曲目性格感；音色控制有助音樂性格', en: 'Sense of the character of the piece; Tonal control contributing to musical character' },
+            { score: 3, range: '20–23', zh: '有仔細準備的證據；出錯能迅速恢復', en: 'Evidence of careful preparation; Prompt recovery from any slips' },
+            { score: 2, range: '17–19', zh: '出錯後恢復不力', en: 'Poor recovery from slips' },
+            { score: 1, range: '10–16', zh: '只有部分段落能演奏；無法連續', en: 'Only some passages mastered; Unable to continue' }
+          ]
+        }
+      ]
+    },
+    extra: {
+      title: { zh: '技術測試', en: 'Technical Tests' },
+      symbol: '★',
+      criteria: [
+        {
+          id: 'scales', zh: '音階與琶音', en: 'Scales & Arpeggios', max: 21, pass: 14,
+          bands: [
+            { score: 5, range: '19–21', zh: '反應迅速；流暢且音樂性呈現；自信且均勻的速度', en: 'Quick response; Fluent and musically presented; Confident and even tempo' },
+            { score: 4, range: '17–18', zh: '反應及時；準備充分；技術大致穩健均勻；少許小錯或修正', en: 'Prompt response; Well prepared; Technically mostly secure and even; Few small slips or corrections' },
+            { score: 3, range: '14–16', zh: '反應謹慎；中速；調性已知但有些錯誤；動力大致維持', en: 'Cautious response; Moderate tempo; Keys known despite some errors; Momentum generally maintained' },
+            { score: 2, range: '11–13', zh: '反應差；速度慢且不穩；頻繁錯誤；部分項目不完整', en: 'Poor response; Slow and inconsistent tempo; Frequent errors; Some incomplete items' },
+            { score: 1, range: '7–10', zh: '反應極差或不完整；極不均勻；速度極慢；技術不足', en: 'Very poor or incomplete response; Extremely sporadic and uneven; Very slow tempo; Technically inadequate' }
+          ]
+        },
+        {
+          id: 'sightreading', zh: '視奏', en: 'Sight-Reading', max: 21, pass: 14,
+          bands: [
+            { score: 5, range: '19–21', zh: '流暢準確；注意力度與 articulation；自信的音樂呈現', en: 'Fluent and accurate; Attention to dynamics and articulation; Confident, musical presentation' },
+            { score: 4, range: '17–18', zh: '大致準確；大致流暢；有力度與 articulation 意識', en: 'Largely accurate; Mostly fluent; Some attention to dynamics and articulation' },
+            { score: 3, range: '14–16', zh: '大致準確；有足夠連貫性；出錯能恢復', en: 'Generally accurate; Adequate continuity; Some recovery from slips' },
+            { score: 2, range: '11–13', zh: '頻繁錯誤；缺乏連貫性；速度差', en: 'Frequent errors; Lack of continuity; Poor tempo' },
+            { score: 1, range: '7–10', zh: '極差；無法維持連貫性', en: 'Very poor; Unable to maintain continuity' }
+          ]
+        },
+        {
+          id: 'aural', zh: '聽覺測試', en: 'Aural Tests', max: 18, pass: 12,
+          bands: [
+            { score: 5, range: '17–18', zh: '準確且迅速的回答；音樂感知明顯', en: 'Accurate and prompt responses; Musical perception evident' },
+            { score: 4, range: '15–16', zh: '大致準確；回答及時；略有猶豫', en: 'Mostly accurate; Prompt response; Some hesitation' },
+            { score: 3, range: '12–14', zh: '大致正確；回答尚可；可能需要引導', en: 'Generally correct; Adequate response; Some prompting needed' },
+            { score: 2, range: '8–11', zh: '頻繁錯誤；回答慢；感知有限', en: 'Frequent errors; Slow response; Limited perception' },
+            { score: 1, range: '4–7', zh: '回答極差；大多數問題無法回答', en: 'Very poor response; Unable to answer most questions' }
+          ]
+        }
+      ]
+    },
+    grandTotal: 90
+  }
+};
+
+/* ============================================================
+   STATE
+============================================================ */
+
+const state = {
+  mode: 'performance',
+  sub: 'scoring',
+  lang: 'zh',
+  info: { student: '', date: '', grade: '', teacher: '' },
+  performance: {
+    pieces: [
+      { name: '', scores: { pitch: 0, time: 0, tone: 0, shape: 0, performance: 0 }, comments: { pitch: '', time: '', tone: '', shape: '', performance: '' } },
+      { name: '', scores: { pitch: 0, time: 0, tone: 0, shape: 0, performance: 0 }, comments: { pitch: '', time: '', tone: '', shape: '', performance: '' } },
+      { name: '', scores: { pitch: 0, time: 0, tone: 0, shape: 0, performance: 0 }, comments: { pitch: '', time: '', tone: '', shape: '', performance: '' } },
+      { name: '', scores: { pitch: 0, time: 0, tone: 0, shape: 0, performance: 0 }, comments: { pitch: '', time: '', tone: '', shape: '', performance: '' } }
+    ],
+    extra: {
+      scores: { communication: 0, interpretation: 0, delivery: 0 },
+      comments: { communication: '', interpretation: '', delivery: '' }
+    }
+  },
+  practical: {
+    pieces: [
+      { name: '', scores: { pitch: 0, rhythm: 0, tone: 0, shape: 0, performance: 0 }, comments: { pitch: '', rhythm: '', tone: '', shape: '', performance: '' } },
+      { name: '', scores: { pitch: 0, rhythm: 0, tone: 0, shape: 0, performance: 0 }, comments: { pitch: '', rhythm: '', tone: '', shape: '', performance: '' } },
+      { name: '', scores: { pitch: 0, rhythm: 0, tone: 0, shape: 0, performance: 0 }, comments: { pitch: '', rhythm: '', tone: '', shape: '', performance: '' } }
+    ],
+    extra: {
+      scores: { scales: 0, sightreading: 0, aural: 0 },
+      comments: { scales: '', sightreading: '', aural: '' }
+    }
+  }
+};
+
+/* ============================================================
+   UTILITIES
+============================================================ */
+
+function t(obj) {
+  if (!obj) return '';
+  return state.lang === 'en' ? (obj.en || obj.zh || '') : (obj.zh || obj.en || '');
+}
+
+function getModeData() { return CRITERIA_DATA[state.mode]; }
+
+function getResultBand(pct) {
+  for (const b of RESULT_BANDS) {
+    if (pct >= b.threshold) return b;
+  }
+  return RESULT_BANDS[RESULT_BANDS.length - 1];
+}
+
+function calcPieceTotal(pieceObj, criteriaIds) {
+  let total = 0;
+  criteriaIds.forEach(id => { total += pieceObj.scores[id] || 0; });
+  return total;
+}
+
+function calcExtraTotal(extraObj, ids) {
+  let total = 0;
+  ids.forEach(id => { total += extraObj.scores[id] || 0; });
+  return total;
+}
+
+function calcGrandTotal() {
+  const md = getModeData();
+  const st = state[state.mode];
+  const criteriaIds = md.pieces.criteria.map(c => c.id);
+  const extraIds = md.extra.criteria.map(c => c.id);
+  let total = 0;
+  st.pieces.forEach(p => { total += calcPieceTotal(p, criteriaIds); });
+  total += calcExtraTotal(st.extra, extraIds);
+  return { total, max: md.grandTotal };
+}
+
+/* ============================================================
+   RENDERING — SCORING PAGE
+============================================================ */
+
+function renderScoring() {
+  const md = getModeData();
+  const container = document.getElementById('scoring-content');
+  const pieceIds = md.pieces.criteria.map(c => c.id);
+  let html = '';
+
+  // Pieces
+  for (let i = 0; i < md.pieces.count; i++) {
+    html += renderPieceCard(i, md);
+  }
+
+  // Extra section (Performance as Whole / Tech Tests)
+  html += renderExtraCard(md);
+
+  container.innerHTML = html;
+  renderSummary();
+}
+
+function renderPieceCard(idx, md) {
+  const piece = state[state.mode].pieces[idx];
+  const pieceTotal = calcPieceTotal(piece, md.pieces.criteria.map(c => c.id));
+  const pieceLabelZh = ['一', '二', '三', '四'][idx] || (idx + 1);
+  const pieceLabelEn = (idx + 1);
+
+  let html = `<div class="piece-card" data-piece-idx="${idx}">
+    <div class="piece-header">
+      <div class="piece-num">${pieceLabelZh}</div>
+      <input type="text" class="piece-name-input" data-piece-idx="${idx}"
+             placeholder="${state.lang === 'en' ? 'Piece name' : '曲名 Piece name'}"
+             value="${escapeAttr(piece.name)}">
+      <div class="piece-subtotal">
+        <span class="zh-part">小計</span><span class="en-part">Subtotal</span>
+        <span class="num">${pieceTotal}</span><span class="denom">/25</span>
+      </div>
+    </div>`;
+
+  md.pieces.criteria.forEach(c => {
+    html += renderCriterion(c, piece.scores[c.id], piece.comments[c.id], `piece-${idx}`);
+  });
+
+  html += `</div>`;
+  return html;
+}
+
+function renderExtraCard(md) {
+  const st = state[state.mode];
+  const extraIds = md.extra.criteria.map(c => c.id);
+  const extraTotal = calcExtraTotal(st.extra, extraIds);
+  let html = `<div class="card extra-card">
+    <h2 class="card-title">
+      <span class="badge-star">${md.extra.symbol}</span>
+      <span class="zh-part">${md.extra.title.zh}</span><span class="en-part">${md.extra.title.en}</span>
+      <span class="piece-subtotal" style="margin-left: auto;">
+        <span class="num">${extraTotal}</span><span class="denom">/15</span>
+      </span>
+    </h2>`;
+
+  md.extra.criteria.forEach(c => {
+    html += renderCriterion(c, st.extra.scores[c.id], st.extra.comments[c.id], 'extra');
+  });
+
+  html += `</div>`;
+  return html;
+}
+
+function renderCriterion(criterion, score, comment, scope) {
+  const cId = criterion.id;
+  let html = `<div class="criterion" data-criterion-id="${cId}" data-scope="${scope}">
+    <div class="criterion-head">
+      <div class="criterion-name">
+        <span class="zh-part">${criterion.zh}</span><span class="en-part">${criterion.en}</span>
+      </div>
+      <div class="score-row">`;
+
+  for (let s = 5; s >= 1; s--) {
+    const color = SCORE_COLORS[s];
+    const selected = (score === s) ? 'selected' : '';
+    html += `<button class="score-btn ${selected}" data-score="${s}" style="--c:${color}">${s}</button>`;
+  }
+
+  html += `</div>
+    </div>`;
+
+  // Detail panel
+  const band = criterion.bands.find(b => b.score === score);
+  if (band) {
+    const color = SCORE_COLORS[score];
+    html += `<div class="detail-panel expanded" style="--c:${color}">
+      <div class="band-line">
+        <span class="band-num">${score}</span>
+        <span class="band-name"><span class="zh-part">${BAND_NAMES[score].zh}</span><span class="en-part">${BAND_NAMES[score].en}</span></span>
+        ${band.range ? `<span class="band-range">${band.range}</span>` : ''}
+      </div>
+      <div class="band-desc">
+        <span class="desc-zh">${band.zh}</span>
+        <span class="desc-en">${band.en}</span>
+      </div>
+    </div>`;
+  } else {
+    html += `<div class="detail-panel" style="--c:${SCORE_COLORS[3]}"></div>`;
+  }
+
+  // Comment input
+  const phZh = `評語（可選）`;
+  const phEn = `Comments (optional)`;
+  const placeholder = state.lang === 'en' ? phEn : `${phZh} ${phEn}`;
+  html += `<input type="text" class="comment-input" data-criterion-id="${cId}" data-scope="${scope}"
+           placeholder="${escapeAttr(placeholder)}" value="${escapeAttr(comment || '')}">`;
+
+  html += `</div>`;
+  return html;
+}
+
+function attachScoringListeners() {
+  // Use event delegation — a single listener per event type on the document.
+  // This avoids duplicate-listener bugs when criterion elements are replaced.
+
+  // Score buttons (delegated click)
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.score-btn');
+    if (!btn) return;
+    handleScoreClick(btn);
+  });
+
+  // Comment inputs (delegated input)
+  document.addEventListener('input', (e) => {
+    const input = e.target;
+    if (input.classList.contains('comment-input')) {
+      const cId = input.dataset.criterionId;
+      const scope = input.dataset.scope;
+      const scopeMatch = scope.match(/^piece-(\d+)$/);
+      const value = input.value;
+      if (scopeMatch) {
+        const idx = parseInt(scopeMatch[1], 10);
+        state[state.mode].pieces[idx].comments[cId] = value;
+      } else {
+        state[state.mode].extra.comments[cId] = value;
+      }
+      return;
+    }
+    if (input.classList.contains('piece-name-input')) {
+      const idx = parseInt(input.dataset.pieceIdx, 10);
+      state[state.mode].pieces[idx].name = input.value;
+      return;
+    }
+    if (input.classList.contains('info-input')) {
+      state.info[input.dataset.field] = input.value;
+    }
+  });
+}
+
+function handleScoreClick(btn) {
+  const scoreVal = parseInt(btn.dataset.score, 10);
+  const critEl = btn.closest('.criterion');
+  if (!critEl) return;
+  const cId = critEl.dataset.criterionId;
+  const scope = critEl.dataset.scope;
+  const scopeMatch = scope.match(/^piece-(\d+)$/);
+  const md = getModeData();
+
+  // Get current score
+  let currentScore;
+  if (scopeMatch) {
+    const idx = parseInt(scopeMatch[1], 10);
+    currentScore = state[state.mode].pieces[idx].scores[cId];
+  } else {
+    currentScore = state[state.mode].extra.scores[cId];
+  }
+
+  const newScore = (currentScore === scoreVal) ? 0 : scoreVal;
+
+  // Update state
+  if (scopeMatch) {
+    const idx = parseInt(scopeMatch[1], 10);
+    state[state.mode].pieces[idx].scores[cId] = newScore;
+  } else {
+    state[state.mode].extra.scores[cId] = newScore;
+  }
+
+  // Re-render just this criterion
+  const criterionData = (scope.startsWith('piece-'))
+    ? md.pieces.criteria.find(c => c.id === cId)
+    : md.extra.criteria.find(c => c.id === cId);
+
+  const comment = scopeMatch
+    ? state[state.mode].pieces[parseInt(scopeMatch[1], 10)].comments[cId]
+    : state[state.mode].extra.comments[cId];
+
+  // Preserve focus on the button (for keyboard accessibility)
+  const focusedScore = scoreVal;
+  const wasDeselecting = (currentScore === scoreVal);
+
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = renderCriterion(criterionData, newScore, comment, scope);
+  const newCriterion = tempDiv.firstElementChild;
+  critEl.replaceWith(newCriterion);
+
+  // If we deselected, focus moves away naturally. If we selected a different score, refocus on the new button.
+  if (!wasDeselecting) {
+    const newBtn = newCriterion.querySelector(`.score-btn[data-score="${focusedScore}"]`);
+    if (newBtn) newBtn.focus();
+  }
+
+  renderSummary();
+  updatePieceSubtotals();
+  renderCriteriaSticky();
+}
+
+function updatePieceSubtotals() {
+  const md = getModeData();
+  const ids = md.pieces.criteria.map(c => c.id);
+  document.querySelectorAll('.piece-card').forEach((card, i) => {
+    const piece = state[state.mode].pieces[i];
+    const total = calcPieceTotal(piece, ids);
+    const numEl = card.querySelector('.piece-subtotal .num');
+    if (numEl) numEl.textContent = total;
+  });
+
+  // Extra subtotal
+  const extraIds = md.extra.criteria.map(c => c.id);
+  const extraTotal = calcExtraTotal(state[state.mode].extra, extraIds);
+  const extraCard = document.querySelector('.extra-card');
+  if (extraCard) {
+    const numEl = extraCard.querySelector('.piece-subtotal .num');
+    if (numEl) numEl.textContent = extraTotal;
+  }
+}
+
+function renderSummary() {
+  const md = getModeData();
+  const { total, max } = calcGrandTotal();
+  const pct = max > 0 ? total / max : 0;
+  const band = getResultBand(pct);
+  const noScore = (total === 0);
+
+  const ids = md.pieces.criteria.map(c => c.id);
+  let cellsHtml = '';
+  for (let i = 0; i < md.pieces.count; i++) {
+    const p = state[state.mode].pieces[i];
+    const sub = calcPieceTotal(p, ids);
+    cellsHtml += `<div class="summary-cell">
+      <div class="label">P${i + 1}</div>
+      <div class="value">${sub}<span class="denom">/25</span></div>
+    </div>`;
+  }
+
+  const extraIds = md.extra.criteria.map(c => c.id);
+  const extraTotal = calcExtraTotal(state[state.mode].extra, extraIds);
+  const extraLabel = state.mode === 'performance' ? '整體' : '技術';
+  const extraLabelEn = state.mode === 'performance' ? 'Perf' : 'Tech';
+  cellsHtml += `<div class="summary-cell">
+    <div class="label">★<span class="zh-part">${extraLabel}</span><span class="en-part">${extraLabelEn}</span></div>
+    <div class="value">${extraTotal}<span class="denom">/15</span></div>
+  </div>`;
+
+  const bandNameZh = noScore ? '未評分' : band.zh;
+  const bandNameEn = noScore ? 'Not Scored' : band.en;
+  const pillBg = noScore ? '#666' : band.color;
+  const pillBorder = noScore ? '#888' : band.color;
+
+  const html = `<h2 class="card-title">
+      <span class="zh-part">評分摘要</span><span class="en-part">Scoring Summary</span>
+    </h2>
+    <div class="summary-grid">${cellsHtml}</div>
+    <div class="summary-total-row">
+      <div class="summary-total">
+        <span class="zh-part">總分</span><span class="en-part">Grand Total</span>:
+        <span class="grand-num">${total}</span><span class="grand-denom">/${max}</span>
+      </div>
+      <div class="result-pill" style="--pill-bg:${pillBg}; --pill-border:${pillBorder}">
+        <span class="zh-part">${bandNameZh}</span><span class="en-part">${bandNameEn}</span>
+      </div>
+    </div>
+    <div class="action-buttons">
+      <button class="action-btn btn-secondary" id="btn-copy">
+        <span class="icon">📋</span>
+        <span class="zh-part">複製到剪貼簿</span><span class="en-part">Copy to Clipboard</span>
+      </button>
+      <button class="action-btn btn-primary" id="btn-pdf">
+        <span class="icon">📄</span>
+        <span class="zh-part">預覽結果 PDF</span><span class="en-part">PDF Preview</span>
+      </button>
+    </div>`;
+
+  document.getElementById('summary-card').innerHTML = html;
+
+  document.getElementById('btn-copy').addEventListener('click', openCopyModal);
+  document.getElementById('btn-pdf').addEventListener('click', openPdfModal);
+}
+
+/* ============================================================
+   RENDERING — CRITERIA PAGE
+============================================================ */
+
+function renderCriteriaPage() {
+  renderCriteriaSticky();
+  renderCriteriaContent();
+}
+
+function renderCriteriaSticky() {
+  const md = getModeData();
+  const { total, max } = calcGrandTotal();
+  const pct = max > 0 ? total / max : 0;
+  const band = total === 0 ? null : getResultBand(pct);
+  const ids = md.pieces.criteria.map(c => c.id);
+  const extraIds = md.extra.criteria.map(c => c.id);
+
+  let cellsHtml = '';
+  for (let i = 0; i < md.pieces.count; i++) {
+    const p = state[state.mode].pieces[i];
+    const sub = calcPieceTotal(p, ids);
+    cellsHtml += `<div class="cs-cell">
+      <div class="lbl">P${i + 1}</div>
+      <div class="val">${sub}<span class="den">/25</span></div>
+    </div>`;
+  }
+  const extraTotal = calcExtraTotal(state[state.mode].extra, extraIds);
+  const extraShortZh = state.mode === 'performance' ? '整體' : '技術';
+  const extraShortEn = state.mode === 'performance' ? 'Perf' : 'Tech';
+  cellsHtml += `<div class="cs-cell">
+    <div class="lbl">★<span class="zh-part">${extraShortZh}</span><span class="en-part">${extraShortEn}</span></div>
+    <div class="val">${extraTotal}<span class="den">/15</span></div>
+  </div>`;
+  cellsHtml += `<div class="cs-cell">
+    <div class="lbl"><span class="zh-part">總分</span><span class="en-part">Total</span></div>
+    <div class="val">${total}<span class="den">/${max}</span></div>
+  </div>`;
+
+  const bandLabel = band
+    ? (state.lang === 'zh' ? `${band.zh} ${band.en}` : band.en)
+    : (state.lang === 'en' ? 'Not Scored' : '未評分 Not Scored');
+  const bandBg = band ? band.color : '#999';
+
+  const html = `<div class="criteria-sticky-grid">${cellsHtml}
+    <div class="cs-pill" style="--pill-bg:${bandBg}">${bandLabel}</div>
+  </div>`;
+
+  document.getElementById('criteria-sticky').innerHTML = html;
+}
+
+function renderCriteriaContent() {
+  const md = getModeData();
+  let html = '';
+
+  // Section A: Pieces Criteria
+  html += `<div class="criteria-section">
+    <h3 class="criteria-section-title">
+      <span class="zh-part">A. 曲目評分準則</span><span class="en-part">Section A: Pieces Marking Criteria</span>
+    </h3>`;
+
+  md.pieces.criteria.forEach(c => {
+    html += renderCriterionReference(c, 'pieces');
+  });
+  html += `</div>`;
+
+  // Section B: Extra (Performance as Whole / Tech Tests)
+  const extraTitle = state.mode === 'performance'
+    ? 'B. 整體演奏表現 / Performance as a Whole'
+    : 'B. 技術測試 / Technical Tests';
+  const extraTitleParts = state.mode === 'performance'
+    ? { zh: 'B. 整體演奏表現', en: 'Section B: Performance as a Whole' }
+    : { zh: 'B. 技術測試', en: 'Section B: Technical Tests' };
+
+  html += `<div class="criteria-section">
+    <h3 class="criteria-section-title">
+      <span class="zh-part">${extraTitleParts.zh}</span><span class="en-part">${extraTitleParts.en}</span>
+    </h3>`;
+
+  md.extra.criteria.forEach(c => {
+    html += renderCriterionReference(c, 'extra');
+  });
+  html += `</div>`;
+
+  // Section C: Overall Result Bands
+  html += `<div class="criteria-section">
+    <h3 class="criteria-section-title">
+      <span class="zh-part">C. 總成績等級</span><span class="en-part">Section C: Overall Result Bands</span>
+    </h3>`;
+
+  const { total, max } = calcGrandTotal();
+  const pct = max > 0 ? total / max : 0;
+  const currentBand = total === 0 ? null : getResultBand(pct);
+
+  RESULT_BANDS.forEach(b => {
+    const isCurrent = currentBand && currentBand.id === b.id;
+    const currentTag = isCurrent
+      ? `<span class="rb-current-tag"><span class="zh-part">目前</span><span class="en-part">Current</span></span>`
+      : '';
+    html += `<div class="result-band-row ${isCurrent ? 'is-current' : ''}" style="--c:${b.color}">
+      <span class="rb-range">${b.range}</span>
+      <span class="rb-pct">${b.pct}</span>
+      <span class="rb-name"><span class="zh-part">${b.zh}</span><span class="en-part">${b.en}</span></span>
+      ${currentTag}
+    </div>`;
+  });
+
+  html += `</div>`;
+
+  document.getElementById('criteria-content').innerHTML = html;
+}
+
+function renderCriterionReference(criterion, scope) {
+  const md = getModeData();
+  let html = `<div class="criteria-subsection">
+    <div class="criteria-subsection-title">
+      <span class="zh-part">${criterion.zh}</span><span class="en-part">${criterion.en}</span>`;
+  if (criterion.max) {
+    html += `<span class="extra-info">(max ${criterion.max}, pass ${criterion.pass})</span>`;
+  }
+  html += `</div>`;
+
+  // For each band, find which pieces have selected it
+  criterion.bands.forEach(band => {
+    const color = SCORE_COLORS[band.score];
+    let tagsHtml = '';
+
+    if (scope === 'pieces') {
+      // Show piece tags
+      for (let i = 0; i < md.pieces.count; i++) {
+        const piece = state[state.mode].pieces[i];
+        if (piece.scores[criterion.id] === band.score) {
+          tagsHtml += `<span class="piece-tag">P${i + 1}</span>`;
+        }
+      }
+    } else {
+      // Show extra tag
+      const extraScore = state[state.mode].extra.scores[criterion.id];
+      const hasMatch = (extraScore === band.score);
+      if (hasMatch) {
+        const tagText = state.mode === 'performance' ? '★' : '★';
+        tagsHtml += `<span class="piece-tag">${tagText}</span>`;
+      }
+    }
+
+    const hasSelection = tagsHtml !== '';
+    const selectedClass = hasSelection ? 'has-selection' : '';
+
+    html += `<div class="band-row ${selectedClass}" style="--c:${color}">
+      <div class="band-row-top">
+        <span class="b-num">${band.score}</span>
+        <span class="b-name"><span class="zh-part">${BAND_NAMES[band.score].zh}</span><span class="en-part">${BAND_NAMES[band.score].en}</span></span>
+        ${band.range ? `<span class="b-range">${band.range}</span>` : ''}
+        <span class="piece-tags">${tagsHtml}</span>
+      </div>
+      <div class="b-desc">
+        <span class="desc-zh">${band.zh}</span>
+        <span class="desc-en">${band.en}</span>
+      </div>
+    </div>`;
+  });
+
+  html += `</div>`;
+  return html;
+}
+
+/* ============================================================
+   OUTPUT TEXT GENERATION
+============================================================ */
+
+function generateOutputText() {
+  const md = getModeData();
+  const isZh = state.lang === 'zh';
+  // Lb returns bilingual in ZH mode, English-only in EN mode
+  const Lb = (zh, en) => isZh ? `${zh} ${en}` : en;
+  const Lbs = (zh, en) => isZh ? `${zh} / ${en}` : en;  // slash-separated
+  const Lp = (zh, en) => isZh ? `${zh} | ${en}` : en;  // pipe-separated (for info rows)
+
+  const sep = '━━━━━━━━━━━━━━━━━━';
+  let out = '';
+
+  // Header
+  out += `🎻 ABRSM ${Lb(md.name.zh, md.name.en)} ${Lbs('評分表', 'Scoring Sheet')}\n`;
+  out += sep + '\n';
+  out += `${Lp('學生', 'Student')}: ${state.info.student || '___'}\n`;
+  out += `${Lp('日期', 'Date')}: ${state.info.date || '___'}\n`;
+  out += `${Lp('級別', 'Grade')}: ${state.info.grade || '___'}\n`;
+  out += `${Lp('教師', 'Teacher')}: ${state.info.teacher || '___'}\n`;
+  out += sep + '\n\n';
+
+  const pieceNumsZh = ['1️⃣', '2️⃣', '3️⃣', '4️⃣'];
+  const pieceLabelsZh = ['曲目一', '曲目二', '曲目三', '曲目四'];
+
+  // Pieces
+  for (let i = 0; i < md.pieces.count; i++) {
+    const piece = state[state.mode].pieces[i];
+    const num = pieceNumsZh[i];
+    const label = isZh ? pieceLabelsZh[i] : `Piece ${i + 1}`;
+    const name = piece.name || (isZh ? '（未填）' : '(untitled)');
+    out += `${num} ${label} / Piece ${i + 1}: ${name}\n`;
+
+    md.pieces.criteria.forEach(c => {
+      const score = piece.scores[c.id];
+      const comment = piece.comments[c.id] || '';
+      out += `  ${Lb(c.zh, c.en)}`;
+      if (score > 0) {
+        const bandObj = BAND_NAMES[score];
+        const bandName = isZh ? `${bandObj.zh} ${bandObj.en}` : bandObj.en;
+        out += `: ${score}${isZh ? '分' : ''} ${bandName}`;
+        if (comment) out += ` — ${comment}`;
+      } else {
+        out += `: ${isZh ? '未評分 Not Scored' : 'Not Scored'}`;
+      }
+      out += '\n';
+    });
+
+    const ids = md.pieces.criteria.map(c => c.id);
+    const sub = calcPieceTotal(piece, ids);
+    out += `  ${Lb('小計', 'Subtotal')}: ${sub}/25\n\n`;
+  }
+
+  // Extra section
+  const extraTitleFull = isZh
+    ? `${md.extra.symbol} ${md.extra.title.zh} / ${md.extra.title.en}`
+    : `${md.extra.symbol} ${md.extra.title.en}`;
+  out += extraTitleFull + '\n';
+
+  md.extra.criteria.forEach(c => {
+    const score = state[state.mode].extra.scores[c.id];
+    const comment = state[state.mode].extra.comments[c.id] || '';
+    let lineLabel = Lb(c.zh, c.en);
+    if (c.max) {
+      lineLabel += ` (max ${c.max}, pass ${c.pass})`;
+    }
+    out += `  ${lineLabel}`;
+    if (score > 0) {
+      const bandObj = BAND_NAMES[score];
+      const bandName = isZh ? `${bandObj.zh} ${bandObj.en}` : bandObj.en;
+      out += `: ${score}${isZh ? '分' : ''} ${bandName}`;
+      if (comment) out += ` — ${comment}`;
+    } else {
+      out += `: ${isZh ? '未評分 Not Scored' : 'Not Scored'}`;
+    }
+    out += '\n';
+  });
+
+  const extraIds = md.extra.criteria.map(c => c.id);
+  const extraTotal = calcExtraTotal(state[state.mode].extra, extraIds);
+  out += `  ${Lb('小計', 'Subtotal')}: ${extraTotal}/15\n\n`;
+
+  // Total
+  const { total, max } = calcGrandTotal();
+  const pct = max > 0 ? total / max : 0;
+  const band = total === 0 ? null : getResultBand(pct);
+  const bandLabel = band
+    ? (isZh ? `${band.zh} ${band.en}` : band.en)
+    : (isZh ? '未評分 Not Scored' : 'Not Scored');
+
+  out += sep + '\n';
+  out += `${Lb('總分', 'Grand Total')}: ${total}/${max}\n`;
+  out += `${Lb('等級', 'Result')}: ${bandLabel}\n`;
+  out += sep + '\n';
+
+  return out;
+}
+
+function generatePdfHtml() {
+  const md = getModeData();
+  const isZh = state.lang === 'zh';
+  // Lb returns bilingual in ZH mode, English-only in EN mode
+  const Lb = (zh, en) => isZh ? `${zh} ${en}` : en;
+  const Lbs = (zh, en) => isZh ? `${zh} / ${en}` : en;
+  const Lp = (zh, en) => isZh ? `${zh} | ${en}` : en;
+  const Lne = (zh, en) => isZh ? `${zh} ${en}` : en;  // for "not scored" etc
+
+  let html = `<div class="pa-title">🎻 ABRSM ${Lb(md.name.zh, md.name.en)} ${Lbs('評分表', 'Scoring Sheet')}</div>`;
+  html += `<div class="pa-line">${Lp('學生', 'Student')}: ${escapeHtml(state.info.student) || '___'}</div>`;
+  html += `<div class="pa-line">${Lp('日期', 'Date')}: ${escapeHtml(state.info.date) || '___'}</div>`;
+  html += `<div class="pa-line">${Lp('級別', 'Grade')}: ${escapeHtml(state.info.grade) || '___'}</div>`;
+  html += `<div class="pa-line">${Lp('教師', 'Teacher')}: ${escapeHtml(state.info.teacher) || '___'}</div>`;
+  html += `<div class="pa-divider"></div>`;
+
+  const pieceNumsZh = ['1️⃣', '2️⃣', '3️⃣', '4️⃣'];
+  const pieceLabelsZh = ['曲目一', '曲目二', '曲目三', '曲目四'];
+
+  for (let i = 0; i < md.pieces.count; i++) {
+    const piece = state[state.mode].pieces[i];
+    const num = pieceNumsZh[i];
+    const label = isZh ? pieceLabelsZh[i] : `Piece ${i + 1}`;
+    const name = piece.name || (isZh ? '（未填）' : '(untitled)');
+    html += `<div class="pa-section">${num} ${label} / Piece ${i + 1}: ${escapeHtml(name)}</div>`;
+
+    md.pieces.criteria.forEach(c => {
+      const score = piece.scores[c.id];
+      const comment = piece.comments[c.id] || '';
+      let lineLabel = Lb(c.zh, c.en);
+      let lineContent;
+      if (score > 0) {
+        const bandObj = BAND_NAMES[score];
+        const bandName = isZh ? `${bandObj.zh} ${bandObj.en}` : bandObj.en;
+        lineContent = `${score}${isZh ? '分' : ''} ${bandName}`;
+        if (comment) lineContent += ` — ${escapeHtml(comment)}`;
+      } else {
+        lineContent = Lne('未評分', 'Not Scored');
+      }
+      html += `<div class="pa-line">${lineLabel}: ${lineContent}</div>`;
+    });
+
+    const ids = md.pieces.criteria.map(c => c.id);
+    const sub = calcPieceTotal(piece, ids);
+    html += `<div class="pa-line"><strong>${Lb('小計', 'Subtotal')}: ${sub}/25</strong></div>`;
+  }
+
+  // Extra section
+  const extraTitle = isZh
+    ? `${md.extra.symbol} ${md.extra.title.zh} / ${md.extra.title.en}`
+    : `${md.extra.symbol} ${md.extra.title.en}`;
+  html += `<div class="pa-section">${extraTitle}</div>`;
+
+  md.extra.criteria.forEach(c => {
+    const score = state[state.mode].extra.scores[c.id];
+    const comment = state[state.mode].extra.comments[c.id] || '';
+    let lineLabel = Lb(c.zh, c.en);
+    if (c.max) lineLabel += ` (max ${c.max}, pass ${c.pass})`;
+    let lineContent;
+    if (score > 0) {
+      const bandObj = BAND_NAMES[score];
+      const bandName = isZh ? `${bandObj.zh} ${bandObj.en}` : bandObj.en;
+      lineContent = `${score}${isZh ? '分' : ''} ${bandName}`;
+      if (comment) lineContent += ` — ${escapeHtml(comment)}`;
+    } else {
+      lineContent = Lne('未評分', 'Not Scored');
+    }
+    html += `<div class="pa-line">${lineLabel}: ${lineContent}</div>`;
+  });
+
+  const extraIds = md.extra.criteria.map(c => c.id);
+  const extraTotal = calcExtraTotal(state[state.mode].extra, extraIds);
+  html += `<div class="pa-line"><strong>${Lb('小計', 'Subtotal')}: ${extraTotal}/15</strong></div>`;
+
+  const { total, max } = calcGrandTotal();
+  const pct = max > 0 ? total / max : 0;
+  const band = total === 0 ? null : getResultBand(pct);
+  const bandLabel = band
+    ? (isZh ? `${band.zh} ${band.en}` : band.en)
+    : (isZh ? '未評分 Not Scored' : 'Not Scored');
+
+  html += `<div class="pa-total"><strong>${Lb('總分', 'Grand Total')}: ${total}/${max}</strong></div>`;
+  html += `<div class="pa-total"><strong>${Lb('等級', 'Result')}: ${bandLabel}</strong></div>`;
+
+  return html;
+}
+
+/* ============================================================
+   MODALS
+============================================================ */
+
+function openCopyModal() {
+  const text = generateOutputText();
+  const ta = document.getElementById('copy-textarea');
+  ta.value = text;
+  document.getElementById('copy-modal').classList.add('open');
+
+  // Try auto-copy
+  setTimeout(() => {
+    ta.focus();
+    ta.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+  }, 50);
+}
+
+function openPdfModal() {
+  const html = generatePdfHtml();
+  document.getElementById('pdf-content').innerHTML = html;
+  document.getElementById('pdf-modal').classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+/* ============================================================
+   LANGUAGE TOGGLE
+============================================================ */
+
+function applyLang(lang) {
+  state.lang = lang;
+  document.body.classList.toggle('lang-zh', lang === 'zh');
+  document.body.classList.toggle('lang-en', lang === 'en');
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  renderAll();
+}
+
+/* ============================================================
+   MODE / SUB SWITCHING
+============================================================ */
+
+function applyMode(mode) {
+  state.mode = mode;
+  document.querySelectorAll('.mode-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.mode === mode);
+  });
+  renderAll();
+}
+
+function applySub(sub) {
+  state.sub = sub;
+  document.querySelectorAll('.sub-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.sub === sub);
+  });
+  document.getElementById('page-scoring').classList.toggle('active', sub === 'scoring');
+  document.getElementById('page-criteria').classList.toggle('active', sub === 'criteria');
+  if (sub === 'criteria') renderCriteriaPage();
+}
+
+function renderAll() {
+  renderScoring();
+  if (state.sub === 'criteria') renderCriteriaPage();
+}
+
+/* ============================================================
+   HELPERS
+============================================================ */
+
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function escapeAttr(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+
+function init() {
+  // Mode tabs
+  document.querySelectorAll('.mode-tab').forEach(t => {
+    t.addEventListener('click', () => applyMode(t.dataset.mode));
+  });
+
+  // Sub tabs
+  document.querySelectorAll('.sub-tab').forEach(t => {
+    t.addEventListener('click', () => applySub(t.dataset.sub));
+  });
+
+  // Lang buttons
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.addEventListener('click', () => applyLang(b.dataset.lang));
+  });
+
+  // Modal close buttons
+  document.querySelectorAll('[data-close]').forEach(b => {
+    b.addEventListener('click', () => closeModal(b.dataset.close));
+  });
+
+  // Click outside modal to close
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+  });
+
+  // Print button
+  document.getElementById('print-btn').addEventListener('click', () => {
+    const html = generatePdfHtml();
+    const pa = document.getElementById('print-area');
+    pa.innerHTML = html;
+    // Close modal so it doesn't interfere
+    document.getElementById('pdf-modal').classList.remove('open');
+    // Show print area (it's display:none by default)
+    pa.style.display = 'block';
+    // Small delay to ensure DOM updated
+    setTimeout(function() {
+      window.print();
+      // Restore after print dialog
+      setTimeout(function() {
+        pa.style.display = '';
+      }, 500);
+    }, 100);
+  });
+
+  // Initial render
+  attachScoringListeners();
+  renderAll();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>

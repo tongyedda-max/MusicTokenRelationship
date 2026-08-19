@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>小提琴課堂記錄卡 | Violin Lesson Log Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --blue:#4A7BA6; --blue-bg:#EDF3F8;
+  --orange:#B8814A; --orange-bg:#FAF1E3;
+  --green:#5B8A72; --green-bg:#EAF2EC;
+  --purple:#7E6A99; --purple-bg:#F0EDF4;
+  --ink:#2C2823; --soft:#6B6358; --line:#D9D2C5;
+  --cream:#FDFAF3; --border:#E5DFD3;
+}
+body {
+  font-family:'Noto Sans SC',sans-serif;
+  background:#E8E3D9;
+  padding:0;
+  color:var(--ink);
+  -webkit-tap-highlight-color:transparent;
+}
+.page {
+  max-width:680px;
+  margin:0 auto;
+  background:var(--cream);
+  min-height:100vh;
+  box-shadow:0 0 24px rgba(0,0,0,.08);
+}
+/* TAB BAR */
+.tabbar {
+  display:flex;
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:#fff;
+  border-bottom:2px solid var(--border);
+}
+.tab {
+  flex:1;
+  padding:12px 8px;
+  text-align:center;
+  font-size:14px;
+  font-weight:600;
+  color:var(--soft);
+  cursor:pointer;
+  border:none;
+  border-bottom:3px solid transparent;
+  transition:all .15s;
+  background:none;
+  font-family:inherit;
+}
+.tab.active { color:var(--blue); border-bottom-color:var(--blue); }
+/* HEADER */
+.hdr {
+  background:linear-gradient(135deg,#4A6FA5,#4A6FA5dd);
+  color:#fff;
+  padding:18px 16px 14px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.hdr h1 { font-family:'Noto Serif SC',serif; font-size:19px; margin-bottom:2px; }
+.hdr .en { font-size:11px; opacity:.85; letter-spacing:1px; text-transform:uppercase; }
+.violin-deco {
+  position:absolute; right:14px; top:50%;
+  transform:translateY(-50%); opacity:.22; width:80px; height:auto;
+}
+/* INFO BAR */
+.info-bar {
+  display:flex; flex-wrap:wrap; gap:6px;
+  padding:10px 14px; background:rgba(0,0,0,.03);
+  border-bottom:1px solid var(--border);
+}
+.info-item { flex:1; min-width:120px; display:flex; flex-direction:column; gap:2px; }
+.info-item label { font-size:9px; color:var(--soft); font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+.info-item input {
+  border:none; border-bottom:1.5px solid var(--line);
+  background:transparent; font-size:13px; font-family:inherit;
+  outline:none; padding:3px 0; color:var(--ink);
+}
+.info-item input:focus { border-bottom-color:var(--blue); }
+/* SECTION CARD */
+.section-card {
+  margin:8px; border:1px solid var(--border);
+  border-radius:10px; overflow:hidden; background:#fff;
+}
+.section-header {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 12px; border-bottom:1px solid var(--border);
+}
+.num-circle {
+  width:24px; height:24px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:12px; color:#fff; flex-shrink:0;
+}
+.card-blue .section-header { background:var(--blue-bg); }
+.card-blue .num-circle { background:var(--blue); }
+.card-orange .section-header { background:var(--orange-bg); }
+.card-orange .num-circle { background:var(--orange); }
+.card-green .section-header { background:var(--green-bg); }
+.card-green .num-circle { background:var(--green); }
+.card-purple .section-header { background:var(--purple-bg); }
+.card-purple .num-circle { background:var(--purple); }
+.section-title { flex:1; }
+.section-title .zh { font-size:13px; font-weight:600; }
+.section-title .en { font-size:9px; color:var(--soft); }
+.section-body { padding:8px 12px; }
+/* LIST INPUT (for sections 1 & 4) */
+.list-input { display:flex; flex-direction:column; gap:5px; }
+.list-row { display:flex; align-items:flex-start; gap:5px; }
+.list-row .num {
+  font-size:12px; font-weight:600; color:var(--soft);
+  min-width:18px; padding-top:6px; flex-shrink:0;
+}
+.list-row .bullet {
+  font-size:12px; color:var(--soft);
+  min-width:10px; padding-top:6px; flex-shrink:0;
+}
+.list-row input {
+  flex:1; min-width:0;
+  border:1px solid var(--line); border-radius:6px;
+  padding:5px 8px; font-size:12px; font-family:inherit;
+  outline:none; background:rgba(255,255,255,.7);
+}
+.list-row input:focus { border-color:var(--blue); background:#fff; }
+.list-row .remove-btn {
+  border:none; background:rgba(0,0,0,.06);
+  border-radius:4px; width:22px; height:22px;
+  font-size:14px; color:var(--soft); cursor:pointer;
+  flex-shrink:0; margin-top:3px;
+  display:flex; align-items:center; justify-content:center;
+}
+.list-row .remove-btn:active { background:rgba(0,0,0,.12); }
+.add-row-btn {
+  display:flex; align-items:center; justify-content:center;
+  gap:4px; padding:6px; border:1.5px dashed var(--border);
+  border-radius:6px; background:transparent; font-size:12px;
+  color:var(--soft); cursor:pointer; font-family:inherit;
+  margin-top:4px; width:100%;
+}
+.add-row-btn:active { background:rgba(0,0,0,.03); }
+/* CHECKBOX WITH INLINE DETAIL */
+.check-detail-list { display:flex; flex-direction:column; gap:4px; }
+.check-detail-item {
+  border:1.5px solid var(--border); border-radius:8px;
+  overflow:hidden; transition:all .15s;
+}
+.check-detail-item .cd-header {
+  display:flex; align-items:center; gap:6px;
+  padding:5px 8px; cursor:pointer; user-select:none;
+}
+.check-detail-item .cd-header .box {
+  width:14px; height:14px; border:1.5px solid var(--soft);
+  border-radius:3px; flex-shrink:0; position:relative;
+}
+.check-detail-item.checked .cd-header .box {
+  background:var(--orange); border-color:var(--orange);
+}
+.check-detail-item.checked .cd-header .box::after {
+  content:''; position:absolute; left:3px; top:0;
+  width:4px; height:8px; border:solid #fff;
+  border-width:0 2px 2px 0; transform:rotate(45deg);
+}
+.check-detail-item .cd-header .label-zh { font-size:12px; font-weight:500; }
+.check-detail-item .cd-header .label-en { font-size:9px; color:var(--soft); }
+.check-detail-item.checked { border-color:var(--orange); background:var(--orange-bg); }
+.check-detail-item .cd-detail {
+  display:none; padding:0 8px 5px 28px;
+}
+.check-detail-item.checked .cd-detail { display:block; }
+.check-detail-item .cd-detail input {
+  width:100%; border:1px solid var(--line); border-radius:5px;
+  padding:4px 6px; font-size:11px; font-family:inherit;
+  outline:none; background:rgba(255,255,255,.8);
+}
+.check-detail-item .cd-detail input:focus { border-color:var(--orange); }
+.check-detail-item .cd-detail input::placeholder { color:#C4BFB3; }
+.cg-title {
+  font-size:11px; font-weight:600; margin-bottom:5px;
+  padding-bottom:3px; border-bottom:1px dashed var(--line);
+}
+.cg-title .en { font-size:9px; color:var(--soft); font-weight:400; margin-left:4px; }
+.checkbox-group { margin-bottom:8px; }
+.checkbox-group:last-child { margin-bottom:0; }
+/* RADIO PILLS */
+.radio-pills { display:flex; gap:5px; flex-wrap:wrap; }
+.pill-item {
+  display:flex; align-items:center; gap:4px;
+  padding:5px 10px; border:1.5px solid var(--border);
+  border-radius:20px; cursor:pointer; font-size:11px;
+  transition:all .12s; user-select:none;
+}
+.pill-item:active { transform:scale(.95); }
+.pill-item .dot {
+  width:10px; height:10px; border:1.5px solid var(--soft);
+  border-radius:50%; flex-shrink:0;
+}
+.pill-item.selected {
+  background:var(--green-bg); border-color:var(--green);
+  color:var(--green); font-weight:600;
+}
+.pill-item.selected .dot { background:var(--green); border-color:var(--green); }
+.pill-item .en { font-size:8px; opacity:.6; }
+/* COPY BUTTON */
+.copy-bar {
+  padding:12px 14px; background:linear-gradient(135deg,#2A2620,#3A342A);
+  display:flex; gap:6px; align-items:center; justify-content:center;
+}
+.copy-btn {
+  flex:1; padding:12px 16px;
+  background:linear-gradient(135deg,#4A6FA5,#5B8DBF);
+  color:#fff; border:none; border-radius:10px;
+  font-size:14px; font-weight:700; cursor:pointer;
+  font-family:inherit; transition:all .15s;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.copy-btn:active { transform:scale(.97); }
+.copy-btn.copied { background:linear-gradient(135deg,#4A7C59,#5B8A72); }
+/* TOAST */
+.toast {
+  position:fixed; bottom:30px; left:50%;
+  transform:translateX(-50%) translateY(100px);
+  background:#2A2620; color:#fff;
+  padding:10px 20px; border-radius:30px;
+  font-size:13px; font-weight:600; z-index:1000;
+  transition:transform .3s; box-shadow:0 4px 20px rgba(0,0,0,.3);
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
+/* FOOTER */
+.footer {
+  text-align:center; padding:10px; font-size:9px;
+  color:var(--soft); border-top:1px solid var(--border); line-height:1.5;
+}
+/* PRINT */
+@media print {
+  body { background:#fff; }
+  .page { box-shadow:none; max-width:100%; }
+  .tabbar { display:none; }
+  #page-zh, #page-en { display:block !important; }
+}
+/* MOBILE */
+@media(max-width:480px) {
+  .hdr h1 { font-size:17px; }
+  .info-bar { padding:8px 10px; gap:4px; }
+  .info-item { min-width:90px; }
+  .info-item input { font-size:12px; }
+  .section-card { margin:6px; }
+  .section-header { padding:7px 10px; gap:5px; }
+  .section-title .zh { font-size:12px; }
+  .section-body { padding:7px 10px; }
+  .list-row input { font-size:11px; padding:4px 6px; }
+  .check-detail-item .cd-header .label-zh { font-size:11px; }
+  .pill-item { font-size:10px; padding:4px 8px; }
+  .copy-btn { font-size:13px; padding:10px 14px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="tabbar">
+    <button class="tab active" onclick="showPage('zh')">中文</button>
+    <button class="tab" onclick="showPage('en')">English</button>
+  </div>
+
+  <div class="hdr">
+    <h1>小提琴課堂記錄卡</h1>
+    <div class="en">Violin Lesson Log Sheet</div>
+    <svg class="violin-deco" viewBox="0 0 100 180" fill="none" stroke="#fff" stroke-width="1.5">
+      <path d="M30 20 Q28 30 32 45 Q35 55 38 60 L38 90 Q35 95 33 105 Q30 120 35 140 Q40 160 50 165 Q60 160 65 140 Q70 120 67 105 Q65 95 62 90 L62 60 Q65 55 68 45 Q72 30 70 20"/>
+      <path d="M38 60 L62 60" stroke-width="1"/>
+      <path d="M40 65 L60 65" stroke-width="0.8"/>
+      <path d="M42 70 L58 70" stroke-width="0.8"/>
+      <path d="M38 85 L62 85" stroke-width="0.8"/>
+      <path d="M40 95 L60 95" stroke-width="0.8"/>
+      <path d="M42 100 L58 100" stroke-width="0.8"/>
+      <path d="M44 105 L56 105" stroke-width="0.8"/>
+      <circle cx="50" cy="80" r="6" fill="none" stroke-width="1"/>
+      <path d="M30 20 Q35 15 38 18" fill="none" stroke-width="1.2"/>
+      <path d="M70 20 Q65 15 62 18" fill="none" stroke-width="1.2"/>
+      <path d="M35 168 Q50 175 65 168" fill="none" stroke-width="1.5"/>
+      <path d="M42 170 L42 175" stroke-width="2"/>
+      <path d="M58 170 L58 175" stroke-width="2"/>
+    </svg>
+  </div>
+
+  <!-- ===== PAGE: 中文 ===== -->
+  <div id="page-zh">
+    <div class="info-bar">
+      <div class="info-item"><label>學生姓名 Student</label><input type="text" id="zh-name"></div>
+      <div class="info-item"><label>日期 Date</label><input type="text" id="zh-date" placeholder="2026-8-1"></div>
+      <div class="info-item"><label>級別 Grade</label><input type="text" id="zh-grade" placeholder="G5"></div>
+      <div class="info-item"><label>教師 Teacher</label><input type="text" id="zh-teacher"></div>
+    </div>
+
+    <!-- Section 1 -->
+    <div class="section-card card-blue">
+      <div class="section-header">
+        <div class="num-circle">1</div>
+        <div class="section-title"><div class="zh">本節課內容</div><div class="en">What Was Covered</div></div>
+      </div>
+      <div class="section-body">
+        <div class="list-input" id="zh-covered-list"></div>
+        <button class="add-row-btn" onclick="addRow('zh-covered')">+ 新增行</button>
+      </div>
+    </div>
+
+    <!-- Section 2 -->
+    <div class="section-card card-orange">
+      <div class="section-header">
+        <div class="num-circle">2</div>
+        <div class="section-title"><div class="zh">上節課問題 & 下節課重點</div><div class="en">Last Issues & Next Focus</div></div>
+      </div>
+      <div class="section-body">
+        <div class="checkbox-group">
+          <div class="cg-title">上節課問題 <span class="en">Last Lesson Issues</span></div>
+          <div class="check-detail-list" id="zh-issues"></div>
+        </div>
+        <div class="checkbox-group">
+          <div class="cg-title">下節課重點 <span class="en">Next Lesson Focus</span></div>
+          <div class="check-detail-list" id="zh-focus"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3 -->
+    <div class="section-card card-green">
+      <div class="section-header">
+        <div class="num-circle">3</div>
+        <div class="section-title"><div class="zh">本節課變化</div><div class="en">This Lesson Change</div></div>
+      </div>
+      <div class="section-body">
+        <div class="radio-pills" id="zh-change">
+          <div class="pill-item" data-label="明顯改善 Significant ↑" onclick="selectPill(this)"><div class="dot"></div>明顯改善<span class="en">Significant ↑</span></div>
+          <div class="pill-item" data-label="略有改善 Slight ↑" onclick="selectPill(this)"><div class="dot"></div>略有改善<span class="en">Slight ↑</span></div>
+          <div class="pill-item" data-label="無變化 No Change" onclick="selectPill(this)"><div class="dot"></div>無變化<span class="en">No Change</span></div>
+          <div class="pill-item" data-label="退步 Regressed ↓" onclick="selectPill(this)"><div class="dot"></div>退步<span class="en">Regressed ↓</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4 -->
+    <div class="section-card card-purple">
+      <div class="section-header">
+        <div class="num-circle">4</div>
+        <div class="section-title"><div class="zh">作業</div><div class="en">Homework</div></div>
+      </div>
+      <div class="section-body">
+        <div class="list-input" id="zh-hw-list"></div>
+        <button class="add-row-btn" onclick="addRow('zh-hw')">+ 新增行</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: English ===== -->
+  <div id="page-en" style="display:none">
+    <div class="info-bar">
+      <div class="info-item"><label>Student Name 學生</label><input type="text" id="en-name"></div>
+      <div class="info-item"><label>Date 日期</label><input type="text" id="en-date" placeholder="2026-8-1"></div>
+      <div class="info-item"><label>Grade 級別</label><input type="text" id="en-grade" placeholder="G5"></div>
+      <div class="info-item"><label>Teacher 教師</label><input type="text" id="en-teacher"></div>
+    </div>
+
+    <div class="section-card card-blue">
+      <div class="section-header">
+        <div class="num-circle">1</div>
+        <div class="section-title"><div class="zh">What Was Covered</div><div class="en">本節課內容</div></div>
+      </div>
+      <div class="section-body">
+        <div class="list-input" id="en-covered-list"></div>
+        <button class="add-row-btn" onclick="addRow('en-covered')">+ Add line</button>
+      </div>
+    </div>
+
+    <div class="section-card card-orange">
+      <div class="section-header">
+        <div class="num-circle">2</div>
+        <div class="section-title"><div class="zh">Last Issues & Next Focus</div><div class="en">上節課問題 & 下節課重點</div></div>
+      </div>
+      <div class="section-body">
+        <div class="checkbox-group">
+          <div class="cg-title">Last Lesson Issues <span class="en">上節課問題</span></div>
+          <div class="check-detail-list" id="en-issues"></div>
+        </div>
+        <div class="checkbox-group">
+          <div class="cg-title">Next Lesson Focus <span class="en">下節課重點</span></div>
+          <div class="check-detail-list" id="en-focus"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card card-green">
+      <div class="section-header">
+        <div class="num-circle">3</div>
+        <div class="section-title"><div class="zh">This Lesson Change</div><div class="en">本節課變化</div></div>
+      </div>
+      <div class="section-body">
+        <div class="radio-pills" id="en-change">
+          <div class="pill-item" data-label="明顯改善 Significant ↑" onclick="selectPill(this)"><div class="dot"></div>Significant ↑<span class="en">明顯改善</span></div>
+          <div class="pill-item" data-label="略有改善 Slight ↑" onclick="selectPill(this)"><div class="dot"></div>Slight ↑<span class="en">略有改善</span></div>
+          <div class="pill-item" data-label="無變化 No Change" onclick="selectPill(this)"><div class="dot"></div>No Change<span class="en">無變化</span></div>
+          <div class="pill-item" data-label="退步 Regressed ↓" onclick="selectPill(this)"><div class="dot"></div>Regressed ↓<span class="en">退步</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card card-purple">
+      <div class="section-header">
+        <div class="num-circle">4</div>
+        <div class="section-title"><div class="zh">Homework</div><div class="en">作業</div></div>
+      </div>
+      <div class="section-body">
+        <div class="list-input" id="en-hw-list"></div>
+        <button class="add-row-btn" onclick="addRow('en-hw')">+ Add line</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COPY BUTTON -->
+  <div class="copy-bar">
+    <button class="copy-btn" onclick="copyToClipboard()">
+      <span>📋</span>
+      <span class="label">複製到剪貼簿 Copy to Clipboard</span>
+    </button>
+  </div>
+
+  <div class="footer">
+    🎵 小提琴課堂記錄卡 · Violin Lesson Log Sheet<br>
+    教師可用此卡記錄學生每節課學習內容、進步過程與作業安排
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ 已複製到剪貼簿！</div>
+
+<script>
+// ===== DATA =====
+const ISSUE_OPTIONS = [
+  {zh:'音準', en:'Intonation'},
+  {zh:'節奏', en:'Rhythm'},
+  {zh:'弓法', en:'Bowing'},
+  {zh:'左手', en:'Left Hand'},
+  {zh:'換把位', en:'Shifting'},
+  {zh:'揉弦', en:'Vibrato'},
+  {zh:'音樂表現', en:'Expression'},
+  {zh:'持琴姿勢', en:'Posture'},
+  {zh:'持弓', en:'Bow Hold'},
+  {zh:'讀譜', en:'Sight Reading'},
+];
+
+const FOCUS_OPTIONS = [
+  {zh:'繼續當前曲目', en:'Continue Repertoire'},
+  {zh:'解決卡點', en:'Fix Sticking Points'},
+  {zh:'推進新內容', en:'Advance New'},
+  {zh:'重建基礎', en:'Rebuild Basics'},
+];
+
+// ===== TAB SWITCH =====
+function showPage(p) {
+  document.getElementById('page-zh').style.display = p === 'zh' ? 'block' : 'none';
+  document.getElementById('page-en').style.display = p === 'en' ? 'block' : 'none';
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', (p === 'zh' && i === 0) || (p === 'en' && i === 1));
+  });
+  window.scrollTo(0, 0);
+}
+
+// ===== LIST INPUT (Sections 1 & 4) =====
+function addRow(type) {
+  const container = document.getElementById(type + '-list');
+  const row = document.createElement('div');
+  row.className = 'list-row';
+  const isNumbered = type.includes('covered'); // Section 1 = numbered, Section 4 = bullet
+
+  if (isNumbered) {
+    const n = container.children.length + 1;
+    row.innerHTML = '<span class="num">' + n + '.</span><input type="text" placeholder="..."><button class="remove-btn" onclick="removeRow(this)">✕</button>';
+  } else {
+    row.innerHTML = '<span class="bullet">•</span><input type="text" placeholder="..."><button class="remove-btn" onclick="removeRow(this)">✕</button>';
+  }
+  container.appendChild(row);
+  row.querySelector('input').focus();
+
+  // Add a default extra row if this is the first one
+  if (container.children.length === 1) {
+    setTimeout(() => addRow(type), 100);
+  }
+}
+
+function removeRow(btn) {
+  const container = btn.parentNode.parentNode;
+  btn.parentNode.remove();
+  // Renumber if numbered
+  if (container.id.includes('covered')) {
+    container.querySelectorAll('.list-row').forEach((row, i) => {
+      const numEl = row.querySelector('.num');
+      if (numEl) numEl.textContent = (i + 1) + '.';
+    });
+  }
+}
+
+// ===== CHECKBOX WITH DETAIL (Section 2) =====
+function buildCheckDetailList(containerId, options, lang) {
+  const container = document.getElementById(containerId);
+  options.forEach(opt => {
+    const item = document.createElement('div');
+    item.className = 'check-detail-item';
+    item.dataset.labelZh = opt.zh;
+    item.dataset.labelEn = opt.en;
+    const zhLabel = lang === 'zh' ? opt.zh : opt.en;
+    const enLabel = lang === 'zh' ? opt.en : opt.zh;
+    item.innerHTML =
+      '<div class="cd-header" onclick="toggleCheckDetail(this)">' +
+        '<div class="box"></div>' +
+        '<span class="label-zh">' + zhLabel + '</span>' +
+        '<span class="label-en">' + enLabel + '</span>' +
+      '</div>' +
+      '<div class="cd-detail"><input type="text" placeholder="' + (lang === 'zh' ? '細節...' : 'detail...') + '" onclick="event.stopPropagation()"></div>';
+    container.appendChild(item);
+  });
+}
+
+function toggleCheckDetail(el) {
+  el.parentNode.classList.toggle('checked');
+}
+
+// ===== PILL SELECT =====
+function selectPill(el) {
+  el.parentNode.querySelectorAll('.pill-item').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ===== COLLECT DATA =====
+function getListData(containerId, isNumbered) {
+  const container = document.getElementById(containerId);
+  const items = [];
+  container.querySelectorAll('.list-row input').forEach(input => {
+    const val = input.value.trim();
+    if (val) items.push(val);
+  });
+  return items;
+}
+
+function getCheckedData(containerId, lang) {
+  const container = document.getElementById(containerId);
+  const results = [];
+  container.querySelectorAll('.check-detail-item.checked').forEach(item => {
+    const label = lang === 'zh' ? item.dataset.labelZh : item.dataset.labelEn;
+    const detail = item.querySelector('.cd-detail input').value.trim();
+    if (detail) {
+      results.push(label + '：' + detail);
+    } else {
+      results.push(label);
+    }
+  });
+  return results;
+}
+
+function getPillData(containerId) {
+  const selected = document.querySelector('#' + containerId + ' .pill-item.selected');
+  return selected ? selected.dataset.label : '';
+}
+
+// ===== BUILD TEXT =====
+function buildText() {
+  let text = '';
+  const sep = '━━━━━━━━━━━━━━━━━━';
+
+  const zhName = document.getElementById('zh-name').value || '____';
+  const zhDate = document.getElementById('zh-date').value || '____';
+  const zhGrade = document.getElementById('zh-grade').value || '____';
+  const zhTeacher = document.getElementById('zh-teacher').value || '____';
+  const zhCovered = getListData('zh-covered-list', true);
+  const zhIssues = getCheckedData('zh-issues', 'zh');
+  const zhFocus = getCheckedData('zh-focus', 'zh');
+  const zhChange = getPillData('zh-change');
+  const zhHw = getListData('zh-hw-list', false);
+
+  const enName = document.getElementById('en-name').value || '';
+  const enDate = document.getElementById('en-date').value || '';
+  const enGrade = document.getElementById('en-grade').value || '';
+  const enTeacher = document.getElementById('en-teacher').value || '';
+  const enCovered = getListData('en-covered-list', true);
+  const enIssues = getCheckedData('en-issues', 'en');
+  const enFocus = getCheckedData('en-focus', 'en');
+  const enChange = getPillData('en-change');
+  const enHw = getListData('en-hw-list', false);
+
+  text += '🎻 小提琴課堂記錄卡 / Violin Lesson Log Sheet\n';
+  text += sep + '\n';
+  text += '學生姓名: ' + zhName + (enName ? ' | Student: ' + enName : '') + '\n';
+  text += '日期: ' + zhDate + (enDate ? ' | Date: ' + enDate : '') + '\n';
+  text += '級別: ' + zhGrade + (enGrade ? ' | Grade: ' + enGrade : '') + '\n';
+  text += '教師: ' + zhTeacher + (enTeacher ? ' | Teacher: ' + enTeacher : '') + '\n';
+  text += sep + '\n\n';
+
+  text += '1️⃣ 本節課內容' + (enCovered.length ? ' / What Was Covered' : '') + '\n';
+  if (zhCovered.length) { zhCovered.forEach((item, i) => { text += (i+1) + '. ' + item + '\n'; }); }
+  if (enCovered.length) { text += '(EN)\n'; enCovered.forEach((item, i) => { text += (i+1) + '. ' + item + '\n'; }); }
+  if (!zhCovered.length && !enCovered.length) text += '(未填寫)\n';
+  text += '\n';
+
+  text += '2️⃣ 上節課問題' + (enIssues.length ? ' / Last Lesson Issues' : '') + '\n';
+  if (zhIssues.length) { zhIssues.forEach(i => { text += '  ✓ ' + i + '\n'; }); }
+  if (enIssues.length) { enIssues.forEach(i => { text += '  ✓ ' + i + '\n'; }); }
+  if (!zhIssues.length && !enIssues.length) text += '  (無)\n';
+  text += '\n';
+
+  text += '⏭ 下節課重點' + (enFocus.length ? ' / Next Lesson Focus' : '') + '\n';
+  if (zhFocus.length) { zhFocus.forEach(f => { text += '  ✓ ' + f + '\n'; }); }
+  if (enFocus.length) { enFocus.forEach(f => { text += '  ✓ ' + f + '\n'; }); }
+  if (!zhFocus.length && !enFocus.length) text += '  (無)\n';
+  text += '\n';
+
+  text += '3️⃣ 本節課變化' + (enChange ? ' / This Lesson Change' : '') + '\n';
+  if (zhChange) text += '  ' + zhChange + '\n';
+  else if (enChange) text += '  ' + enChange + '\n';
+  else text += '  (未選擇)\n';
+  text += '\n';
+
+  text += '4️⃣ 作業' + (enHw.length ? ' / Homework' : '') + '\n';
+  if (zhHw.length) { zhHw.forEach(item => { text += '  ' + item + '\n'; }); }
+  if (enHw.length) { text += '(EN)\n'; enHw.forEach(item => { text += '  ' + item + '\n'; }); }
+  if (!zhHw.length && !enHw.length) text += '  (未填寫)\n';
+  text += sep + '\n';
+  return text;
+}
+
+// ===== COPY TO CLIPBOARD (always shows modal + tries auto-copy) =====
+function copyToClipboard() {
+  const text = buildText();
+
+  // Always show modal with text pre-selected
+  showTextModal(text);
+
+  // Also try auto-copy (works in some browsers)
+  setTimeout(function() {
+    var ta = document.querySelector('#textModal textarea');
+    if (!ta) return;
+
+    // Select text
+    ta.focus();
+    ta.select();
+    try {
+      var range = document.createRange();
+      range.selectNodeContents(ta);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      ta.setSelectionRange(0, ta.value.length);
+    } catch(e) {}
+
+    // Try clipboard API
+    var copied = false;
+    try { copied = document.execCommand('copy'); } catch(e) { copied = false; }
+
+    if (!copied && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() {
+        showCopied();
+      }).catch(function() {});
+    } else if (copied) {
+      showCopied();
+    }
+  }, 200);
+}
+
+// ===== MODAL (always shows text for copy) =====
+function showTextModal(text) {
+  // Remove existing modal
+  const existing = document.getElementById('textModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'textModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:14px;padding:16px;max-width:420px;width:100%;max-height:85vh;display:flex;flex-direction:column;gap:10px;';
+  
+  const title = document.createElement('div');
+  title.style.cssText = 'font-size:14px;font-weight:700;text-align:center;color:#2A2620;line-height:1.5;';
+  title.innerHTML = '📋 文字已全選<br><span style="font-size:11px;font-weight:400;color:#6B6358">長按 → 複製 / Long press → Copy</span>';
+  
+  const ta = document.createElement('textarea');
+  ta.style.cssText = 'width:100%;flex:1;min-height:250px;font-size:13px;border:2px solid #4A6FA5;border-radius:8px;padding:10px;font-family:inherit;line-height:1.5;resize:none;color:#2A2620;background:#FDFAF3;';
+  ta.value = text;
+  
+  const btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:8px;';
+  
+  const selectBtn = document.createElement('button');
+  selectBtn.style.cssText = 'flex:1;padding:10px;background:#4A6FA5;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;';
+  selectBtn.textContent = '📋 複製 Copy';
+  selectBtn.onclick = function() {
+    ta.focus();
+    ta.select();
+    try {
+      var range = document.createRange();
+      range.selectNodeContents(ta);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      ta.setSelectionRange(0, ta.value.length);
+    } catch(e) {}
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch(e) {}
+    if (ok) { showCopied(); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() { showCopied(); }).catch(function() {});
+    }
+  };
+
+  const closeBtn = document.createElement('button');
+  closeBtn.style.cssText = 'flex:1;padding:10px;background:#E5DFD3;color:#6B6358;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;';
+  closeBtn.textContent = '關閉 Close';
+  closeBtn.onclick = function() { modal.remove(); };
+
+  btnRow.appendChild(selectBtn);
+  btnRow.appendChild(closeBtn);
+  box.appendChild(title);
+  box.appendChild(ta);
+  box.appendChild(btnRow);
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+
+  // Auto-select text after modal appears
+  setTimeout(function() {
+    ta.focus();
+    ta.select();
+    try {
+      var range = document.createRange();
+      range.selectNodeContents(ta);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      ta.setSelectionRange(0, ta.value.length);
+    } catch(e) {}
+  }, 100);
+}
+
+function showCopied() {
+  const btn = document.querySelector('.copy-btn');
+  btn.classList.add('copied');
+  btn.querySelector('.label').textContent = '✓ 已複製！';
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => {
+    btn.classList.remove('copied');
+    btn.querySelector('.label').textContent = '複製到剪貼簿 Copy to Clipboard';
+    toast.classList.remove('show');
+  }, 2500);
+}
+
+// ===== INIT =====
+// Build checkbox lists for both pages
+buildCheckDetailList('zh-issues', ISSUE_OPTIONS, 'zh');
+buildCheckDetailList('zh-focus', FOCUS_OPTIONS, 'zh');
+buildCheckDetailList('en-issues', ISSUE_OPTIONS, 'en');
+buildCheckDetailList('en-focus', FOCUS_OPTIONS, 'en');
+
+// Add initial rows for list inputs
+addRow('zh-covered');
+addRow('zh-hw');
+addRow('en-covered');
+addRow('en-hw');
+</script>
+
+</body>
+</html>
