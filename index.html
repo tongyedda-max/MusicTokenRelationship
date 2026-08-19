@@ -15,73 +15,82 @@
             background-color: #000;
         }
 
-        /* 上方網頁顯示區域（扣除底部控制條的 50px） */
+        /* 🌐 滿版網頁顯示區域：現在百分之百填滿螢幕 */
         .site-container {
             width: 100%;
-            height: calc(100% - 50px); 
+            height: 100%; 
             border: none;
             background-color: #fff;
+            display: block;
         }
 
-        /* 💡 永遠固定在最底部的「選單開關控制條」 */
-        .menu-trigger-bar {
+        /* 💡 縮小到角落的懸浮圓形按鈕 (FAB) */
+        .menu-fab {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 50px;
-            background-color: #111; /* 黑色高質感 */
+            bottom: 25px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #111;
             color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 15px;
-            font-weight: bold;
+            font-size: 24px;
             cursor: pointer;
             z-index: 10000; /* 保證在最上層 */
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
-            border-top: 1px solid #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            border: 1px solid #333;
+            transition: transform 0.2s, background-color 0.2s;
         }
 
-        /* 💡 可摺疊的直式導覽選單（支援長文字，點擊展開） */
+        .menu-fab:hover {
+            background-color: #222;
+            transform: scale(1.05);
+        }
+
+        /* 💡 可摺疊的直式導覽選單（調整為從底部往上滑出） */
         .foldable-nav {
             position: fixed;
-            bottom: 50px; /* 從控制條上方開始 */
+            bottom: 0;
             left: 0;
             width: 100%;
-            max-height: calc(100% - 50px); /* 防止按鈕太多超出螢幕 */
-            overflow-y: auto; /* 按鈕如果太多可以上下滾動 */
+            max-height: 80%; /* 限制最大高度，留出上方空間，避免全遮擋 */
+            overflow-y: auto; /* 項目多時可滾動 */
             background-color: #1a1a1a;
             display: flex;
-            flex-direction: column; /* 直式排列，字再長都不會卡住 */
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+            flex-direction: column; 
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.6);
             z-index: 9999;
-            transition: transform 0.3s ease-in-out; /* 順暢的滑動動畫 */
-            transform: translateY(110%); /* 預設隱藏在螢幕下方 */
+            transition: transform 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94); /* 更流暢的動畫 */
+            transform: translateY(105%); /* 預設完全隱藏在螢幕下方 */
+            border-top-left-radius: 15px; /* 圓角看起來更精緻 */
+            border-top-right-radius: 15px;
         }
 
-        /* 當啟動 .show 時，選單會往上滑出顯示 */
+        /* 當啟動 .show 時，選單滑出顯示 */
         .foldable-nav.show {
             transform: translateY(0);
         }
 
-        /* 選單內每個項目的樣式 */
+        /* 選單內項目樣式 */
         .foldable-nav button, .foldable-nav a {
             background: none;
             border: none;
-            border-bottom: 1px solid #2a2a2a; /* 項目之間的分隔線 */
+            border-bottom: 1px solid #2a2a2a; 
             color: #bbb !important;
             font-size: 16px;
             text-decoration: none;
             display: flex;
             align-items: center;
-            padding: 15px 20px; /* 加大點擊範圍，手機更好按 */
+            padding: 16px 25px; 
             box-sizing: border-box;
             width: 100%;
             transition: 0.2s;
         }
 
-        /* 滑鼠移過去或選中時的高亮變色 */
+        /* 高亮變色 */
         .foldable-nav button:hover, .foldable-nav a:hover,
         .foldable-nav button.active-btn {
             color: #fff !important;
@@ -93,14 +102,13 @@
 <body>
 
     <!-- ─── 🌐 滿版網頁顯示視窗 ─── -->
-    <!-- 預設一進來載入 README.md (GitHub 會將其轉為首頁) -->
     <iframe 
         id="web-window" 
         class="site-container" 
         src="README.md">
     </iframe>
 
-    <!-- ─── 💡 垂直摺疊選單（已包含您所有的 7 個項目） ─── -->
+    <!-- ─── 💡 垂直摺疊選單（已包含您所有的 10 個項目） ─── -->
     <nav id="my-nav" class="foldable-nav">
         
         <!-- 情況 A：同倉庫檔案，點擊直接在上方框框切換 -->
@@ -115,21 +123,15 @@
         
         <!-- 情況 C：會拒絕連線的限制網站（點擊直接整頁跳轉過去） -->
         <a href="https://tonesavvy.com/music-practice-exercises/">🎹 音樂練習 (ToneSavvy)</a>
-        <a href="https://joyceonkeys.com/recital-planner/">發表會籌備指南 (joyceonkeys)</a>
-        <a href="https://andywu1101.github.io/ear-training/">音樂聽力練習 (andywu)</a>
-        <a href="https://17gugugu.tw/">鼓咕顧GUGUGU</a>
-
-        
-
-        
-
-        
+        <a href="https://joyceonkeys.com/recital-planner/">📅 發表會籌備指南 (joyceonkeys)</a>
+        <a href="https://andywu1101.github.io/ear-training/">👂 音樂聽力練習 (andywu)</a>
+        <a href="https://17gugugu.tw/">🥁 鼓咕顧 GUGUGU</a>
 
     </nav>
 
-    <!-- 底部黑色的控制點擊列 -->
-    <div class="menu-trigger-bar" onclick="toggleMenu()">
-        <span id="menu-text">☰ 點擊展開網頁功能選單 (7)</span>
+    <!-- 💡 右下角圓形懸浮按鈕 (10 代表總項目數) -->
+    <div id="fab-btn" class="menu-fab" onclick="toggleMenu()">
+        ☰
     </div>
 
     <!-- ─── ⚙️ 控制摺疊與切換的 JavaScript ─── -->
@@ -137,14 +139,18 @@
         // 切換選單的展開與收合
         function toggleMenu() {
             const nav = document.getElementById('my-nav');
-            const text = document.getElementById('menu-text');
+            const fab = document.getElementById('fab-btn');
             
             nav.classList.toggle('show');
             
             if (nav.classList.contains('show')) {
-                text.innerHTML = "✕ 點擊關閉收起來";
+                fab.innerHTML = "✕";
+                fab.style.backgroundColor = "#cc0000"; /* 展開時按鈕變紅色，提示關閉 */
+                fab.style.border = "1px solid #ff3333";
             } else {
-                text.innerHTML = "☰ 點擊展開網頁功能選單 (7)";
+                fab.innerHTML = "☰";
+                fab.style.backgroundColor = "#111";   /* 恢復黑色 */
+                fab.style.border = "1px solid #333";
             }
         }
 
@@ -162,83 +168,6 @@
 
             // 4. 選好網頁後，自動把選單收起來
             toggleMenu();
-        }
-    </script>
-
-</body>
-</html>
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
-            z-index: 9999; /* 確保導覽列永遠在最上層 */
-        }
-
-        /* 導覽列按鈕樣式 */
-        .bottom-nav button, .bottom-nav a {
-            background: none;
-            border: none;
-            color: #888;
-            font-size: 14px;
-            cursor: pointer;
-            padding: 10px;
-            width: 100%;
-            height: 100%;
-            transition: 0.3s;
-        }
-
-        /* 當按鈕被選中或滑鼠移過去時的高亮效果 */
-        .bottom-nav button:hover, .bottom-nav button.active-btn {
-            color: #fff;
-            background-color: #333;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-
-    <!-- ─── 🌐 滿版網頁顯示視窗 ─── -->
-    <!-- id="web-window" 是核心，src 填入一進來預設要顯示的網站 -->
-    <iframe 
-        id="web-window" 
-        class="site-container" 
-        src="README.md">
-    </iframe>
-
-
-    <!-- ─── 💡 固定在底部的多網站導覽列 ─── -->
-    <nav class="bottom-nav">
-        <!-- 點擊時觸發 switchSite 函式，括號內填入想要載入的完整網址 -->
-        <button onclick="switchSite('README.md', this)" class="active-btn">home</button>
-        <!-- 💡 載入同倉庫的 abrsmscore.html 檔案 -->
-        <button onclick="switchSite('violin_lesson_log_v2 (5).html', this)">上課紀錄表</button>
-        <!-- 💡 載入同倉庫的 abrsmscore.html 檔案 -->
-        <button onclick="switchSite('orchestra.html', this)">作曲家+樂團閃卡</button>
-        <!-- 💡 載入同倉庫的 abrsmscore.html 檔案 -->
-<button onclick="switchSite('Musicterms.html', this)">music term 閃卡</button>
-        <!-- 💡 載入同倉庫的 abrsmscore.html 檔案 -->
-<button onclick="switchSite('abrsm_dual_scoring_v2 (1).html', this)">ABRSM打分</button>
-        <!-- load different side -->
-        <button onclick="switchSite('https://music.school.nz/violin/', this)">music school</button>
-<!-- load different side -->
-        <a href="https://tonesavvy.com/music-practice-exercises/">音樂練習 (ToneSavvy)</a>
-    
-        
-
-
-
-    </nav>
-
-
-    <!-- ─── ⚙️ 控制切換網址的 JavaScript ─── -->
-    <script>
-        function switchSite(siteUrl, buttonElement) {
-            // 1. 改變滿版 iframe 的 src 網址，讓它載入新網站，而外面的導覽列完全不動
-            document.getElementById('web-window').src = siteUrl;
-
-            // 2. 移除所有導覽按鈕的高亮狀態
-            const buttons = document.querySelectorAll('.bottom-nav button');
-            buttons.forEach(btn => btn.classList.remove('active-btn'));
-
-            // 3. 讓當前被點擊的按鈕變成高亮狀態
-            buttonElement.classList.add('active-btn');
         }
     </script>
 
