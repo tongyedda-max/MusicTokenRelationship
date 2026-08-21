@@ -20,12 +20,11 @@ This website is just a Hamburger Menu(≡) with link+ iframe
 
 
 
-link i collect:
+this website 's link:
 
 https://tongyedda-max.github.io/MusicTokenRelationship/
 
-
-Website by others:
+link i collect (Website by others):
 
 https://music.school.nz/violin/
 🌐 Violin Music School 認音
@@ -44,9 +43,9 @@ https://andywu1101.github.io/ear-training/
 https://17gugugu.tw/
 
 
-
 https://www.knowphilosophers.site/
 🧠 東西方哲學家哲學圖譜
+
 
 https://service-692392470248.europe-west2.run.app/
 🎼 西方經典音樂家發展圖譜
