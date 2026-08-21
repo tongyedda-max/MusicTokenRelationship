@@ -1,0 +1,1603 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <title>你的留言牆</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Kalam:wght@300;400;700&family=Klee+One:wght@400;600&family=Long+Cang&family=LXGW+WenKai+TC:wght@400;700&family=Patrick+Hand&display=swap');
+      /* Design reminder: 「靜靜長出的紙板」— deep walnut frame, tactile cork, quiet found notes. */
+      :root {
+        --ink: #322a26;
+        --soft-ink: #6d625b;
+        --wall: #b77b45;
+        --peach: #eca782;
+        --butter: #f4d66e;
+        --sage: #a9c8b4;
+        --sky: #a9c6d7;
+        --lilac: #c5b7d9;
+        --rose: #e6a5ab;
+        --paper-shadow: 0 13px 19px rgba(77, 64, 54, 0.18), 0 2px 4px rgba(77, 64, 54, 0.1);
+        --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+        --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+      }
+
+      * { box-sizing: border-box; }
+      html { background: #2f1d15; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        font-family: "Noto Sans TC", "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background-color: #2f1d15;
+        background-image:
+          repeating-linear-gradient(101deg, rgba(255,210,151,.055) 0 2px, rgba(44,24,16,.05) 3px 6px, transparent 7px 19px),
+          linear-gradient(135deg, #3a2419, #24150f);
+        background-size: auto, auto, cover;
+        background-attachment: fixed;
+      }
+      button, textarea, input { font: inherit; }
+      button { color: inherit; }
+      button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid #a06545; outline-offset: 3px; }
+
+      .app-shell { min-height: 100vh; padding: 16px clamp(14px, 3vw, 42px) 34px; overflow: hidden; background:linear-gradient(90deg,rgba(255,236,203,.045),transparent 16%,transparent 84%,rgba(0,0,0,.1)); }
+      .topbar {
+        max-width: 1480px; margin: 0 auto 13px; min-height: 54px; display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; padding: 8px 12px; border:1px solid rgba(76,43,23,.28); background:rgba(255,247,231,.92); box-shadow:0 3px 10px rgba(13,7,4,.2);
+      }
+      .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+      .brand-mark {
+        width: 39px; height: 39px; flex: 0 0 auto; position: relative; display: block; border: 1.8px solid var(--ink); border-radius: 2px;
+        background: var(--peach); transform: rotate(-4deg); box-shadow: 3px 3px 0 rgba(50, 42, 38, .12);
+      }
+      .brand-mark::before { content: ""; position: absolute; width: 30px; height: 30px; background: var(--butter); border: 1.5px solid var(--ink); left: 6px; top: 6px; z-index: -1; transform: rotate(9deg); }
+      .brand-mark::after { content: ""; position: absolute; width: 31px; height: 20px; left: -9px; top: 14px; border: 1.5px solid var(--ink); border-right: 0; border-radius: 50% 0 0 50%; transform: rotate(-22deg); }
+      .brand-copy { min-width: 0; }
+      .brand-title { font-family: Georgia, "Noto Serif TC", serif; font-size: clamp(18px, 2.3vw, 25px); letter-spacing: .03em; line-height: 1.05; }
+      .brand-note { margin-top: 3px; color: var(--soft-ink); font-size: 11px; letter-spacing: .08em; }
+      .top-actions { display: flex; align-items: center; gap: 7px; }
+      .text-button, .icon-button {
+        border: 1px solid rgba(50, 42, 38, .24); border-radius: 999px; background: rgba(255,255,255,.42); min-height: 34px;
+        padding: 0 12px; cursor: pointer; transition: transform 160ms var(--ease-out), background 160ms var(--ease-out);
+      }
+      .text-button:hover, .icon-button:hover { background: rgba(255,255,255,.8); transform: translateY(-1px); }
+      .text-button:active, .icon-button:active { transform: scale(.97); }
+      .icon-button { width: 34px; padding: 0; display: grid; place-items: center; font-family: Georgia, serif; font-size: 17px; }
+
+      .compose-strip { max-width: 1480px; margin: 0 auto 14px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: stretch; gap: 11px; }
+      .compose-card { position:relative; padding: 13px 18px 11px 21px; background-color: rgba(255,252,244,.86); background-image: repeating-linear-gradient(0deg, transparent 0, transparent 25px, rgba(97,77,60,.065) 26px); border: 0; border-left: 3px solid rgba(236,167,130,.75); border-radius: 1px; box-shadow: 4px 6px 0 rgba(64, 49, 39, .055), 0 7px 13px rgba(87, 72, 61, .065); transform: rotate(-.1deg); }
+      .compose-card::after { content:""; position:absolute; width:54px; height:12px; right:9%; top:-5px; background:rgba(235,205,157,.57); transform:rotate(1.5deg); box-shadow:0 1px 1px rgba(73,57,44,.05); }
+      .compose-label { display: flex; justify-content: space-between; gap: 12px; color: var(--soft-ink); font-size: 12px; margin-bottom: 5px; }
+      .compose-mode { margin-right:auto; color:#a34e48; font-family:"LXGW WenKai TC",cursive; font-size:13px; }
+      .cancel-reply { border:0; border-bottom:1px solid #9c504b; padding:0 0 1px; background:transparent; color:#8a403b; cursor:pointer; font-size:11px; white-space:nowrap; }
+      .compose-card.replying { border-left-color:#c56f6b; box-shadow:4px 6px 0 rgba(119,52,47,.08),0 7px 13px rgba(87,72,61,.09); }
+      #memoInput { width: 100%; height: 38px; resize: none; border: 0; background: transparent; color: var(--ink); font-size: 15px; line-height: 1.45; }
+      #memoInput::placeholder { color: #938880; }
+      .memo-actions { display: flex; align-items: center; gap: 7px; padding-top: 5px; }
+      .author-input { max-width: 134px; border: 0; border-bottom: 1px solid rgba(50,42,38,.24); background: transparent; padding: 3px 1px; font-size: 12px; color: var(--soft-ink); }
+      .author-input::placeholder { color: #9e938b; }
+      .post-button { border: 0; background: var(--peach); color: var(--ink); padding: 8px 14px; min-width: 84px; align-self: end; border-radius: 1px; cursor: pointer; font-family:"LXGW WenKai TC", "Klee One", cursive; box-shadow: 2px 3px 0 rgba(50,42,38,.1); transform:rotate(.5deg); transition: transform 160ms var(--ease-out), background 160ms var(--ease-out), box-shadow 160ms var(--ease-out); }
+      .post-button:hover { background: #f0b08f; box-shadow:3px 5px 0 rgba(50,42,38,.11); transform: translateY(-2px) rotate(-.3deg); }
+      .post-button:active { transform: scale(.97); }
+
+      .wall-frame { max-width: 1480px; margin: 0 auto; position: relative; padding:clamp(12px,1.7vw,23px); border:8px solid #3a2116; background-color:#633a21; background-image:repeating-linear-gradient(96deg,rgba(255,202,132,.16) 0 2px,rgba(37,19,11,.18) 3px 6px,transparent 7px 20px),linear-gradient(135deg,#78472a,#4a2919); box-shadow:0 20px 42px rgba(9,5,3,.37),inset 0 0 0 2px rgba(228,169,102,.22),inset 0 0 16px rgba(18,8,4,.65); }
+      .wall {
+        position: relative; min-height: 940px; overflow: hidden; isolation: isolate; border: 1px solid rgba(71,39,21,.58);
+        background-color: #b77b45;
+        background-image:
+          radial-gradient(circle at 18% 15%, rgba(255,237,193,.21) 0 1px, transparent 1.6px),
+          radial-gradient(circle at 73% 64%, rgba(76,39,19,.16) 0 1px, transparent 1.5px),
+          repeating-linear-gradient(18deg, rgba(92,49,24,.055) 0 1px, transparent 1px 7px),
+          linear-gradient(118deg, rgba(244,191,118,.22), rgba(111,62,31,.12));
+        background-size:8px 8px,13px 13px,17px 17px,auto;
+        box-shadow:inset 0 0 28px rgba(67,35,18,.35),inset 0 0 0 7px rgba(255,226,171,.09);
+      }
+      .board-surface { position:absolute; inset:0; transform-origin:0 0; will-change:transform; }
+      .wall::before { content: ""; position: absolute; inset: 0; opacity: .32; pointer-events: none; background-image:radial-gradient(circle at 12% 78%,rgba(55,28,13,.24) 0 3px,transparent 3.5px),radial-gradient(circle at 86% 22%,rgba(55,28,13,.19) 0 2px,transparent 2.8px),linear-gradient(105deg,transparent 49.7%,rgba(86,47,25,.035) 50%,transparent 50.3%); background-size:auto,auto,37px 37px; }
+      .wall::after { content: ""; position: absolute; width: 290px; height: 290px; left: 50%; top: 50%; transform: translate(-50%,-50%); border: 1px dashed rgba(80,42,20,.16); border-radius: 50%; pointer-events: none; }
+      .wall-caption { position: absolute; left: 21px; bottom: 16px; color: rgba(60,33,18,.64); font-size: 11px; letter-spacing: .08em; z-index: 2; text-shadow:0 1px rgba(255,222,167,.18); }
+      .wall-hint { position: absolute; right: 19px; bottom: 16px; color: rgba(60,33,18,.64); font-size: 11px; z-index: 2; text-shadow:0 1px rgba(255,222,167,.18); }
+      .mobile-board-tools { display:none; }
+
+      .note {
+        --note-bg: var(--butter); --rotation: 0deg; --width: 168px;
+        position: absolute; width: var(--width); min-height: 105px; left: calc(var(--x) * 1%); top: calc(var(--y) * 1%);
+        z-index: var(--z, 3); padding: 18px 16px 13px; overflow: hidden; background: var(--note-bg); color: #2f2824; box-shadow: var(--paper-shadow);
+        transform: translate(-50%, -50%) rotate(var(--rotation)); cursor: grab; user-select: none; touch-action: none;
+        transition: box-shadow 180ms var(--ease-out), filter 180ms var(--ease-out), opacity 240ms var(--ease-out), transform 220ms var(--ease-out);
+      }
+      .note::before { content: ""; position: absolute; inset: 3px; border: 1px solid rgba(69,54,42,.08); pointer-events: none; }
+      .note:hover { filter: saturate(1.05); box-shadow: 0 18px 26px rgba(75,60,49,.23), 0 2px 4px rgba(75,60,49,.1); }
+      .note.dragging { cursor: grabbing; transition: none; filter: saturate(1.08); box-shadow: 0 26px 34px rgba(52,42,34,.28); }
+      .note.floating { animation: noteFloat var(--float-time, 5.8s) var(--float-delay, 0s) ease-in-out infinite; }
+      .note.dragging.floating { animation: none; }
+      .note.enter { animation: paperIn 260ms var(--ease-out) both; }
+      .note.enter.placed { animation: paperPinned 280ms var(--ease-out) both; }
+      .note.personal { --note-bg: var(--rose); }
+      .note.intro { --note-bg: #f1b9a9; }
+      .note.drawing-only { min-height: 104px; display: grid; place-items: center; padding: 10px; }
+      .note-content { position: relative; z-index: 1; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--note-ink, #2f2824); font-family: var(--note-font, "Kaiti TC", "STKaiti", "KaiTi", "BiauKai", serif); font-size: var(--note-size, clamp(16px, 1.65vw, 21px)); font-weight: var(--note-weight, 500); font-style: var(--note-style, normal); line-height: var(--note-line, 1.43); letter-spacing: var(--note-track, .018em); }
+      .note.short .note-content { font-size: var(--note-size, clamp(20px, 2vw, 28px)); line-height: var(--note-line, 1.25); }
+      .note-signature { position: relative; z-index: 1; margin-top: 11px; text-align: right; color: var(--note-ink, rgba(47,40,36,.71)); opacity: .77; font-family: var(--note-font, "Kaiti TC", "STKaiti", "KaiTi", serif); font-size: 12px; }
+      .note-knot { position: absolute; width: 7px; height: 7px; background: rgba(69,54,42,.23); border-radius: 50%; top: 7px; right: 8px; }
+      .note.reply-near::after { content: ""; position: absolute; width: 12px; height: 12px; left: -8px; bottom: -8px; border-left: 1px solid rgba(58,47,39,.37); border-bottom: 1px solid rgba(58,47,39,.37); border-radius: 0 0 0 12px; }
+      .note.paper-1 { width:calc(var(--width) + 9px); min-height:112px; border-radius:0 0 9px 0; background-image:linear-gradient(135deg,rgba(255,255,255,.13),transparent 36%); }
+      .note.paper-2 { width:calc(var(--width) - 10px); min-height:115px; border-radius:0 0 0 8px; outline:1px solid rgba(82,63,48,.06); outline-offset:-4px; }
+      .note.paper-3 { min-height:110px; background-image:linear-gradient(180deg,rgba(255,255,255,.18),transparent 26%); }
+      .note.paper-1 .note-knot { width:9px; height:9px; background:rgba(69,54,42,.18); }
+      .note.paper-2 .note-knot { top:8px; right:11px; width:6px; height:6px; background:rgba(155,81,70,.34); }
+      .note.paper-3 .note-knot { border-radius:1px; transform:rotate(17deg); background:rgba(69,54,42,.2); }
+      .hand-bold { --note-font: "LXGW WenKai TC", "Kalam", cursive; --note-size: clamp(17px, 1.8vw, 23px); --note-weight: 700; --note-line: 1.34; --note-track: -.045em; --note-ink: #2d2927; }
+      .hand-round { --note-font: "LXGW WenKai TC", "Klee One", cursive; --note-size: clamp(16px, 1.66vw, 21px); --note-weight: 400; --note-line: 1.49; --note-track: .006em; --note-ink: #43352f; }
+      .hand-fine { --note-font: "LXGW WenKai TC", "Caveat", cursive; --note-size: clamp(15px, 1.55vw, 20px); --note-weight: 400; --note-line: 1.56; --note-track: .025em; --note-ink: #463d38; }
+      .hand-blue { --note-font: "LXGW WenKai TC", "Kalam", cursive; --note-size: clamp(16px, 1.64vw, 21px); --note-weight: 700; --note-line: 1.43; --note-track: -.015em; --note-ink: #274e67; }
+      .hand-purple { --note-font: "LXGW WenKai TC", "Long Cang", cursive; --note-size: clamp(18px, 1.84vw, 24px); --note-weight: 400; --note-line: 1.36; --note-track: .004em; --note-ink: #4a3e68; }
+      .hand-child { --note-font: "LXGW WenKai TC", "Patrick Hand", cursive; --note-size: clamp(17px, 1.78vw, 23px); --note-weight: 700; --note-line: 1.31; --note-track: -.018em; --note-ink: #9a4f37; }
+      .hand-penciled { --note-font: "LXGW WenKai TC", "Caveat", cursive; --note-size: clamp(15px, 1.52vw, 20px); --note-weight: 400; --note-style: italic; --note-line: 1.53; --note-track: .02em; --note-ink: #61554c; }
+      .hand-quick { --note-font: "LXGW WenKai TC", "Kalam", cursive; --note-size: clamp(16px, 1.66vw, 22px); --note-weight: 400; --note-line: 1.38; --note-track: -.018em; --note-ink: #402f2c; }
+      .hand-tall { --note-font: "LXGW WenKai TC", "Long Cang", cursive; --note-size: clamp(19px, 1.92vw, 25px); --note-weight: 400; --note-line: 1.25; --note-track: .012em; --note-ink: #2d2927; }
+      .info-note { --note-font: "LXGW WenKai TC", "Klee One", cursive; --note-size: clamp(13px, 1.32vw, 17px); --note-line: 1.42; --note-ink: #3c332e; }
+      .doodle { width: 72px; height: 72px; position: relative; z-index: 1; overflow: visible; }
+      .note.has-doodle .doodle.corner { width: 38px; height: 38px; position: absolute; right: 9px; bottom: 8px; opacity: .8; overflow: hidden; }
+      .note.has-doodle .doodle.corner > svg { width: 100%; height: 100%; display: block; }
+      .note.drawing-only .doodle > svg { width: 100%; height: 100%; display: block; }
+      .note.has-doodle .note-content { padding-right: 23px; }
+      .doodle path, .doodle line, .doodle circle, .doodle ellipse, .doodle polyline { fill: none; stroke: #4f423a; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+      .doodle .accent { stroke: #c87959; }
+
+      .modal-layer { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(54,44,37,.18); backdrop-filter: blur(8px); }
+      .modal-layer.open { display: flex; }
+      .modal-paper { width: min(560px, 93vw); min-height: 310px; position: relative; padding: clamp(30px, 6vw, 55px); box-shadow: 0 28px 70px rgba(35,29,25,.32); transform: rotate(-.6deg); }
+      .modal-paper::before { content: ""; position: absolute; inset: 7px; border: 1px solid rgba(55,43,35,.1); pointer-events: none; }
+      .modal-close { position: absolute; top: 13px; right: 14px; border: 0; background: transparent; font-size: 23px; cursor: pointer; z-index: 2; }
+      .modal-kind { position: relative; color: rgba(47,40,36,.62); letter-spacing: .08em; font-size: 11px; margin-bottom: 16px; }
+      .modal-content { position: relative; min-height: 130px; white-space: pre-wrap; color:var(--note-ink,#2f2824); font-family:var(--note-font,"Kaiti TC",serif); font-size: clamp(24px, 4vw, 33px); font-weight:var(--note-weight,500); font-style:var(--note-style,normal); letter-spacing:var(--note-track,.01em); line-height: var(--note-line,1.42); }
+      .modal-edit { width: 100%; min-height: 150px; border: 0; resize: vertical; background: transparent; color: var(--note-ink,var(--ink)); font-family:var(--note-font,"Kaiti TC",serif); font-size: clamp(23px, 4vw, 32px); font-weight:var(--note-weight,500); font-style:var(--note-style,normal); letter-spacing:var(--note-track,.01em); line-height: var(--note-line,1.4); }
+      .modal-author { display: block; margin: 9px 0 14px auto; max-width: 190px; border: 0; border-bottom: 1px solid rgba(50,42,38,.3); background: transparent; text-align: right; color:var(--note-ink,#2f2824); font-family:var(--note-font,"Kaiti TC",serif); font-size: 15px; }
+      .modal-actions { position: relative; display: flex; gap: 8px; justify-content: flex-end; align-items: center; margin-top: 19px; }
+      .paper-action { border: 1px solid rgba(47,40,36,.55); background: rgba(255,255,255,.34); padding: 7px 10px; border-radius: 2px; cursor: pointer; font-size: 12px; }
+      .paper-action.danger { border-color: #9c504b; color: #7b3631; }
+      .paper-action.primary { background: rgba(47,40,36,.88); color: white; }
+
+      .info-panel { position: fixed; z-index: 60; top: 72px; right: clamp(12px, 3vw, 42px); width: min(370px, calc(100vw - 24px)); display: none; padding: 19px; background: #fffdf8; border: 1px solid rgba(50,42,38,.2); box-shadow: 0 20px 50px rgba(54,43,34,.21); }
+      .info-panel.open { display: block; }
+      .info-panel h2 { margin: 0 0 9px; font-family: Georgia, "Noto Serif TC", serif; font-size: 20px; }
+      .info-panel p { margin: 0 0 12px; color: #625850; font-size: 13px; line-height: 1.65; }
+      .privacy-line { padding: 10px; margin: 12px 0; background: #f6f0e8; font-size: 12px !important; color: #4f463f !important; }
+      .clear-button { border: 0; border-bottom: 1px solid #9c504b; padding: 2px 0; background: transparent; color: #853e39; cursor: pointer; font-size: 12px; }
+      .style-panel { position: fixed; z-index: 60; top: 72px; right: clamp(12px, 3vw, 42px); width: min(310px, calc(100vw - 24px)); display: none; padding: 18px; background: #fffdf8; border: 1px solid rgba(50,42,38,.2); box-shadow: 0 20px 50px rgba(54,43,34,.21); }
+      .style-panel.open { display: block; }
+      .style-panel h2 { margin: 0 0 12px; font-family: Georgia, "Noto Serif TC", serif; font-size: 19px; }
+      .style-panel p { margin: 0 0 8px; color: #6b5e55; font-size: 12px; }
+      .hand-choices, .ink-choices { display:flex; flex-wrap:wrap; gap:7px; margin:0 0 15px; }
+      .hand-choice { min-width:64px; border:1px solid rgba(50,42,38,.25); background:#fff; padding:6px 8px; cursor:pointer; font-size:13px; }
+      .hand-choice.selected { border-color:var(--peach); box-shadow: inset 0 -3px 0 var(--peach); }
+      .ink-choice { width:27px; height:27px; border:2px solid #fff; border-radius:50%; box-shadow:0 0 0 1px rgba(50,42,38,.28); cursor:pointer; }
+      .ink-choice.selected { transform:scale(1.15); box-shadow:0 0 0 2px var(--peach); }
+      .crisis { max-width: 1480px; margin: 0 auto 12px; display: none; padding: 13px 15px; border-left: 4px solid #a85d52; background: rgba(255,246,242,.94); color: #523b36; font-size: 14px; line-height: 1.58; }
+      .crisis.show { display: block; }
+      .paste-toast { position:fixed; z-index:80; top:22px; left:50%; display:flex; align-items:center; gap:8px; max-width:calc(100vw - 34px); padding:10px 14px; border:1px solid rgba(79,47,29,.27); background:rgba(255,250,239,.97); color:#4b3020; box-shadow:0 12px 28px rgba(22,12,7,.22); font-family:"LXGW WenKai TC", "Klee One", cursive; font-size:14px; opacity:0; pointer-events:none; transform:translate(-50%,-14px) rotate(-.5deg); transition:opacity 180ms var(--ease-out),transform 220ms var(--ease-out); }
+      .paste-toast::before { content:""; width:19px; height:9px; background:rgba(234,194,119,.72); transform:rotate(-7deg); box-shadow:0 1px 1px rgba(61,36,18,.12); }
+      .paste-toast.show { opacity:1; transform:translate(-50%,0) rotate(-.5deg); }
+
+      @keyframes paperIn { from { opacity: 0; transform: translate(-50%, -50%) rotate(calc(var(--rotation) - 4deg)) scale(.95); } to { opacity: 1; transform: translate(-50%, -50%) rotate(var(--rotation)) scale(1); } }
+      @keyframes paperPinned { 0% { opacity:0; transform:translate(-50%,-58%) rotate(calc(var(--rotation) - 5deg)) scale(.94); } 68% { opacity:1; transform:translate(-50%,-48%) rotate(calc(var(--rotation) + 1deg)) scale(1.02); } 100% { opacity:1; transform:translate(-50%,-50%) rotate(var(--rotation)) scale(1); } }
+      @keyframes noteFloat { 0%, 100% { translate: 0 0; } 48% { translate: 0 -2px; } }
+      @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; } }
+      @media (max-width: 720px) {
+        .app-shell { padding: 0 0 14px; }
+        .topbar { min-height:0; display:flex; justify-content:flex-start; margin:0; padding:12px 16px 8px; border:0; box-shadow:none; }
+        .topbar .top-actions { display:none; }
+        .brand { gap:8px; }
+        .brand-mark { width:30px; height:30px; border-width:1.4px; box-shadow:2px 2px 0 rgba(50,42,38,.1); }
+        .brand-mark::before { width:23px; height:23px; left:5px; top:5px; border-width:1px; }
+        .brand-mark::after { width:24px; height:16px; left:-7px; top:11px; border-width:1px; }
+        .brand-title { font-size:20px; }
+        .brand-note { font-size:9px; margin-top:2px; }
+        .compose-strip { grid-template-columns:minmax(0,1fr) 75px; gap:8px; margin:0 11px 9px; }
+        .compose-card { min-height:99px; padding:10px 13px 9px 16px; box-shadow:0 4px 12px rgba(68,53,41,.075); }
+        .compose-card::after { width:39px; height:9px; top:-4px; }
+        .compose-label { font-size:10px; margin-bottom:3px; }
+        #memoInput { height:45px; font-size:14px; }
+        .author-input { font-size:11px; }
+        .post-button { width:auto; min-width:0; min-height:0; align-self:stretch; padding:8px 5px; font-size:15px; line-height:1.15; box-shadow:2px 3px 0 rgba(50,42,38,.1); }
+        .wall-frame { width:100%; padding:9px; border-width:6px; box-shadow:0 12px 25px rgba(9,5,3,.3),inset 0 0 0 1px rgba(228,169,102,.22); }
+        .wall { min-height:calc(100svh - 236px); height:calc(100svh - 236px); overflow:hidden; touch-action:none; }
+        .board-surface { width:960px; height:1850px; inset:0 auto auto 0; }
+        .note { min-height:105px; padding:16px 14px 12px; left:calc(var(--mx) * 1%); top:calc(var(--my) * 1%); }
+        .note.has-doodle .doodle.corner { width: 31px; height: 31px; right: 7px; bottom: 6px; }
+        .note-content { font-size: var(--note-size, 18px); }
+        .note.short .note-content { font-size: var(--note-size, 21px); }
+        .wall-caption { left: 11px; bottom: 10px; }
+        .wall-hint { display: none; }
+        .mobile-board-tools { position:absolute; z-index:20; right:13px; bottom:calc(78px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:7px; padding:7px; border:1px solid rgba(61,49,40,.14); border-radius:15px; background:rgba(255,253,248,.88); box-shadow:0 12px 26px rgba(55,43,35,.16); backdrop-filter:blur(10px); }
+        .mobile-board-tools button { width:38px; height:38px; border:0; border-radius:10px; background:transparent; color:#41352f; font-size:20px; cursor:pointer; }
+        .mobile-board-tools button:active { background:#f0b08f; transform:scale(.94); }
+        .mobile-board-tools .mobile-divider { height:1px; margin:0 4px; background:rgba(61,49,40,.12); }
+        .mobile-zoom-readout { display:grid; place-items:center; min-height:22px; color:#74665d; font-size:10px; font-family:"LXGW WenKai TC",cursive; }
+        .paste-toast { top:calc(12px + env(safe-area-inset-top)); font-size:13px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand" aria-label="你的留言牆">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div class="brand-copy"><div class="brand-title" id="brandTitle">你的留言牆</div><div class="brand-note" id="brandNote">A wall that grows quietly</div></div>
+        </div>
+        <div class="top-actions">
+          <button class="text-button" id="languageButton" type="button">中文 / EN</button>
+          <button class="icon-button" id="styleButton" type="button" aria-label="我的字跡">✎</button>
+          <button class="icon-button" id="soundButton" type="button" aria-label="紙張音效">♩</button>
+          <button class="icon-button" id="infoButton" type="button" aria-label="資訊">i</button>
+        </div>
+      </header>
+
+      <section class="compose-strip" aria-label="留下新的 memo">
+        <div class="compose-card">
+          <div class="compose-label"><span id="composeLabel">把想留下的話貼上來</span><span id="memoryLabel">只留在這個瀏覽器</span></div>
+          <textarea id="memoInput" maxlength="360" aria-label="新增 memo" placeholder="可以是煩惱、感謝、分享、提醒，或一句想留住的話。"></textarea>
+          <div class="memo-actions"><span class="compose-mode" id="composeMode" hidden></span><button class="cancel-reply" id="cancelReply" type="button" hidden>改為新增 memo</button><input id="authorInput" class="author-input" maxlength="30" aria-label="可選落款" placeholder="可選：你的落款" /></div>
+        </div>
+        <button class="post-button" id="postButton" type="button">貼上去</button>
+      </section>
+
+    <aside class="crisis" id="crisisPanel"></aside>
+    <div class="paste-toast" id="pasteToast" role="status" aria-live="polite"></div>
+      <section class="wall-frame" aria-label="互動留言牆"><div class="wall" id="wall"><div class="board-surface" id="boardSurface"></div><div class="wall-caption" id="wallCaption">舊紙條在內，新紙條往外長。</div><div class="wall-hint" id="wallHint">拖曳紙條・點一下拿近看</div><nav class="mobile-board-tools" aria-label="白板工具"><button id="mobileAddButton" type="button" aria-label="新增紙條">＋</button><button id="mobileLanguageButton" type="button" aria-label="切換語言">文</button><button id="mobileStyleButton" type="button" aria-label="我的字跡">✎</button><button id="mobileSoundButton" type="button" aria-label="紙張音效">♩</button><div class="mobile-divider"></div><button id="zoomInButton" type="button" aria-label="放大白板">＋</button><span class="mobile-zoom-readout" id="mobileZoomReadout">82%</span><button id="zoomOutButton" type="button" aria-label="縮小白板">−</button><div class="mobile-divider"></div><button id="resetBoardButton" type="button" aria-label="回到中間">⌂</button></nav></div></section>
+    </main>
+
+    <div class="modal-layer" id="modalLayer" role="dialog" aria-modal="true" aria-label="查看紙條"><article class="modal-paper" id="modalPaper"><button class="modal-close" id="modalClose" aria-label="關閉">×</button><div class="modal-kind" id="modalKind"></div><div id="modalBody"></div><div class="modal-actions" id="modalActions"></div></article></div>
+
+    <aside class="info-panel" id="infoPanel"><h2 id="infoTitle">這面牆</h2><p id="infoText">把想留下的話貼上來。牆會慢慢長出幾張紙。</p><p class="privacy-line" id="privacyText">內容僅儲存在使用者這台瀏覽器；網站擁有者與其他訪客不會看到你的內容。</p><button class="clear-button" id="clearButton">清除這個瀏覽器的牆</button></aside>
+    <aside class="style-panel" id="stylePanel"><h2 id="styleTitle">我的字跡</h2><p id="styleHint">這組字跡會用在所有你留下的紙條。</p><div class="hand-choices" id="handChoices"></div><p id="inkHint">我的筆色</p><div class="ink-choices" id="inkChoices"></div></aside>
+
+    <script src="./note-library.js"></script>
+    <script>
+      (() => {
+        'use strict';
+        const STORAGE_KEY = 'your-note-wall.v1';
+        const PALETTES = ['#f4d66e','#eca782','#a9c8b4','#a9c6d7','#c5b7d9','#e6a5ab','#f1e4aa','#d5c6ab'];
+        const INTENT_KEYWORDS = {
+          fatigue: ['累','疲','撐不住','下班','加班','工作','上課','壓力','sleep','tired','work','exhausted','burnout'],
+          lonely: ['孤單','孤獨','沒人','聽我','想念','被忽略','alone','lonely','heard','miss'],
+          uncertain: ['不知道','害怕','焦慮','未來','不確定','對不對','怕','anxious','afraid','future','don’t know','dont know'],
+          frustration: ['生氣','委屈','丟掉','煩','討厭','爛','angry','mad','throw','frustrated','hate'],
+          gratitude: ['謝謝','感謝','多謝','thank','thanks','grateful'],
+          share: ['看到','今天','終於','完成','雲','天空','好消息','看見','finished','finally','saw','today','sky','happy'],
+          blessing: ['希望','祝','路過的人','願','hope','wish','everyone'],
+          affirmation: ['慢慢來','相信','值得','喜歡','力量','positive','believe','worth','go slowly'],
+          complex: ['家人','家庭','工作','錢','失眠','明天','family','money','sleepless','tomorrow']
+        };
+        const SAFE_TERMS = ['不想活','想死','自殺','傷害自己','結束自己','不想醒來','kill myself','suicide','hurt myself','end my life'];
+        const COPY = {
+          zh: {
+            title: '你的留言牆', tag: 'A wall that grows quietly', compose: '把想留下的話貼上來', memory: '只留在這個瀏覽器', placeholder: '可以是煩惱、感謝、分享、提醒，或一句想留住的話。', replyPlaceholder: '回覆這張紙條…', replyMode: '正在回覆紙條', cancelReply: '改為新增 memo', newMemo: '新增 memo', added: '已貼上這張 memo', replied: '回覆已貼上', author: '可選：你的落款', post: '貼上去', wall: '舊紙條在內，新紙條往外長。', hint: '拖曳紙條・點一下拿近看', personal: '你留下的紙條', passerby: '匿名紙條', memo: 'a memo 📝', save: '儲存', remove: '移除', reply: '回一張', keep: '留著', soundOn: '紙張音效已開啟', soundOff: '紙張音效已關閉', infoTitle: '這面牆', info: '把想留下的話貼上來。牆會慢慢長出幾張紙。', privacy: '內容僅儲存在使用者這台瀏覽器；網站擁有者與其他訪客不會看到你的內容。', clear: '清除這個瀏覽器的牆', clearConfirm: '要清除這個瀏覽器裡所有紙條嗎？這個動作無法復原。', crisis: '你現在不需要一個人處理這件事。請立刻聯絡當地緊急服務、危機支援資源，或身邊你信任的人，並留在有人陪伴的地方。你仍然可以把這張紙條留在牆上。', intro: 'hi 各位好，這是我的留言牆 ：）。', introBy: 'by 我', memoHelp: '把煩惱、感謝、想留住的話，\n或想給陌生人的一句話貼上來。\n\n這面牆只在這個瀏覽器裡，\n慢慢長出匿名紙條。\n\n拖曳・打開・修改・移除', styleTitle: '我的字跡', styleHint: '這組字跡會用在所有你留下的紙條。', inkHint: '我的筆色'
+          },
+          en: {
+            title: 'Your Note Wall', tag: 'A wall that grows quietly', compose: 'Leave a note for whoever passes by', memory: 'stays in this browser', placeholder: 'A worry, a thank-you, a small thing you saw, or a line you want to keep.', replyPlaceholder: 'Reply to this note…', replyMode: 'Replying to this note', cancelReply: 'Switch to a new memo', newMemo: 'New memo', added: 'Memo pinned', replied: 'Reply pinned', author: 'optional: your signature', post: 'Pin it', wall: 'Older notes stay inside. Newer notes grow outward.', hint: 'Drag a note · tap to read it close', personal: 'A note you left', passerby: 'An anonymous note', memo: 'a memo 📝', save: 'Save', remove: 'Remove', reply: 'Reply with a note', keep: 'Keep', soundOn: 'Paper sound is on', soundOff: 'Paper sound is off', infoTitle: 'About this wall', info: 'Leave something on the wall. A few notes will grow around it, slowly.', privacy: 'Your content is stored only in this browser. The site owner and other visitors cannot see it.', clear: 'Clear this browser wall', clearConfirm: 'Clear every note saved in this browser? This cannot be undone.', crisis: 'You do not have to handle this alone right now. Please contact local emergency services, a crisis support line, or someone you trust, and stay where another person can be with you. You can still leave your note on the wall.', intro: 'hi everyone, this is my note wall :).', introBy: 'by me', memoHelp: 'Pin a worry, a thank-you,\na line you want to keep,\nor a note for a stranger.\n\nIn this browser, a few\nanonymous notes grow around it.\n\nDrag · open · edit · remove', styleTitle: 'My handwriting', styleHint: 'This handwriting stays with every note you leave.', inkHint: 'My ink'
+          }
+        };
+        const FALLBACK_BANK = {
+  "zh": {
+    "fatigue": [
+      "這段路如果走得很慢，也沒有關係。",
+      "願你不用一直向誰證明什麼。",
+      "路過留一張：希望你回去的路上，有一小段路是安靜的。",
+      "今天先把力氣用在自己身上也可以。",
+      "陌生人，有些事情晚一點再想也沒關係的！Let it go~",
+      "這張紙沒有催你的意思，這只是一張紙。 ——by紙。",
+      "如果今天只做到這裡，好像也夠了，下！班！",
+      "希望你的肩膀今晚可以鬆一點。",
+      "陌生人，有些事情晚一點再想也沒關係。",
+      "這張紙沒有催你的意思，這只是一張紙。",
+      "今天的清單可以有空格，那是正常的呼吸。",
+      "偶爾臉可以放空，笑容不是每一刻的義務。",
+      "小聲提醒，累不等於沒用。",
+      "複雜的問題可以先放進抽屜，晚點再打開看。",
+      "隔壁的貓也有懶著的日子，你也可以。",
+      "你今天已經比昨天的自己前進了一點，哪怕很小。",
+      "沒馬上回訊息，可能只是暫時選擇安靜。",
+      "把今天的雜音想像成背景的電風扇，存在但可以忽略。",
+      "有些努力看不到，但會像暗槓一樣慢慢變多。",
+      "當腦袋熱得像湯，蓋上蓋子等待冷卻也合理。",
+      "今天不必為明天排太多劇情，先讓場景停止一下。",
+      "散亂的房間也會講故事，不用每次都當掃得乾淨。",
+      "把對某件事的熱情當成一件厚外套，想脫就脫。",
+      "外表正常的人，也許暗藏省電模式。",
+      "拖延有時像系統更新，慢一點不一定壞事。",
+      "世界不只要你跑，偶爾躺著它也會繼續轉。",
+      "今天的難關說不定會成為明天的笑料。",
+      "讓窗外的光慢慢變少，別急著追上每個日程。",
+      "失敗感像穿睡衣出門，尷尬但不會致命。",
+      "工作像地心引力，放手一下也會輕微飄浮。"
+    ],
+    "lonely": [
+      "有些話說不出口也沒關係。留在這裡，就已經有人看見了。",
+      "這張紙沒有什麼答案，只是想留在這裡。",
+      "剛好路過，剛好看見，想你知道這兒有人關心你。",
+      "希望今天有一個瞬間，讓你覺得自己不是透明的。",
+      "我不知道你的生活，但這張紙背後的人，希望人和人之間多點温暖。",
+      "有些人不是不在，只是不知道怎麼靠近，希望有善意抵達你的心。",
+      "把這句放在牆上，好像就沒有那麼空蕩了。",
+      "我不知道你的生活，但這張紙背後的人，希望人和人之間多點溫暖。",
+      "不是每個人都不在，有的人只是還不知道怎麼靠近，希望有善意抵達你的心。",
+      "貼在牆上的這句話，好像就沒有那麼空蕩了。",
+      "窗外下雨了，我想把這張紙塞進你口袋裡，當作一個不刺眼的問候。",
+      "有時我只是想讓字留在別人的視線裡，證明我們曾同一個房間呼吸過。",
+      "如果牆會回話，希望它說：我看見了你今天的模樣。",
+      "一句無關緊要的話貼在這裡，像是人群裡的小旗子。",
+      "路燈下的影子也會寂寞，別以為只是你一個人。",
+      "我把遺忘的笑聲折成小紙條，放在這兒給路過的人。",
+      "有人把故事悄悄放在這裡，沒標題也不完整，但足夠讓人想起自己。",
+      "你不需要立刻回答這張紙，它會乖乖待在牆上等你。",
+      "哪怕只是短短一句，能被看見就值得我寫下來。",
+      "心情有時候像冷氣，沒預警就吹來，這張紙是件薄外套。",
+      "有些日子像沒聲音的電視，貼張紙在牆上，討回一點聲音。",
+      "誰說牆只能掛畫？有時候它也需要尷尬的小紙條。",
+      "我不知道怎麼敘述平凡，就把一個平凡的留言留在這裡。",
+      "看到這張紙的人，如果正好需要一個陌生的眼神，這裡有一個。",
+      "寫下名字會太沉重，寫下一句話剛好，輕一點。",
+      "想像有人在對面的咖啡店看見這句話，然後笑了一下。",
+      "在這個牆的小角落，放一點不被安排的存在感。",
+      "不確定的心事折成摺痕，貼在牆上，它們比較不會跑掉。",
+      "城市太大，聲音太多，這張小紙是給安靜的聽眾。",
+      "我不是來解釋的，只是帶來一點溫柔，放在你可以忽略的地方。"
+    ],
+    "uncertain": [
+      "不用現在就替這件事取一個結論。",
+      "希望你手上那件放不下的事，會有一點一點鬆開的時候。",
+      "答案晚一點來，也不是壞事。",
+      "今天不知道，也可以。",
+      "有些岔路走過才知道長什麼樣子。",
+      "留一顆畫得不太圓的星星給你。",
+      "這張memo是個提示，follow your heart。",
+      "也許答案躲在一杯未喝完的咖啡裡。",
+      "先把這件事放一邊，別讓它佔滿整個腦袋。",
+      "別急著把選擇當成永遠的決定。",
+      "或許等你回頭看，現在會像個有趣的插曲。",
+      "偶爾保持一點疑問，比裝懂來得誠實。",
+      "如果方向看不清，試試把問題講給別人聽。",
+      "讓選項自己慢慢排隊，你再看看哪個笑得真。",
+      "當下的猶豫不是失敗，只是訊號之一。",
+      "把這個問號畫得大一點，可能比較好發現下一步。",
+      "小聲地承認不知道，會讓人比較真實。",
+      "換種角度看，有時候疑惑會變成風景。",
+      "早一點確定不代表早一點安心。",
+      "未必現在要做選擇，時間也會幫你排序。",
+      "越急著收線，越容易扯斷那根本就還沒做好的線。",
+      "試著把心事放成草稿，你可以改很多次。",
+      "想像答案像一張還未完成的海報，顏色還在乾。",
+      "暫時不去定義，也是一種溫柔的保留。",
+      "多留一點空間給突發的念頭或突來的笑。",
+      "再等等看，事情有時候會自己把邏輯排好。",
+      "嘗試用笨方法試一次，看看會不會出現新的路。",
+      "若是你現在覺得亂，代表你還活著在選擇。",
+      "看著那份清單，你可能會發現有幾項其實不用挑。",
+      "安靜地坐一下，讓腦中的選項互相說完話。"
+    ],
+    "frustration": [
+      "嗯……聽說把紙張撕掉可以解壓，實在受不住，要不試試？",
+      "有些日子就是很不適合假裝沒事。",
+      "我今天畫圖畫的時侯也畫得很亂，讓我很不開心 :(",
+      "如果很煩，這張Memo可以先幫你承受一下。",
+      "不用把委屈立刻吞下。",
+      "事情不順利的時候，連空氣都會比較燥熱。",
+      "這裡可以留下那些不好聽的話，然後，Let it go。",
+      "我今天畫圖畫的時候也畫得很亂，讓我很不開心。",
+      "我很想大喊，但講出來又覺得怪尷尬，就先寫在這邊。",
+      "剛剛又被小事絆到了，心情像被膠帶黏住一樣。",
+      "別問我為什麼沉默，我連自己都在生氣。",
+      "今天的我連咖啡都不想欣賞，只想把桌子踢一腳。",
+      "每次排隊到半夜，世界都變得特別小，煩躁就跑出來了。",
+      "有人把我的努力當空氣，真的會很想把那空氣堵住。",
+      "心裡有一隻小蟲一直在吱吱叫，怎麼也停不下來。",
+      "想把那些令人不舒服的訊息剪掉，但手機在手，剪不掉。",
+      "時間像慢動作播放，我的情緒卻像被快轉，完全不同步。",
+      "別告訴我淡定，現在的我連假裝都很累。",
+      "明明準備好了還被打斷，所有的氣都不見了。",
+      "跟別人說話像丟石頭，回音都變成挑剔的話。",
+      "我把不爽寫下來，然後發現紙比人還誠實。",
+      "把鑰匙掉在沙發縫，然後找半小時，那種想罵街的感覺。",
+      "等公車等到腦袋空轉，心裡的火苗越來越起來。",
+      "想把桌上的東西全推倒，但又怕清理更累，只好在心裡推。",
+      "被別人誤解比被誤會還更煩，講了也像把空氣對著牆壁說話。",
+      "有些話想說出口，話到嘴邊又被禮貌吞回去。",
+      "好想把今天的對話做個剪輯，刪掉那些尷尬片段。",
+      "心裡的小劇場在重播，場景都是同一個尷尬畫面。",
+      "每次提醒別人，反而變成自己在反覆受傷。",
+      "想把抓狂的聲音收藏起來，留到沒人的時候播放。"
+    ],
+    "gratitude": [
+      "收到了，謝謝你，陌生人。",
+      "那就很好。今天我這邊也有一點點好事發生了，也值得記下來。",
+      "這兒收到了特地發來感謝。",
+      "你的謝謝看起來有點暖。",
+      "路過的人也收到了一小塊心意。",
+      "這張紙想替這個瞬間佔個位置。",
+      "兜兜轉轉，好事終於如期而至。",
+      "剛好有人幫我撿起掉在地上的飲料，真的很感謝。",
+      "早餐店的阿姨今天多放了一匙糖，心情有點輕。",
+      "被公車司機等了一下，趕上了班，謝謝那份耐心。",
+      "那句簡短的「辛苦了」，意外地讓我暖了一下。",
+      "收到一杯暖咖啡的味道，像有人在遠處招呼我。",
+      "借我筆的那個瞬間，悄悄幫我渡過尷尬，謝謝。",
+      "曬衣夾不見了，鄰居還給我，瞬間放心了。",
+      "今晚有人回了我的訊息，比我預期的早，覺得被看見。",
+      "小店老闆多找了零頭，覺得被寵了一下。",
+      "圖書館幫我留了那本書，剛好要用，謝謝。",
+      "一個陌生人的微笑在下雨天派上用場，暖了一路。",
+      "朋友替我攪拌的那碗泡麵，讓我晚餐有個小確幸。",
+      "被提醒帶傘的人，今天沒有被雨淋成落湯雞，謝謝。",
+      "有人幫忙按電梯，送我到樓下，省了等的時間。",
+      "包裹裡多塞了一張小紙條，內容雖短但暖心。",
+      "那張送錯的票被還回來了，省了一場麻煩，謝謝。",
+      "今晚有人借我外套，雖然簡單但很溫暖。",
+      "被咖啡店記住了我的名字，覺得被記得，很意外的喜歡。",
+      "有人幫我把腳踏車推上坡，少了好多喘氣的瞬間。",
+      "郵差在雨中把包裹放好，感謝這種默默的用心。",
+      "夜市大排檔的阿姨多給了一份配菜，今晚多了點開心。",
+      "路燈下那段短促的聊天，讓我不那麼孤單。",
+      "我把這塊小心意留在牆上，謝謝你來看它。"
+    ],
+    "share": [
+      "omggg 這件事很好！先貼在這兒，不要讓今天後來那些亂七八糟的事把它蓋掉！",
+      "我想像了一下。這種小事被你捕捉到，也是件美好的事。",
+      "原來你等這一天等了好一陣子。那就先不要急著假裝沒什麼事發生，這個需要慶祝！",
+      "oh！今天留言牆上多了一個美好瞬間。",
+      "真好！我也想把這件事記下來，所以我已經拿出了並且收回我的手機。",
+      "真好，替你高興。",
+      "你不知道我是誰，但我剛好看到，哈！",
+      "只是路過，不小心看到了這兒。留個紀念。",
+      "這個memo 要留久一點，好人好事晚點再看也會覺得開心。",
+      "剛剛路過，看到你貼的，就覺得世界小小地亮了一下。",
+      "這個瞬間有點安靜，像是城市裡的秘密花園。",
+      "我也曾有過類似感覺，看到你寫的心情像被回聲補了一句。",
+      "這瞬間值得被按住一下，等會兒再笑起來也不奇怪。",
+      "小確幸報到，專屬的牆角已經被認領了。",
+      "這個細節很容易被忽略，幸好你抓到它。",
+      "照片沒拍好也沒關係，這邊的文字就夠溫柔了。",
+      "我猜你也有點尷尬地笑，這樣剛好。",
+      "這裡像是小型時間膠囊，大家偷偷放進快樂。",
+      "笑一小下也可以，之後再決定要不要告訴別人。",
+      "謝謝你把這件小事帶到公共空間，讓別人也能偷看。",
+      "這種被看見的感覺真奇妙，像有人在街角對你眨眼。",
+      "這張便條很會讓人想起某個味道或聲音。",
+      "看到這句話心裡暖了一下，然後又想笑。",
+      "有種想把這件事摺起來放口袋的衝動。",
+      "有的人會快速滑過，有的人會停留，今天你抓到了停留的人。",
+      "這裡的每一張紙都像是小小的秘密交換站。",
+      "也許等個幾年再回來看，會覺得當時的自己很可愛。",
+      "這條留言證明了生活裡還有讓人傻笑的地方。",
+      "我不常寫東西，但看到這句，還是想留下來。",
+      "明明是別人的故事，卻讓我心裡長出一個小插曲。"
+    ],
+    "blessing": [
+      "也希望這句有回到你身上。",
+      "這句祝福在牆上繞一圈。",
+      "有人收到你留的好意了。",
+      "我就不客氣沾點祝褔了。",
+      "願你今天也有一口熱的。",
+      "這張memo想替你把祝福放大一點點……！",
+      "窗外的風聲幫你把祝福帶來了。",
+      "某個角落有人偷偷為你笑了。",
+      "把好運悄悄塞進你不常注意的口袋裡。",
+      "希望你遇到的是溫柔又不太費事的那種。",
+      "不管今天有沒有驚喜，至少有這張小紙片在。",
+      "小確幸藏在你常經過的地方，偶爾會被發現。",
+      "下午如果多出一點空檔，我會替你暗暗開心。",
+      "今天的雜事先後讓位給一點小安穩就好。",
+      "希望你喝到的每杯飲料都剛剛好，不太甜也不太貴。",
+      "遇到的人若都帶來一點好心情，那就恰到好處。",
+      "這是一張隨手送出的幸運票，無法退換也無法退貨。",
+      "要是房間有點亂，祝福會自動導航過去。",
+      "等電梯的那幾分鐘，說不定你會突然笑出來。",
+      "收到的訊息多半是好消息，偶爾還會附上段子。",
+      "一點運氣放在口袋，偷偷分享一半也不錯。",
+      "今天的小麻煩短暫又帶點可愛就足夠了。",
+      "這張紙負責把平凡瞬間變成小確幸。",
+      "這句像口袋裡的糖，必要時偷偷吃一顆。",
+      "祝你不被突如其來的鳥屎黏住，躲得漂亮。",
+      "今天天氣若好，願你正好被太陽撞到。",
+      "好事不一定敲門，它更會在縫隙塞張便條。",
+      "祝福比咖啡便宜，也更容易上癮。",
+      "給你的不是完整劇本，只是幾個小驚喜和運氣。",
+      "牆上這張小紙提醒世界：有人值得被好待。"
+    ],
+    "affirmation": [
+      "這句看起來很適合貼久一點。",
+      "借我看一眼。嗯，這句不錯。",
+      "有些話不急著有用，喜歡就先留著。",
+      "這張不要撕掉……plsssss",
+      "它看起來像是會陪很久的一句話。",
+      "我想在旁邊畫一隻慢慢走的小蝸牛。",
+      "陌生人考慮出書嗎，你當時要退出文壇的時候我是拒絕的。",
+      "今天翻到這張就笑了兩秒，夠了。",
+      "如果你今天沒辦法把所有東西排好，也沒關係。",
+      "暫時藏起來也可以，等你想起來再看。",
+      "我喜歡你忘記手機在沙發上的時候慌張的樣子。",
+      "這句話像是昨天買的熱可可，暖但不燙。",
+      "先把眼前這小事放進口袋，明天再掏出來。",
+      "有些答案會在走路的時候冒出來，今天就先走一走吧。",
+      "你不必把每件事情都變成故事的高潮。",
+      "小聲說，這世界比你想得還多笑點。",
+      "這裡可以放你不想讓別人看到的那張笑臉照片。",
+      "我幫你把昨天的混亂收了一點，還給你一半空白。",
+      "今晚別把所有好想法都藏起來，留一條線給明天。",
+      "有時候遺忘是給自己一場小小的假。",
+      "你會笑到覺得這不過癮的那一天，現在先收藏這句話。",
+      "這句話像那種沒人注意的小幸運，先悄悄收好。",
+      "今天做不到也沒關係，明天一樣有空氣。",
+      "偶爾走錯路也是為了發現不一樣的風景。",
+      "有些事情值得慢慢看，就像把手上的線慢慢鬆開。",
+      "如果需要理由重新開始，這張就當那個小理由吧。",
+      "這裡保留一個位置給突如其來的好點子。",
+      "不用每次都把自己說明得清清楚楚，模糊也很好。",
+      "曾經覺得荒唐的想法，有時候會變成晚餐的笑料。",
+      "毫無鋪陳地喜歡一件小事，也是一種勇敢。"
+    ],
+    "complex": [
+      "看完覺得像不是一件事壓著你，是很多件事剛好一起擠進來。這樣當然會很難呼吸。",
+      "這麼長一段不是你太多事，是事情真的太多。",
+      "不用擔心，先不用把它們排成一個很漂亮的故事。亂一點也沒關係。",
+      "我不知道全部，但看起來這陣子真的過得不順……",
+      "有些日子像房間裡同時開了幾台風扇，怎樣都靜不下來。",
+      "這張紙先放一把大一點的傘給你。",
+      "如果你現在只想把事情倒出來，也可以，不用急。",
+      "感覺像不是一件事壓著你，是很多件事剛好一起擠進來。這樣當然會很難呼吸。",
+      "別覺得每件小事都要立刻解決，先把它們攤平在桌上看看就好。",
+      "有時候混亂本身就是訊號，不是你的失敗證明。",
+      "提醒炸了就像腦袋裡的便利貼，暫時都很喧鬧。",
+      "你可以對自己說一句很短的真話，不用修飾也不要對外解釋。",
+      "說出來的順序可以亂，重要的是把那些東西從肚子裡搬出來。",
+      "有些人看起來都很鎮定，但裡面可能也在整理亂七八糟的線頭。",
+      "振動時刻常常比真正重要的事還響亮。",
+      "把所有想做和該做的寫在一張紙上，不用分類，只是把聲音放出來。",
+      "那些小小的缺口其實會讓壓力漏出來一點，不用怕有漏洞。",
+      "聽說時間不會立刻修好一切，但它會讓你發現哪些東西還值得繼續牽掛。",
+      "人會在累到快不住時變得很誠實，連對自己的期待也說不出話。",
+      "連選擇不回應都是一種考慮的方式。",
+      "偶爾覺得自己像個多工機器，但其實只是被放滿了太多窗格。",
+      "誰都不必一直是最堅硬的那塊磐石，偶爾裂了也能重組成別的形狀。",
+      "把時間想像成一片布，有些皺褶不是你的錯。",
+      "不需要每一個人都理解你的地圖，能有人在旁邊聽你講就好。",
+      "今天的焦躁可能只是明天故事的一個插圖，不是全部章節。",
+      "你不必把所有不確定的東西當成秘密，可以先對自己說清楚一點。",
+      "有些情緒像沒煮熟的飯，放久了會黏住腳步。",
+      "別急著把每件事都放進標籤裡，它們有時候只是暫時的噪音。",
+      "當事情像重播的歌詞不停回來，可以試著把曲子暫停一下聽聽背景聲。",
+      "別忘了，混亂裡也有小小的日常，比如那杯還熱的茶。"
+    ],
+    "silence": [
+      "今天的字好像都請假了。",
+      "那我先貼一張沒有內容的。",
+      "嗯。這張紙點了點頭。",
+      "只留一個符號也算到過這裡。",
+      "窗外的風在輕聲講話，我在記筆記給空氣。",
+      "桌上的杯子睡著了，紙還保持清醒。",
+      "忘記要寫什麼了，於是改寫忘記本身。",
+      "這裡是空白的存放處，留給過路的念頭。",
+      "有時候沉默會敲門，然後悄悄坐下來。",
+      "我把聲音摺成一隻小船，放在角落裡。",
+      "這張紙像按下了暫停鍵，畫面還有呼吸。",
+      "只貼了半句話，另一半給了想像去完成。",
+      "原本以為會爆發，結果只是輕輕散了。",
+      "這裡藏了一個問題：怎麼形容沒有字。",
+      "眼睛放在空處，會不小心看到回音。",
+      "旁邊那張比我還擅長沉默，讓我有點小羨慕。",
+      "字似乎跟日曆做了約定，今天輪到會議空檔。",
+      "如果沉默有顏色，應該是淡薄的灰藍。",
+      "我想偷走一點安靜，結果只拿到一角紙。",
+      "筆頭也會偷懶，於是留下這張無業通知。",
+      "我畫了個圈，圈住了暫時不說的那些句子。",
+      "這張紙守口如瓶，什麼都沒透露。",
+      "空白讓人想像，現在先暫停想像的排隊。",
+      "我跟紙比賽誰更安靜，最後兩者都輸給時間。",
+      "一個小符號像訪客，敲完門就悄悄走了。",
+      "好像有人在耳邊說話，結果只是空氣翻頁。",
+      "我給沉默貼了標籤，寫著「暫時停留」。",
+      "這裡只給短暫停靠的念頭，請減少行李。",
+      "有時什麼都不寫，反而給別的聲音坐坐。",
+      "把空白貼上牆，好像把時間暫藏在抽屜裡。"
+    ],
+    "neutral": [
+      "路過，放一張。",
+      "這張紙只是覺得這裡還可以再多一點顏色。",
+      "今天牆上有一小塊空白，先放這裡。",
+      "沒有特別要說什麼，只是想貼一張。",
+      "這面牆好像慢慢變得有點熱鬧。",
+      "留給下一個路過的人。",
+      "我本來沒有要寫什麼，但還是留個字。",
+      "感覺牆慢慢變得有點熱鬧。",
+      "剛好有張紙在口袋裡，剛好這裡有空位。",
+      "看見牆就想試試不同的顏色搭配，於是貼了。",
+      "放一張，讓角落看起來沒那麼寂寞。",
+      "如果牆會說話，它可能會喜歡這張小小的訪客。",
+      "沒什麼宣言，只是偷偷做了件小事。",
+      "當作一個小小記號，給路過的眼睛一點驚喜。",
+      "想像這面牆是城市的素描本，這是我的隨手一筆。",
+      "不急著解釋，就先貼上了。",
+      "或許某個晚上有人會把它當作迷路時的訊號。",
+      "為了證明今天我也有來過這個街角。",
+      "格子太整齊了，想添個隨性的角落。",
+      "假如這張紙被風吹走，那也算是冒險的延伸。",
+      "沒有目的地，只是覺得顏色應該散步一下。",
+      "牆上本來就有很多故事，這只是其中一頁。",
+      "先占個位，等更多故事來填進來。",
+      "做了一件小事，其他的留給時間。",
+      "想像有一百張貼滿整面牆，覺得有點好笑。",
+      "它證明有人曾經看過這面牆。",
+      "有時候就是想把一點隨機放在日常裡。",
+      "把平凡的牆當成一本可翻的日記。",
+      "有點想把心情藏進紙裡，於是動手了。",
+      "只是好奇牆上還能藏下多少小東西。"
+    ]
+  },
+  "en": {
+    "fatigue": [
+      "It is all right if this part of the road is slow.",
+      "You do not have to keep proving something all the time.",
+      "A note from someone passing by: I hope a small part of your way home is quiet.",
+      "You can spend your energy on yourself today.",
+      "Some things can wait until later without disappearing.",
+      "This note is not rushing you.",
+      "If this is all you could do today, maybe it is enough.",
+      "Let the to-do list sit. It doesn't measure you.",
+      "No one needs a full explanation for why you're tired.",
+      "Small steps count, even if they feel invisible.",
+      "The house can be messy for a little while. It won't swallow you.",
+      "The pace isn't the problem; the road is heavy right now.",
+      "Rest isn't a failure; it's a change of speed.",
+      "Inbox at zero isn't a measure of worth.",
+      "Saying no is allowed even without a neat reason.",
+      "Today might be more about holding on than moving forward.",
+      "It's fine to leave some lights off for now.",
+      "Someone else can handle the tiny tasks today if that helps.",
+      "Quiet does work, even when it doesn't look like work.",
+      "You're not lazy; your energy has limits.",
+      "Tiny wins look ordinary, but they're real.",
+      "Save your stubbornness for later. Rest can use it now.",
+      "If talking feels hard, a blank text still says I'm here.",
+      "A day doesn't need to be full to mean something.",
+      "There is no rule that says you must sparkle today.",
+      "Softness can carry you through; toughness can wait.",
+      "Slow days are a shape of life, not a flaw in you.",
+      "Let the calendar have empty boxes for a change.",
+      "Pause now so later won't feel like a cliff.",
+      "Wear your tired like a coat, not a scar."
+    ],
+    "lonely": [
+      "It is all right if some things do not come out in words. Leaving them here is already something.",
+      "This note has no answer. It just wanted to be here.",
+      "Passing by. Happened to see this.",
+      "I hope there is one moment today when you do not feel invisible.",
+      "I do not know all of it, but this note paused for a moment.",
+      "Putting this on the wall makes it feel a little less empty.",
+      "I watched someone drop a coffee and thought about how small things can wobble a day.",
+      "Left here because the room felt too loud for thinking.",
+      "If someone needed an excuse to sigh, consider this it.",
+      "There was a song stuck in my head and I wanted to leave the chorus somewhere public.",
+      "I don't want to fix anything; I just wanted to notice this corner with you.",
+      "The street smelled like rain and bread today. It felt worth mentioning.",
+      "This scrap of paper is trying to hold a quiet, nothing more.",
+      "I folded my day into a square and set it here.",
+      "For whoever's hands find this: the moment was real, however small.",
+      "I spent ten minutes watching a cloud decide, then left this.",
+      "No advice, no plan; only the quiet fact that I saw something.",
+      "This is a small witness to a day that moved slowly.",
+      "It feels strange to speak to a wall, so I wrote instead.",
+      "Someone laughed nearby and it made the world seem less heavy for a second.",
+      "I meant to say more, then the bus came.",
+      "Left because I liked the color of the light on the sidewalk.",
+      "If this meets someone who needs to pause, take it as a gentle pause.",
+      "There is a missing line here that I couldn't write.",
+      "I carried a blank space all morning and now it's on the wall.",
+      "One small admission: I wished for company in the grocery aisle.",
+      "I am practicing letting small things exist without explaining them.",
+      "This note is a tiny attendance: I was present here for a moment.",
+      "Sometimes I notice ordinary evidence that I'm not the only person moving through the day.",
+      "If you're also pretending everything is fine, we can pretend together for a minute."
+    ],
+    "uncertain": [
+      "You do not have to give this a final answer tonight.",
+      "I hope the thing you cannot put down loosens, little by little.",
+      "An answer arriving later is not a bad answer.",
+      "It is okay not to know today.",
+      "Some turns only make sense after you take them.",
+      "Leaving a star that is not quite round.",
+      "Maybe the right move is just a smaller one than you imagined.",
+      "Holding the question doesn't make you smaller.",
+      "Small hesitations are not proof of failure.",
+      "There is space for unsure plans and quiet experiments.",
+      "Not deciding is still a shape of decision.",
+      "Leave room for answers that arrive sideways.",
+      "New things show up when nothing is forced.",
+      "Let this be a draft for now.",
+      "The quiet in between answers is not empty.",
+      "Changing your mind tomorrow is an option.",
+      "Paper maps get folded over; some plans will too.",
+      "Use the small evidence you have to sketch a simpler story.",
+      "A thin hope is still a thread.",
+      "If it feels heavy, think about it like a bookmark.",
+      "Not knowing can be a quiet kind of listening.",
+      "No one needs an explanation for your pause.",
+      "Sometimes the right move is to keep walking and notice where the road softens.",
+      "Feeling two things at once is normal.",
+      "This is a version, not the final edition.",
+      "Allow a little mess to test the edges.",
+      "Questions are better companions than sudden decisions.",
+      "Hold onto curiosity more than certainty tonight.",
+      "A choice made from less noise might surprise you.",
+      "Loving something for now doesn't require a forever promise."
+    ],
+    "frustration": [
+      "This one can stay rough. It does not need to sound nice yet.",
+      "Some days are not made for pretending everything is fine.",
+      "Today the clouds look a little scribbly too.",
+      "If it is annoying, this note can frown with you for a while.",
+      "You do not have to put the hurt away immediately.",
+      "When things get stuck, even the air feels louder.",
+      "It's annoying when tiny things balloon into ruined plans.",
+      "Honestly, the waiting does most of the damage.",
+      "Not every mess needs an explanation right away.",
+      "Mostly I'm tired of having to translate feelings into neat reasons.",
+      "Funny how a split-second can rewrite your whole day.",
+      "Left to myself, I replay the same small grievance on loop.",
+      "Tiny defeats add up until nothing feels light anymore.",
+      "I keep telling myself this will pass, then the clock proves me wrong.",
+      "Maybe the problem is bigger than the checklist of fixes we keep trying.",
+      "Everything that was calm yesterday is quietly in a bad mood today.",
+      "Half the time I resent that nothing dramatic happens to justify feeling like this.",
+      "Nobody warned me how boring being frustrated could feel.",
+      "The smallest interruption can feel like a personal betrayal.",
+      "Long sighs become part of the furniture before you notice.",
+      "Little gestures that should help instead land like more things to do.",
+      "Can't tell if I'm stuck or just avoiding the thing that needs doing.",
+      "Broken plans hang in the hall like unpaid bills.",
+      "Quietly, annoyance has its own rhythm and it doesn't always need fixing.",
+      "Plain frustration sits stubbornly, like gum on a shoe.",
+      "All the polite smiles feel like sandpaper today.",
+      "Suddenly I'm tired of explaining why I'm quiet.",
+      "Otherwise reasonable people say tiny things that land like shoves.",
+      "Still, irritation can wobble on its own and then settle.",
+      "For now, I'll let the annoyance sit on the table like an unfinished cup."
+    ],
+    "gratitude": [
+      "This thank-you can stay on the wall.",
+      "That is good. A day that is a little easier is still worth noting.",
+      "The wall received it.",
+      "Your thank-you looks a little warm.",
+      "Someone passing by got a small piece of it too.",
+      "Someone caught the kindness. That feels good.",
+      "The barista remembered my usual and it made the line feel lighter.",
+      "My neighbor watered my plant when I forgot; the leaves look relieved.",
+      "The bus driver waited and I didn’t have to sprint.",
+      "A person lifted my dropped grocery bag and walked on as if nothing happened.",
+      "That stranger's smile at the crosswalk softened an otherwise gray morning.",
+      "My playlist queued the exact song and the walk home suddenly fit.",
+      "A friend texted 'thinking of you' and it landed like a small warmth.",
+      "I found a seat on the crowded train and felt oddly lucky.",
+      "Someone quietly picked up the tab and didn't turn it into a deal.",
+      "Sunlight hit the corner table just right and my coffee tasted better for it.",
+      "The neighbor's dog plopped down and demanded belly scratches; I obliged and laughed.",
+      "A teammate handled the late email thread so I could close my laptop without worry.",
+      "A busker played a song that matched my mood exactly as I walked by.",
+      "The library book I returned had a sticky note that said 'hope you enjoyed it.'",
+      "The copier finally stopped jamming and I fist-bumped the empty room.",
+      "Leftover cake in the break room felt like a tiny celebration.",
+      "An elevator stranger complimented my shoes and I carried that for the day.",
+      "My surviving houseplant proved it's tougher than I give it credit for.",
+      "An umbrella was offered during a downpour and I didn't feel like asking.",
+      "An extra napkin appeared right when my coffee betrayed me.",
+      "Dinner didn't collapse tonight; my improvised recipe worked out.",
+      "A sibling's meme landed at exactly the wrong meeting and I nearly lost it.",
+      "Someone held the door while I juggled bags and it was perfectly timed.",
+      "A short thank-you note on the fridge for the building cleaner made the whole hallway brighter."
+    ],
+    "share": [
+      "I imagined that cloud.",
+      "This one deserves to stay.",
+      "Maybe you had been waiting for this day for a while.",
+      "It is nice that you noticed such a small thing.",
+      "Okay, the wall has one more picture today.",
+      "A note that is a little happy for you.",
+      "Found a coin on the sidewalk and kept it because why not.",
+      "Left this because the light hit it just right.",
+      "Saw you smiling at nothing and wanted to mark the moment.",
+      "Remember when the bus was late and we laughed about it.",
+      "Today felt like a small, unnecessary victory.",
+      "Some things are quietly stubborn and that feels good.",
+      "Small wonders live in plain sight, held by the everyday.",
+      "If the music fit the moment, remember that sound.",
+      "There was a tiny bookstore two blocks away yesterday.",
+      "Someone left a stamp collection in a drawer once and it smelled like summer.",
+      "The coffee here tastes like a memory I can't place.",
+      "Another day, another scribble that somehow feels honest.",
+      "Nearby, a cat judged a passerby and proceeded to nap.",
+      "Before you ask, yes, this is unofficially approved by the wall.",
+      "After the rain, the city feels like it borrowed new colors.",
+      "No need to overthink the little gifts strangers leave in odd places.",
+      "Still, the postcard from somewhere you haven't been is charming.",
+      "Quietly, the streetlamp hummed like an old radio.",
+      "We once traded jokes for a parking spot and it felt fair.",
+      "Bright afternoons make ordinary errands feel cinematic.",
+      "Handwritten things age like small time capsules.",
+      "Odd little triumphs deserve to be noted, even if it's just a scribble.",
+      "Late-night conversations leave strange, honest residue.",
+      "Curiosity is why someone stuck a postcard here, and that's enough reason."
+    ],
+    "blessing": [
+      "I hope a little of that wish finds its way back to you.",
+      "That wish can take one lap around the wall.",
+      "Someone received the good thing you left.",
+      "I will put a little more beside it.",
+      "I hope you get something warm today too.",
+      "Let the coffee in your cup be exactly the temperature you wanted.",
+      "Quietly, a free bench waits where you want to sit.",
+      "If a stranger smiles, may it stop being small and feel real.",
+      "On your walk, a song starts playing that matches your steps.",
+      "Tonight the streetlight turns green right as you step out.",
+      "When the bus arrives, it happens to be the empty one.",
+      "Somewhere nearby, the exact book you want appears on a shelf.",
+      "Here's a small wish: your umbrella opens and does its job.",
+      "Imagine a sweater that fits like an old favorite, without trying.",
+      "The lost coin rolls right under the couch where you always look.",
+      "Find a text that says nothing urgent, just hello.",
+      "Wishing the oven timer is merciful when you check it by mistake.",
+      "Between two meetings, a minute comes that feels like a break.",
+      "For no reason, someone remembers your usual order and gets it right.",
+      "One small cloud misses your plans and lets the sun stay.",
+      "Here's to the awkward pause resolving into a shared laugh.",
+      "Perhaps the sun warms the exact bench you pick for lunch.",
+      "Hopes that the sandwich you choose turns out even better than you expected.",
+      "May the phone battery hold long enough to let you take the photo you want.",
+      "At the corner, the vendor has one of your favorites left.",
+      "As you step outside, the breeze is exactly the kind that helps.",
+      "This tiny favor comes: the parking spot is empty when you arrive.",
+      "There is a seat on the train that nobody asks for.",
+      "In case you're wondering, the recipe actually works the first time.",
+      "So the small thing you postponed is easier than you thought."
+    ],
+    "affirmation": [
+      "This looks like a sentence worth keeping for a while.",
+      "Let me borrow my eyes for a second. Yeah, that is a good one.",
+      "Some words do not need to be useful yet. You can keep them because you like them.",
+      "Do not take this one down.",
+      "It looks like a sentence that could stay a long time.",
+      "A tiny snail is walking slowly beside this.",
+      "Keep it nearby, like a postcard someone once sent.",
+      "Hidden between other notes, it waits without asking for attention.",
+      "Paper remembers where it sat; this one has good bones.",
+      "Quiet things can make a room feel less rushed.",
+      "Today this felt worth pinning up. That feeling has weight.",
+      "Notice the sentence that doesn't try to fix anything.",
+      "There is no immediate reason for it to exist, and that's fine.",
+      "These few words are allowed to be ornamental.",
+      "I like how it sits on the wall like a small secret.",
+      "Strange little comforts live in plain handwriting.",
+      "Maybe it stayed because it made you blink.",
+      "Nobody needs to explain why it's here.",
+      "Small sentences take up only as much space as they need.",
+      "When the light hits this note, it seems to mean something different.",
+      "On a crowded wall, this has its own quiet rhythm.",
+      "Under other thoughts, it still feels steady.",
+      "Between errands and emails, this is an honest pause.",
+      "Left where the eye tends to wander, it becomes a small landmark.",
+      "Right now the wall is more than a collection; it's a map.",
+      "Still, it doesn’t demand to be understood.",
+      "Remember that some lines are simply companions for the day.",
+      "Softly written, but it keeps its shape.",
+      "Awhile ago someone liked the way these words sounded; that still matters.",
+      "Old scraps and new ideas can coexist without explanation."
+    ],
+    "complex": [
+      "That is a lot to arrive all at once. Anyone would have trouble picking just one thing to talk about.",
+      "You do not have to make it neat first. This page is big enough to hold it for now.",
+      "When everything crowds in at once, of course your head feels full.",
+      "I do not know all of it, but this season sounds heavy.",
+      "These words can sit together for now.",
+      "When the list multiplies, attention feels like a single thread being pulled thin.",
+      "Not everything here is the same kind of problem; label them later if you want.",
+      "Some thoughts are stubborn because they belong to someone else's calendar.",
+      "A few things will keep returning until they get a little space.",
+      "You don't need the whole map right now; a corner will do.",
+      "It is honest to feel both annoyed and exhausted at once.",
+      "This stack of notes looks chaotic because real life doesn't file itself.",
+      "There are soft, small things mixed in with the loud, important ones.",
+      "Let the mess be evidence, not judgement.",
+      "Some pieces here are questions wearing out their shoes.",
+      "Maybe the most helpful thing is noticing how heavy the room feels.",
+      "You might find clarity by changing nothing and reading again tomorrow.",
+      "The reason you can't pick one thing is because your days are braided together.",
+      "These scribbles are a map of attention, not of failure.",
+      "A single quiet fact can make everything else rearrange.",
+      "It's okay if the order is wrong; order doesn't decide truth.",
+      "Keeping some things private is a reasonable option.",
+      "Some days will only allow you to notice, not resolve.",
+      "These notes are doing the quiet work of turning noise into something you can see.",
+      "When every topic clamors, the quiet ones can be the hardest to hear.",
+      "You're allowed to be inconsistent; complexity looks like that.",
+      "Old resentments and new worries are bunched together through no one's fault.",
+      "This pile is a timeline written in half sentences.",
+      "A few things here might be smaller than they feel; a few might be bigger.",
+      "For now, let these lines be company rather than instructions."
+    ],
+    "silence": [
+      "Looks like the words took the day off.",
+      "I will leave a note with no words, then.",
+      "Mm. This note nodded.",
+      "A single symbol still counts as coming by.",
+      "The room is listening to its own furniture.",
+      "Someone folded the silence into a paper plane.",
+      "There is an argument with the clock.",
+      "Chair remembers the shape of a pause.",
+      "This wall prefers quiet punctuation.",
+      "Checked the silence; it winked back.",
+      "Paper held its breath on the corner.",
+      "Window fogged with an idea of nothing.",
+      "Half the sentence wandered off without notice.",
+      "Footsteps stopped to admire the absence.",
+      "Light moved across the page like an apology.",
+      "Microwave hummed as if it had secrets.",
+      "Door kept its mouth closed.",
+      "Coffee cooled in solidarity with the quiet.",
+      "Second hands rehearsed not-ticking.",
+      "Old chairs know better than to interrupt.",
+      "Tiny gaps make a strong hush.",
+      "Shelf held back a single, small sound.",
+      "Phone blinked but didn't say anything.",
+      "Air felt like a well-timed pause.",
+      "Echo cleared its throat and left.",
+      "Post-it scored a silent note in the corner.",
+      "Quietly, the hallway agreed to stay out of it.",
+      "Nobody announced the meeting of two silences.",
+      "Left the page mostly blank, like consent.",
+      "Space kept its promises between sentences."
+    ],
+    "neutral": [
+      "A note from someone passing by.",
+      "This patch of wall could use a little more color.",
+      "There was a small blank spot here.",
+      "Nothing big to say. Just leaving a note.",
+      "The wall is getting a little busier, slowly.",
+      "For the next person who passes by.",
+      "Left a tiny square so the wall looks less lonely.",
+      "Spotted a faded sticker near the corner.",
+      "If you're reading this, hello from another day.",
+      "I liked the light here this afternoon.",
+      "Added a dash of color because it felt right.",
+      "No agenda. Just the sound of people passing.",
+      "Saw a dog wag its tail and thought to add this.",
+      "An ordinary day gets an ordinary mark.",
+      "One more note makes the pattern a little better.",
+      "Quiet hello for whoever notices.",
+      "Tucked this in between two brighter squares.",
+      "Random small thing left by someone who liked the spot.",
+      "Feels like a pause in the day.",
+      "Not much to add beyond this note.",
+      "Keeping the spot company for a few minutes.",
+      "Small paper, small gesture, small moment.",
+      "Here's a square to break up the gray.",
+      "Marked this place simply because I passed by.",
+      "Curious how many of these will stack up.",
+      "Unremarkable, except for being shared.",
+      "That spot looked like it could use a tiny interruption.",
+      "Leaving a small trace of someone else's afternoon.",
+      "Colors here remind me of old notebooks.",
+      "Tiny square to keep things interesting."
+    ]
+  }
+};
+        const DOODLES = ['star','cloud','moon','fish','dog','umbrella','heart','snail','cup','notes','sun','flower','leaf','planet','cat','bird','house','lemon'];
+        const HANDS = ['hand-bold','hand-round','hand-fine','hand-blue','hand-purple','hand-child','hand-penciled','hand-quick','hand-tall'];
+        const PERSONAL_HANDS = ['hand-bold','hand-round','hand-fine','hand-penciled','hand-quick','hand-tall'];
+        const ANON_INKS = ['#292523','#a33b3f','#234e76'];
+        const PERSONAL_INKS = ['#292523','#a33b3f','#234e76','#4b3b6b','#6a5140'];
+        const FALLBACK_RESPONSE_TAILS = {
+  "zh": {
+    "fatigue": [
+      "",
+      "\n\n今天先到這裡也可以。",
+      "\n\n（重要的事情要再說一次）希望你回去的路上有一小段很安靜。",
+      "\n\n遲一點再想，不會扣分。",
+      "\n\n我幫你在旁邊畫了個快睡著的太陽。"
+    ],
+    "lonely": [
+      "",
+      "\n\n我不太會講話，但不想讓這張紙只有自己。",
+      "\n\n這裡有人看到了。",
+      "\n\n路過的時候停了一下。",
+      "\n\n我在旁邊貼一張，免得它太空。"
+    ],
+    "uncertain": [
+      "",
+      "\n\n今晚不用把答案找完。",
+      "\n\n明天再看也還是你的事。",
+      "\n\n先選一個比較不難的步驟就好。",
+      "\n\n我也有好多次不知道下一步。"
+    ],
+    "frustration": [
+      "",
+      "\n\n這種煩真的不是深呼吸三次就會散掉的。",
+      "\n\n如果想罵一句，也可以。",
+      "\n\n先不要急著原諒任何人。",
+      "\n\n今天的心情也有點亂。"
+    ],
+    "gratitude": [
+      "",
+      "\n\n這句謝謝看起來很暖。",
+      "\n\n我也被分到一點點。",
+      "\n\n兜兜轉轉，好事終於如期而至。",
+      "\n\n希望那個人也剛好看見。"
+    ],
+    "share": [
+      "",
+      "\n\n我會記得今天牆上有這件事。",
+      "\n\n你看到它的時候，應該有一點開心吧。",
+      "\n\n這種好事要先讓它待久一點。",
+      "\n\n我在角落畫個小圓圈，圈住它。"
+    ],
+    "blessing": [
+      "",
+      "\n\n也祝你剛好被好好對待。",
+      "\n\n我把這個願望放大一點點。",
+      "\n\n希望它會繞一圈回到你這裡。",
+      "\n\n有人路過，收到你的好意。"
+    ],
+    "affirmation": [
+      "",
+      "\n\n這句不要撕掉。",
+      "\n\n我想把它抄在自己的本子上。",
+      "\n\n它看起來很適合陪很久。",
+      "\n\n旁邊留個歪掉的愛心。"
+    ],
+    "complex": [
+      "",
+      "\n\n像桌上同時堆了太多東西，怎樣都清不完。",
+      "\n\n你不用現在替它們分類。",
+      "\n\n讀到這裡，提醒你停一下。",
+      "\n\n先讓這些字在牆上透透氣。"
+    ],
+    "silence": [
+      "",
+      "\n\n我也不講話，畫個月亮陪你。",
+      "\n\n今天只放這個，也算數。",
+      "\n\n這張紙點了點頭。",
+      "\n\n我在旁邊放一顆快睡著的星星。"
+    ],
+    "neutral": [
+      "",
+      "\n\n剛好經過。",
+      "\n\n今天這裡多了一點顏色。",
+      "\n\n留給下一個路過的人。",
+      "\n\n我沒有什麼好說的，還是貼一張。"
+    ]
+  },
+  "en": {
+    "fatigue": [
+      "",
+      "\n\nStopping here today still counts.",
+      "\n\nI hope one part of your way home is quiet.",
+      "\n\nThinking about it later does not lose you points.",
+      "\n\nI drew a sun that looks ready for a nap."
+    ],
+    "lonely": [
+      "",
+      "\n\nI am not great with words. I just did not want this note alone.",
+      "\n\nSomeone saw this.",
+      "\n\nI stopped for a second while passing by.",
+      "\n\nLeaving one beside it so the space feels less empty."
+    ],
+    "uncertain": [
+      "",
+      "\n\nYou do not have to finish finding the answer tonight.",
+      "\n\nIt will still be your question tomorrow.",
+      "\n\nMaybe pick the least difficult next step.",
+      "\n\nI have had plenty of days with no next step either."
+    ],
+    "frustration": [
+      "",
+      "\n\nThis kind of annoying does not disappear after three deep breaths.",
+      "\n\nYou can complain a little if you need to.",
+      "\n\nNo need to forgive anyone in a hurry.",
+      "\n\nThe clouds are scribbly today too."
+    ],
+    "gratitude": [
+      "",
+      "\n\nYour thank-you looks warm.",
+      "\n\nI got a small piece of it too.",
+      "\n\nGood things really do land sometimes.",
+      "\n\nI hope that person sees it somehow."
+    ],
+    "share": [
+      "",
+      "\n\nI will remember this was on the wall today.",
+      "\n\nYou must have smiled a little when you saw it.",
+      "\n\nLet the good thing stay around for a while.",
+      "\n\nI drew a little circle around it."
+    ],
+    "blessing": [
+      "",
+      "\n\nI hope you get treated gently too.",
+      "\n\nMaking that wish a tiny bit bigger.",
+      "\n\nMaybe it will make one lap and come back to you.",
+      "\n\nSomeone passing by received your kindness."
+    ],
+    "affirmation": [
+      "",
+      "\n\nDo not take this one down.",
+      "\n\nI want to copy it into my own notebook.",
+      "\n\nIt looks like it could stay for a long time.",
+      "\n\nLeaving a crooked heart beside it."
+    ],
+    "complex": [
+      "",
+      "\n\nLike too many things piling up on one desk at once.",
+      "\n\nYou do not have to sort them by size right now.",
+      "\n\nI paused here for a bit.",
+      "\n\nLet these words get some air on the wall."
+    ],
+    "silence": [
+      "",
+      "\n\nI will not say anything either. Just drawing a moon.",
+      "\n\nThis still counts today.",
+      "\n\nThis note nodded.",
+      "\n\nLeaving a sleepy star beside it."
+    ],
+    "neutral": [
+      "",
+      "\n\nJust happened to pass by.",
+      "\n\nA little more color showed up here today.",
+      "\n\nFor the next person who stops here.",
+      "\n\nNothing clever to say, so I left a note."
+    ]
+  }
+};
+        function validExternalLibrary(candidate){
+          return !!(candidate && candidate.BANK && candidate.RESPONSE_TAILS && candidate.BANK.zh && candidate.BANK.en && candidate.RESPONSE_TAILS.zh && candidate.RESPONSE_TAILS.en);
+        }
+        const externalLibrary = window.YOUR_NOTE_WALL_LIBRARY;
+        const BANK = validExternalLibrary(externalLibrary) ? externalLibrary.BANK : FALLBACK_BANK;
+        const RESPONSE_TAILS = validExternalLibrary(externalLibrary) ? externalLibrary.RESPONSE_TAILS : FALLBACK_RESPONSE_TAILS;
+        const DEFAULT_BLOCKED_PHRASES = {
+          zh:['你要加油','想開一點','你可以做到','你一定可以','這個考驗','因為你有能力','去喝一口','吃點東西','洗個澡','早一點躺下','不是你懶','你沒有落後'],
+          en:['you can do it','cheer up','everything happens for a reason','this test came because','go eat','take a shower','go to sleep','you are not behind']
+        };
+        const BLOCKED_PHRASES = externalLibrary?.BLOCKED_PHRASES || DEFAULT_BLOCKED_PHRASES;
+        const $ = (s) => document.querySelector(s);
+        const canStore = storage();
+        const wall = $('#wall');
+        const boardSurface = $('#boardSurface');
+        const memoInput = $('#memoInput');
+        const authorInput = $('#authorInput');
+        let state = { used: [], notes: [] };
+        state = loadState();
+        let selectedId = null;
+        let replyToId = null;
+        let drag = null;
+        let boardDrag = null;
+        const boardPointers = new Map();
+        let pinch = null;
+        let audioContext = null;
+
+        function uid(){ return 'n_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+        function r(min,max){ return Math.random()*(max-min)+min; }
+        function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+        function escapeHtml(v){ return String(v || '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+        function now(){ return Date.now(); }
+        function normalize(v){ return String(v || '').toLowerCase().replace(/[，。！？、,.!?;:]/g,' '); }
+        function storage(){ try { localStorage.setItem('__nwt__','1'); localStorage.removeItem('__nwt__'); return true; } catch { return false; } }
+
+        function defaultState(){
+          const lang = (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+          const t = now();
+          const userStyle = { hand:'hand-bold', ink:'#292523' };
+          const intro = { id: uid(), type:'personal', content:COPY[lang].intro, author:COPY[lang].introBy, lang, createdAt:t - 1000*60*60*18, x:49, y:53, rotation:-2, color:'#f1b9a9', width:205, z:14, intro:true, hand:userStyle.hand, ink:userStyle.ink };
+          const memo = { id: uid(), type:'info', content:COPY[lang].memoHelp, author:COPY[lang].memo, lang, createdAt:t - 1000*60*60*17, x:72, y:24, rotation:3, color:'#f1e4aa', width:184, z:13, hand:'info-note', ink:'#3c332e' };
+          const noteCount = 8 + Math.floor(Math.random()*3);
+          const seeds = createSeeds(lang, noteCount, t);
+          return { version:5, lang, userStyle, soundOn:true, notes:[intro, memo, ...seeds], used:seeds.map(n=>n.key).filter(Boolean), lastVisit:t, nextAt:t + minutes(r(30,90)), crisis:false, board:{x:0,y:0,scale:.76,ready:false} };
+        }
+        function loadState(){
+          if(!canStore) return defaultState();
+          try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); if(saved && Array.isArray(saved.notes)){ saved.userStyle = saved.userStyle || { hand:'hand-bold', ink:'#292523' }; saved.soundOn = saved.soundOn !== false; saved.board = saved.board || {x:0,y:0,scale:.68,ready:false}; if((saved.version||1)<3){ const c=COPY[saved.lang||'zh']; const oldInfo=saved.notes.find(n=>n.type==='info'); if(oldInfo){ Object.assign(oldInfo,{content:c.memoHelp,author:c.memo,x:72,y:24,width:184,hand:'info-note',ink:'#3c332e'}); } else saved.notes.push({ id:uid(), type:'info', content:c.memoHelp, author:c.memo, lang:saved.lang||'zh', createdAt:now()-minutes(12), x:72, y:24, rotation:3, color:'#f1e4aa', width:184, z:Math.max(...saved.notes.map(n=>n.z||0))+1, hand:'info-note', ink:'#3c332e' }); saved.version=3; } saved.notes.forEach(n=>{ if(n.type==='personal'){ n.hand=saved.userStyle.hand; n.ink=saved.userStyle.ink; } else { n.hand=n.hand||pick(HANDS); n.ink=n.ink||pick(ANON_INKS); } }); return saved; } return defaultState(); } catch { return defaultState(); }
+        }
+        function saveState(){ if(canStore) try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {} }
+        function minutes(v){ return Math.round(v*60*1000); }
+        function playPaper(kind='move'){
+          if(!state.soundOn || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+          try {
+            audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+            if(audioContext.state === 'suspended') audioContext.resume();
+            const t = audioContext.currentTime;
+            const frames = kind==='place' ? 0.085 : 0.055;
+            const sampleRate = audioContext.sampleRate;
+            const buffer = audioContext.createBuffer(1, Math.max(1, Math.floor(sampleRate * frames)), sampleRate);
+            const data = buffer.getChannelData(0);
+            for(let i=0;i<data.length;i++){ const fade=1-i/data.length; data[i]=(Math.random()*2-1)*fade*fade*(kind==='place'?0.085:0.05); }
+            const source=audioContext.createBufferSource(); const filter=audioContext.createBiquadFilter(); const gain=audioContext.createGain();
+            source.buffer=buffer; filter.type='bandpass'; filter.frequency.value=kind==='place'?900:1500; filter.Q.value=.55; gain.gain.setValueAtTime(.34,t); gain.gain.exponentialRampToValueAtTime(.001,t+frames);
+            source.connect(filter).connect(gain).connect(audioContext.destination); source.start(t);
+          } catch (_) {}
+        }
+
+        function createSeeds(lang, count, t){
+          const pools = ['neutral','share','affirmation','fatigue','gratitude'];
+          const notes=[], seedHistory={bases:new Set(),fullTexts:new Set(),baseTexts:[]};
+          for(let i=0;i<count;i++){
+            const intent = pools[i%pools.length];
+            const item = createAnonymous(intent, lang, t - minutes((count-i)*23), null, i, seedHistory);
+            if(!item) continue;
+            seedHistory.bases.add(item.baseKey); seedHistory.fullTexts.add(comparableText(item.content)); seedHistory.baseTexts.push(item.baseContent);
+            item.x = 50 + Math.cos(i * 2.399 + .5) * (12 + (i%4)*7);
+            item.y = 50 + Math.sin(i * 2.399 + .5) * (11 + (i%4)*6);
+            item.z = 2+i;
+            notes.push(item);
+          }
+          return notes;
+        }
+        function intentFor(text){
+          const value = normalize(text);
+          if(!value.trim() || /^[.…·…♡♥❤\s]+$/.test(value)) return 'silence';
+          let best='neutral', score=0;
+          Object.entries(INTENT_KEYWORDS).forEach(([intent, words]) => {
+            const count = words.reduce((total, word)=>total + (value.includes(word.toLowerCase()) ? 1 : 0),0);
+            if(count > score){ score=count; best=intent; }
+          });
+          const clauses = text.split(/[。！!？?\n]/).filter(Boolean).length;
+          if(clauses >= 4 && score <= 1) return 'complex';
+          return best;
+        }
+        function hasCrisis(text){ const v=normalize(text); return SAFE_TERMS.some(x=>v.includes(x)); }
+        function usedSet(){ return new Set(state.used || []); }
+        function comparableText(value){ return normalize(value).replace(/[^\p{L}\p{N}]/gu,''); }
+        function blockedContent(value, lang){ return (BLOCKED_PHRASES[lang]||[]).some(phrase=>normalize(value).includes(normalize(phrase))); }
+        function repeatedPair(base, tail){
+          const first=comparableText(base), second=comparableText(tail);
+          return !!(first && second && (first===second || first.includes(second) || second.includes(first)));
+        }
+        const SEMANTIC_CUES = {
+          zh: {
+            passing:['路過','經過'], quiet:['安靜','靜不下來'], gratitude:['謝謝','感謝','多謝','好意','善意'], goodNews:['好事','高興','很好','如期而至'],
+            seen:['看見','透明','停一下','太空'], uncertain:['答案','方向','下一步','不知道','岔路'], frustration:['委屈','卡住','不好聽','原諒','很煩'],
+            blessing:['希望','祝福','願你'], keeping:['不要撕','陪很久','貼久','自己的位置','本子上'], silence:['字好像','沒有內容','一個符號','點了點頭'], complex:['事情真的太多','同時','不輕','清不完']
+          },
+          en: {
+            passing:['passing by','happened to pass'], quiet:['quiet','too loud'], gratitude:['thank you','kindness','good thing you left'], goodNews:['good news','happy for you','deserves to stay','waiting for this day'],
+            seen:['saw this','invisible','less empty','paused for a moment'], uncertain:['answer','direction','next step','do not know','turns'], frustration:['annoying','hurt away','stuck','forgive'],
+            blessing:['i hope','wish'], keeping:['do not take this down','keeping for a while','stay a long time','notebook'], silence:['words took','no words','single symbol','nodded'], complex:['all at once','too many','sounds heavy','crowds in']
+          }
+        };
+        function semanticTags(value, lang){
+          const source=normalize(value); const tags=[];
+          Object.entries(SEMANTIC_CUES[lang]||{}).forEach(([tag,cues])=>{ if(cues.some(cue=>source.includes(normalize(cue)))) tags.push(tag); });
+          return new Set(tags);
+        }
+        function lexicalUnits(value, lang){
+          const source=normalize(value);
+          if(lang==='en'){
+            const stops=new Set(['the','and','that','this','with','from','have','just','your','you','for','but','not','all','can','are','was','one','will','still','into','when','some','here','there','little','really']);
+            return new Set((source.match(/[a-z]+/g)||[]).filter(word=>word.length>2&&!stops.has(word)));
+          }
+          const cleaned=source.replace(/這張|這句|今天|可以|一點|有人|好像|沒有|只是|覺得|如果|已經|真的|先|一下|的|了|在|就|也|很|把|不/g,'');
+          const units=new Set(); for(let i=0;i<cleaned.length-1;i++){ const unit=cleaned.slice(i,i+2); if(unit.length===2) units.add(unit); } return units;
+        }
+        function overlapRatio(a,b){
+          if(!a.size||!b.size) return 0; let shared=0; a.forEach(item=>{if(b.has(item))shared++;}); return shared/Math.min(a.size,b.size);
+        }
+        function meaningTooSimilar(candidate, existing, lang){
+          const candidateTags=semanticTags(candidate,lang), existingTags=semanticTags(existing,lang);
+          const sharedTags=[...candidateTags].filter(tag=>existingTags.has(tag));
+          const ratio=overlapRatio(lexicalUnits(candidate,lang),lexicalUnits(existing,lang));
+          if(sharedTags.length>=2) return true;
+          if(sharedTags.length===1 && ratio >= (lang==='en' ? .34 : .42)) return true;
+          return ratio >= (lang==='en' ? .67 : .72);
+        }
+        function baseKey(lang, content){ return (lang||state.lang||'zh')+'|'+comparableText(content); }
+        function allBaseTexts(lang){ return Object.values(BANK[lang]||{}).flat().filter(Boolean); }
+        function inferBaseText(note){
+          if(note.baseContent) return note.baseContent;
+          if(!note.content) return '';
+          const whole=comparableText(note.content);
+          return allBaseTexts(note.lang||state.lang).sort((a,b)=>b.length-a.length).find(base=>whole.startsWith(comparableText(base))) || '';
+        }
+        function inferBaseKey(note){
+          if(note.baseKey) return note.baseKey;
+          const matched=inferBaseText(note); return matched ? baseKey(note.lang||state.lang,matched) : '';
+        }
+        function wallAnonymousHistory(lang){
+          const bases=new Set(), fullTexts=new Set(), baseTexts=[];
+          state.notes.filter(note=>note.type==='anonymous' && (note.lang||lang)===lang).forEach(note=>{
+            const inferred=inferBaseKey(note); if(inferred) bases.add(inferred);
+            const baseText=inferBaseText(note); if(baseText) baseTexts.push(baseText);
+            const full=comparableText(note.content); if(full) fullTexts.add(full);
+          });
+          return {bases,fullTexts,baseTexts};
+        }
+        function createAnonymous(intent, lang, createdAt=now(), replyTo=null, seed=0, localHistory=null){
+          const history=wallAnonymousHistory(lang);
+          (localHistory?.bases||[]).forEach(key=>history.bases.add(key));
+          (localHistory?.fullTexts||[]).forEach(text=>history.fullTexts.add(text));
+          (localHistory?.baseTexts||[]).forEach(text=>history.baseTexts.push(text));
+          const pool = (Array.isArray(BANK[lang]?.[intent]) ? BANK[lang][intent] : BANK[lang].neutral).filter(content=>!blockedContent(content,lang) && !history.bases.has(baseKey(lang,content)) && !history.baseTexts.some(existing=>meaningTooSimilar(content,existing,lang)));
+          if(!pool.length) return null;
+          const used = usedSet();
+          const tails = Array.isArray(RESPONSE_TAILS[lang]?.[intent]) ? RESPONSE_TAILS[lang][intent] : RESPONSE_TAILS[lang].neutral;
+          const combinations = pool.flatMap((content, i)=>{
+            const compatible = tails.map((tail,j)=>({tail,j})).filter(pair=>!repeatedPair(content,pair.tail));
+            const safePairs = compatible.length ? compatible : [{tail:'',j:'base-only'}];
+            return safePairs.map(pair=>({content, tail:pair.tail, key:lang+'_'+intent+'_'+i+'_'+pair.j}));
+          }).filter(pair=>!history.fullTexts.has(comparableText(pair.content+pair.tail)));
+          if(!combinations.length) return null;
+          let candidates = combinations.map(pair=>({content:pair.content+pair.tail,key:pair.key})).filter(x=>!used.has(x.key));
+          if(!candidates.length) candidates = combinations.map(pair=>({content:pair.content+pair.tail,key:pair.key+'_'+uid()}));
+          const chosen = pick(candidates);
+          const drawing = (intent==='silence' || Math.random() < .2) ? pick(DOODLES) : (Math.random() < .38 ? pick(DOODLES) : null);
+          const drawingOnly = (intent==='silence' && Math.random()<.42) || Math.random()<.075;
+          const note = {
+            id:uid(), type:'anonymous', content:drawingOnly?'':chosen.content, baseContent:chosen.content.split('\n\n')[0], baseKey:baseKey(lang,chosen.content.split('\n\n')[0]), author:'', lang, intent, key:chosen.key, createdAt,
+            x:50, y:50, rotation:r(-8,8).toFixed(1), color:pick(PALETTES), width:Math.round(r(126,210)), z:3, doodle:drawing || (drawingOnly?pick(DOODLES):null), drawingOnly, replyTo, hand:pick(HANDS), ink:pick(ANON_INKS)
+          };
+          return note;
+        }
+        function ringPlace(note, target){
+          const sameAge = state.notes.filter(n=>n.type===note.type).length;
+          const angle = r(0, Math.PI*2);
+          const ring = target ? r(13,19) : Math.min(44, 25 + sameAge*1.45);
+          const baseX = target ? target.x : 50;
+          const baseY = target ? target.y : 50;
+          note.x = Math.max(9, Math.min(91, baseX + Math.cos(angle)*ring));
+          note.y = Math.max(9, Math.min(91, baseY + Math.sin(angle)*ring*.78));
+          note.z = 3 + state.notes.length;
+          if(target && Number.isFinite(target.mobileX) && Number.isFinite(target.mobileY)){
+            note.mobileX=Math.max(12,Math.min(88,target.mobileX+Math.cos(angle)*16));
+            note.mobileY=Math.max(10,Math.min(105,target.mobileY+Math.sin(angle)*15));
+          } else { note.mobileX=undefined; note.mobileY=undefined; }
+        }
+        function scheduleResponse(memo){
+          const intent = intentFor(memo.content);
+          if(hasCrisis(memo.content)){ state.crisis=true; saveState(); renderCrisis(); return; }
+          let count = 1;
+          if(intent==='affirmation') count = Math.random()<.56 ? 1+Math.floor(Math.random()*3) : 0;
+          if(intent==='silence') count = Math.random()<.55 ? 1 : 0;
+          if(intent==='complex') count = 1 + (Math.random()<.34?1:0);
+          for(let i=0;i<count;i++){
+            window.setTimeout(()=>{
+              const n = createAnonymous(intent, state.lang, now(), memo.id);
+              if(!n) return;
+              ringPlace(n,memo); state.notes.push(n); state.used.push(n.key); saveState(); render(true, n.id);
+            }, 700 + i*1200);
+          }
+        }
+        function addMemo(){
+          const content = memoInput.value.trim(); if(!content) return;
+          const replyTarget=replyToId ? state.notes.find(note=>note.id===replyToId) : null;
+          const wasReply=!!replyTarget;
+          const n={ id:uid(), type:'personal', content, author:authorInput.value.trim(), lang:state.lang, createdAt:now(), x:50, y:50, rotation:r(-4,4).toFixed(1), color:'#e6a5ab', width:Math.round(r(170,220)), z:state.notes.length+6, hand:state.userStyle.hand, ink:state.userStyle.ink, replyTo:replyTarget?.id||null };
+          ringPlace(n,replyTarget||null); state.notes.push(n); memoInput.value=''; authorInput.value=''; state.lastVisit=now(); clearReplyMode(); saveState(); playPaper('place'); render(true,n.id,true); focusOnPersonalNote(n); showPasteToast(wasReply?COPY[state.lang].replied:COPY[state.lang].added); scheduleResponse(n);
+        }
+        function maybeCatchUp(){
+          const elapsed = Math.max(0, now()-(state.lastVisit||now()));
+          const count = Math.min(3, Math.floor(elapsed/minutes(70)));
+          for(let i=0;i<count;i++){
+            const n=createAnonymous('neutral', state.lang, now()-minutes((count-i)*8)); if(!n) continue; ringPlace(n,null); state.notes.push(n); state.used.push(n.key);
+          }
+          state.lastVisit=now(); saveState();
+        }
+        function maybeTimedNote(){
+          if(now() >= (state.nextAt||0)) { const n=createAnonymous('neutral',state.lang); state.nextAt=now()+minutes(r(30,90)); if(!n){ saveState(); return; } ringPlace(n,null); state.notes.push(n); state.used.push(n.key); saveState(); render(true,n.id); }
+        }
+        function doodle(type){
+          const map={
+            star:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><path d="M40 9 L47 31 L70 31 L51 44 L58 67 L40 53 L21 67 L28 44 L10 31 L33 31 Z"/><path class="accent" d="M61 13 l5 5"/></svg>',
+            cloud:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><path d="M13 48c1-8 8-13 15-12 3-11 18-13 24-3 10-2 17 5 15 14H13z"/><path d="M27 57v7M40 57v10M53 57v7"/></svg>',
+            moon:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><path d="M48 11c-18 8-22 36-3 50-18 1-31-15-27-32 3-13 15-21 30-18z"/><circle class="accent" cx="60" cy="19" r="2"/></svg>',
+            fish:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><path d="M13 42c12-16 33-17 45-2-11 17-34 18-45 2z"/><path d="M58 40l12-10v22z"/><circle cx="28" cy="38" r="1.6"/></svg>',
+            dog:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><path d="M18 49c2-17 27-24 41-9 7 8 2 20-11 20H28c-8 0-12-4-10-11z"/><path d="M28 34l-5-10 13 7M52 34l10-7-5 12"/><path d="M30 47c7 4 15 4 22 0"/><path class="accent" d="M62 58c8 1 8 8 1 9"/></svg>',
+            umbrella:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><path d="M13 40c8-19 43-19 55 0-7-5-11 3-18 0-7 4-12-5-19 0-7-4-11 4-18 0z"/><path d="M41 40v23c0 7 9 8 10 1"/><path class="accent" d="M18 57l-4 7M60 55l4 7"/></svg>',
+            heart:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><path d="M40 65C7 43 16 16 31 20c5 1 8 5 9 9 4-9 14-13 21-6 13 13-1 31-21 42z"/></svg>',
+            snail:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><path d="M10 55h43c8 0 13-4 13-10s-5-10-11-10c-3 0-5 1-7 3"/><circle cx="38" cy="42" r="14"/><path d="M38 34c8 0 9 13 1 15-7 2-10-8-4-10"/><path d="M15 54l-2-9M22 54l-1-10"/></svg>',
+            cup:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><path d="M19 34h38l-4 28H24z"/><path d="M57 39h7c8 0 8 14-3 14h-5"/><path class="accent" d="M29 18c-5 6 5 7 0 13M41 15c-5 7 5 8 0 15"/></svg>',
+            notes:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><path d="M14 21h25v31H14zM41 33h25v28H41z"/><path d="M22 30h10M49 42h9"/><path class="accent" d="M35 59l7 7"/></svg>',
+            sun:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="14"/><path d="M40 8v12M40 60v12M8 40h12M60 40h12M17 17l8 8M55 55l8 8M63 17l-8 8M25 55l-8 8"/></svg>',
+            flower:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="31" r="7"/><circle cx="40" cy="17" r="9"/><circle cx="54" cy="25" r="9"/><circle cx="50" cy="40" r="9"/><circle cx="30" cy="40" r="9"/><circle cx="26" cy="25" r="9"/><path d="M40 48v23M40 62c-8-4-12-3-15 0M40 57c8-4 11-2 14 0"/></svg>',
+            leaf:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><path d="M16 62C20 27 43 13 67 13c0 27-15 51-51 49z"/><path d="M19 59c17-13 28-24 43-41M39 45l-1-12M30 53l-10-2"/></svg>',
+            planet:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="39" r="18"/><path d="M10 47c18 8 43 7 61-10 5-5 2-9-5-7-22 5-42 16-55 15-7-1-8-4-1-8"/><circle class="accent" cx="27" cy="33" r="2"/></svg>',
+            cat:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><path d="M18 56c2-23 9-34 22-34s21 11 22 34H18z"/><path d="M24 27l-1-13 12 9M56 27l2-13-13 9M30 41h1M49 41h1M37 49c2 2 5 2 7 0M16 45l12 2M52 47l12-3"/></svg>',
+            bird:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><path d="M12 42c13-21 28-8 28 1 7-14 20-12 28-3-8-2-14 1-18 7-8-4-16-3-25 3-4-4-7-7-13-8z"/><path class="accent" d="M53 47l10 8"/></svg>',
+            house:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><path d="M16 37l24-20 24 20v28H16z"/><path d="M32 65V48h16v17M24 43h7M49 43h7"/></svg>',
+            lemon:'<svg class="doodle" viewBox="0 0 80 80" aria-hidden="true"><path d="M16 45c2-21 20-31 41-22 11 5 12 22 1 33-16 16-41 9-42-11z"/><path d="M51 20c2-9 10-11 16-10-1 8-7 13-15 14"/><path class="accent" d="M31 40l3 2M45 36l3 2M39 51l3 2"/></svg>'
+          }; return map[type] || map.star;
+        }
+        function noteHtml(note){
+          const text = note.content ? '<div class="note-content">'+escapeHtml(note.content).replace(/\n/g,'<br>')+'</div>' : '';
+          const drawing = note.doodle ? '<span class="doodle '+(note.drawingOnly?'':'corner')+'">'+doodle(note.doodle)+'</span>' : '';
+          const sig = note.author ? '<div class="note-signature">'+escapeHtml(note.author)+'</div>' : '';
+          const paperVariant=('paper-'+((String(note.id||'0').split('').reduce((sum,char)=>sum+char.charCodeAt(0),0))%4));
+          const classes=['note',note.type==='personal'?'personal':(note.type==='info'?'info':'anonymous'),note.intro?'intro':'',note.drawingOnly?'drawing-only':'',note.content.length<20?'short':'',note.doodle&&!note.drawingOnly?'has-doodle':'',note.replyTo?'reply-near':'',paperVariant,note.hand||'hand-bold'].filter(Boolean).join(' ');
+          const mx = Number.isFinite(note.mobileX) ? note.mobileX : note.x;
+          const my = Number.isFinite(note.mobileY) ? note.mobileY : note.y;
+          return '<article class="'+classes+'" data-id="'+note.id+'" role="button" tabindex="0" aria-label="'+escapeHtml(note.content || '簡筆畫紙條')+'" style="--x:'+note.x+';--y:'+note.y+';--mx:'+mx+';--my:'+my+';--rotation:'+note.rotation+'deg;--width:'+note.width+'px;--note-bg:'+note.color+';--note-ink:'+note.ink+';--z:'+note.z+'"><span class="note-knot"></span>'+text+drawing+sig+'</article>';
+        }
+        function render(animate=false, animateId=null, placed=false){
+          boardSurface.querySelectorAll('.note').forEach(e=>e.remove());
+          const ordered=[...state.notes].sort((a,b)=>(a.z||0)-(b.z||0));
+          ordered.forEach(note=>{
+            const holder=document.createElement('div'); holder.innerHTML=noteHtml(note); const el=holder.firstChild; boardSurface.appendChild(el);
+            el.style.setProperty('--float-time', r(4.8,7.2).toFixed(2)+'s'); el.style.setProperty('--float-delay', (-r(0,3)).toFixed(2)+'s');
+            if(animate && note.id===animateId){ el.classList.add('enter'); if(placed) el.classList.add('placed'); window.setTimeout(()=>el.classList.add('floating'),300); } else el.classList.add('floating'); bindNote(el,note);
+          });
+          applyCopy(); renderCrisis();
+        }
+        function isMobileBoard(){ return window.matchMedia('(max-width: 720px)').matches; }
+        function bindNote(el,note){
+          el.addEventListener('pointerdown', e=>{ if(e.button!==undefined&&e.button!==0) return; e.stopPropagation(); playPaper('move'); const mobile=isMobileBoard(); drag={id:note.id, el, sx:e.clientX, sy:e.clientY, x:mobile?(Number.isFinite(note.mobileX)?note.mobileX:note.x):note.x, y:mobile?(Number.isFinite(note.mobileY)?note.mobileY:note.y):note.y, mobile, moved:false}; el.setPointerCapture?.(e.pointerId); el.classList.add('dragging'); note.z=Math.max(...state.notes.map(n=>n.z||0))+1; });
+          el.addEventListener('pointermove', e=>{ if(!drag||drag.id!==note.id) return; const rect=drag.mobile?boardSurface.getBoundingClientRect():wall.getBoundingClientRect(); const dx=(e.clientX-drag.sx)/rect.width*100; const dy=(e.clientY-drag.sy)/rect.height*100; if(Math.abs(dx)>0.5||Math.abs(dy)>0.5) drag.moved=true; const nx=Math.max(5,Math.min(95,drag.x+dx)); const ny=drag.mobile?Math.max(5,Math.min(145,drag.y+dy)):Math.max(7,Math.min(93,drag.y+dy)); if(drag.mobile){note.mobileX=nx; note.mobileY=ny; el.style.setProperty('--mx',nx); el.style.setProperty('--my',ny);}else{note.x=nx; note.y=ny; el.style.setProperty('--x',nx); el.style.setProperty('--y',ny);} el.style.zIndex=note.z; });
+          const finish=e=>{ if(!drag||drag.id!==note.id) return; const moved=drag.moved; drag.el.classList.remove('dragging'); drag=null; if(moved) playPaper('place'); saveState(); if(!moved) openNote(note.id); };
+          el.addEventListener('pointerup',finish); el.addEventListener('pointercancel',finish); el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openNote(note.id);}});
+        }
+        function applyBoard(){
+          if(!isMobileBoard()){ boardSurface.style.transform=''; return; }
+          const b=state.board||{x:0,y:0,scale:.68};
+          boardSurface.style.transform='translate('+Math.round(b.x)+'px,'+Math.round(b.y)+'px) scale('+b.scale.toFixed(3)+')';
+          $('#mobileZoomReadout').textContent=Math.round(b.scale*100)+'%';
+        }
+        function centerBoard(force=false){
+          if(!isMobileBoard()) return;
+          ensureMobileLayout();
+          state.board=state.board||{x:0,y:0,scale:.76,ready:false};
+          if(force || !state.board.ready){
+            state.board.scale=.76;
+            state.board.x=(wall.clientWidth-(960*state.board.scale))/2;
+            state.board.y=4;
+            state.board.ready=true;
+          }
+          applyBoard();
+        }
+        function ensureMobileLayout(){
+          const cols=[18,50,82];
+          [...state.notes].sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)).forEach((note,index)=>{
+            if(Number.isFinite(note.mobileX) && Number.isFinite(note.mobileY)) return;
+            const col=index%3, row=Math.floor(index/3);
+            note.mobileX=cols[col];
+            note.mobileY=15+row*25+(col===1?3:0);
+          });
+        }
+        function zoomBoard(delta){
+          if(!isMobileBoard()) return;
+          const b=state.board; const old=b.scale; const next=Math.max(.48,Math.min(1.16,old+delta));
+          const cx=wall.clientWidth/2, cy=wall.clientHeight/2;
+          b.x=cx-(cx-b.x)*(next/old); b.y=cy-(cy-b.y)*(next/old); b.scale=next; b.ready=true; applyBoard(); saveState();
+        }
+        function focusOnPersonalNote(note){
+          if(isMobileBoard()){
+            ensureMobileLayout();
+            const board=state.board||{x:0,y:0,scale:.76,ready:false};
+            const scale=Math.max(.84,Math.min(1.02,board.scale||.84));
+            const targetX=(note.mobileX/100)*960, targetY=(note.mobileY/100)*1850;
+            board.scale=scale; board.x=wall.clientWidth*.5-targetX*scale; board.y=wall.clientHeight*.48-targetY*scale; board.ready=true;
+            state.board=board; applyBoard(); saveState(); return;
+          }
+          window.requestAnimationFrame(()=>{
+            const el=boardSurface.querySelector('[data-id="'+note.id+'"]'); if(!el) return;
+            const target=el.getBoundingClientRect().top+window.scrollY-window.innerHeight*.47;
+            window.scrollTo({top:Math.max(0,target),behavior:'smooth'});
+          });
+        }
+        function pinchPoints(){ return [...boardPointers.values()]; }
+        function pointDistance(a,b){ return Math.hypot(b.x-a.x,b.y-a.y); }
+        function pointMid(a,b){ return {x:(a.x+b.x)/2,y:(a.y+b.y)/2}; }
+        function boardPointerDown(e){
+          if(!isMobileBoard() || e.target.closest('.note') || e.target.closest('.mobile-board-tools')) return;
+          boardPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+          wall.setPointerCapture?.(e.pointerId);
+          if(boardPointers.size===1){ boardDrag={sx:e.clientX,sy:e.clientY,x:state.board.x,y:state.board.y,moved:false}; return; }
+          if(boardPointers.size===2){
+            const [a,b]=pinchPoints();
+            pinch={distance:Math.max(1,pointDistance(a,b)),mid:pointMid(a,b),scale:state.board.scale,x:state.board.x,y:state.board.y,moved:false};
+            boardDrag=null;
+          }
+        }
+        function boardPointerMove(e){
+          if(!isMobileBoard() || !boardPointers.has(e.pointerId)) return;
+          boardPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+          if(pinch && boardPointers.size>=2){
+            const [a,b]=pinchPoints(); const mid=pointMid(a,b);
+            const next=Math.max(.48,Math.min(1.16,pinch.scale*(pointDistance(a,b)/pinch.distance)));
+            const ratio=next/pinch.scale;
+            state.board.x=mid.x-(pinch.mid.x-pinch.x)*ratio;
+            state.board.y=mid.y-(pinch.mid.y-pinch.y)*ratio;
+            state.board.scale=next; state.board.ready=true; pinch.moved=true; applyBoard(); return;
+          }
+          if(!boardDrag) return;
+          const dx=e.clientX-boardDrag.sx, dy=e.clientY-boardDrag.sy;
+          if(Math.abs(dx)>2||Math.abs(dy)>2) boardDrag.moved=true;
+          state.board.x=boardDrag.x+dx; state.board.y=boardDrag.y+dy; applyBoard();
+        }
+        function boardPointerUp(e){
+          const changed=(pinch&&pinch.moved)||(boardDrag&&boardDrag.moved);
+          boardPointers.delete(e.pointerId);
+          if(boardPointers.size<2) pinch=null;
+          if(changed) saveState();
+          if(boardPointers.size===0) boardDrag=null;
+        }
+        function openNote(id){
+          const note=state.notes.find(n=>n.id===id); if(!note) return; selectedId=id; const c=COPY[state.lang]; const layer=$('#modalLayer'); const paper=$('#modalPaper');
+          paper.style.background=note.color; paper.className='modal-paper '+(note.hand||'hand-bold'); paper.style.setProperty('--note-ink',note.ink||'#2f2824'); $('#modalKind').textContent=note.type==='personal'?c.personal:(note.type==='info'?c.memo:c.passerby);
+          const body=$('#modalBody'); const actions=$('#modalActions'); actions.innerHTML='';
+          if(note.type==='personal'){
+            body.innerHTML='<textarea class="modal-edit" id="modalEdit">'+escapeHtml(note.content)+'</textarea><input class="modal-author" id="modalAuthor" value="'+escapeHtml(note.author||'')+'" placeholder="'+escapeHtml(c.author)+'" />';
+            actions.innerHTML='<button class="paper-action danger" id="removeNote">'+c.remove+'</button><button class="paper-action primary" id="saveNote">'+c.save+'</button>';
+            $('#saveNote').onclick=()=>{note.content=$('#modalEdit').value.trim()||note.content;note.author=$('#modalAuthor').value.trim();saveState();closeModal();render();scheduleResponse(note);};
+          } else {
+            body.innerHTML=note.drawingOnly?'<div style="display:grid;place-items:center;min-height:155px">'+doodle(note.doodle)+'</div>':'<div class="modal-content">'+escapeHtml(note.content).replace(/\n/g,'<br>')+'</div>';
+            actions.innerHTML='<button class="paper-action danger" id="removeNote">'+c.remove+'</button><button class="paper-action" id="replyNote">'+c.reply+'</button><button class="paper-action primary" id="keepNote">'+c.keep+'</button>';
+            $('#replyNote').onclick=()=>startReplyMode(note.id); $('#keepNote').onclick=closeModal;
+          }
+          $('#removeNote').onclick=()=>{state.notes=state.notes.filter(n=>n.id!==id);saveState();closeModal();render();};
+          layer.classList.add('open');
+        }
+        function closeModal(){ $('#modalLayer').classList.remove('open'); selectedId=null; }
+        function updateComposeMode(){
+          const c=COPY[state.lang], replying=!!replyToId;
+          $('#composeMode').hidden=!replying; $('#cancelReply').hidden=!replying;
+          $('#composeMode').textContent=replying?c.replyMode:''; $('#cancelReply').textContent=c.cancelReply;
+          $('.compose-card').classList.toggle('replying',replying);
+          memoInput.placeholder=replying?c.replyPlaceholder:c.placeholder;
+          memoInput.setAttribute('aria-label',replying?c.replyMode:c.newMemo);
+          $('#mobileAddButton').textContent=replying?'↩':'＋';
+          $('#mobileAddButton').setAttribute('aria-label',replying?c.cancelReply:c.newMemo);
+        }
+        function startReplyMode(id){
+          replyToId=id; memoInput.value=''; closeModal(); updateComposeMode(); document.querySelector('.compose-strip').scrollIntoView({behavior:'smooth',block:'start'}); window.setTimeout(()=>memoInput.focus(),260);
+        }
+        function clearReplyMode(){ replyToId=null; updateComposeMode(); }
+        let pasteToastTimer=null;
+        function showPasteToast(message){
+          const toast=$('#pasteToast'); toast.textContent=message; toast.classList.remove('show'); window.requestAnimationFrame(()=>toast.classList.add('show'));
+          window.clearTimeout(pasteToastTimer); pasteToastTimer=window.setTimeout(()=>toast.classList.remove('show'),2100);
+        }
+        function applyCopy(){
+          const c=COPY[state.lang]; document.documentElement.lang=state.lang==='zh'?'zh-Hant':'en'; $('#brandTitle').textContent=c.title; $('#brandNote').textContent=c.tag; $('#composeLabel').textContent=c.compose; $('#memoryLabel').textContent=c.memory; authorInput.placeholder=c.author; $('#postButton').textContent=c.post; $('#wallCaption').textContent=c.wall; $('#wallHint').textContent=c.hint; $('#infoTitle').textContent=c.infoTitle; $('#infoText').textContent=c.info; $('#privacyText').textContent=c.privacy; $('#clearButton').textContent=c.clear; $('#soundButton').textContent=state.soundOn?'♩':'♩̸'; $('#soundButton').setAttribute('aria-label',state.soundOn?c.soundOn:c.soundOff);
+          $('#styleTitle').textContent=c.styleTitle; $('#styleHint').textContent=c.styleHint; $('#inkHint').textContent=c.inkHint; $('#mobileSoundButton').textContent=state.soundOn?'♩':'♩̸'; $('#mobileLanguageButton').textContent=state.lang==='zh'?'中':'EN'; $('#mobileLanguageButton').setAttribute('aria-label',state.lang==='zh'?'目前中文；切換至英文':'Currently English; switch to Chinese'); $('#languageButton').textContent=state.lang==='zh'?'中 / EN':'EN / 中'; updateComposeMode(); renderStylePanel();
+        }
+        function renderStylePanel(){
+          const names = state.lang==='zh' ? { 'hand-bold':'濃黑字','hand-round':'圓圓字','hand-fine':'細筆字','hand-penciled':'鉛筆字','hand-quick':'快寫字','hand-tall':'長筆字' } : { 'hand-bold':'Bold pen','hand-round':'Round hand','hand-fine':'Fine pen','hand-penciled':'Pencil','hand-quick':'Quick hand','hand-tall':'Tall hand' };
+          $('#handChoices').innerHTML = PERSONAL_HANDS.map(hand=>'<button class="hand-choice '+hand+(state.userStyle.hand===hand?' selected':'')+'" data-hand="'+hand+'">'+names[hand]+'</button>').join('');
+          $('#inkChoices').innerHTML = PERSONAL_INKS.map(ink=>'<button class="ink-choice '+(state.userStyle.ink===ink?' selected':'')+'" data-ink="'+ink+'" style="background:'+ink+'" aria-label="選擇筆色"></button>').join('');
+          $('#handChoices').querySelectorAll('[data-hand]').forEach(el=>el.onclick=()=>{state.userStyle.hand=el.dataset.hand; state.notes.filter(n=>n.type==='personal').forEach(n=>n.hand=state.userStyle.hand); saveState(); render();});
+          $('#inkChoices').querySelectorAll('[data-ink]').forEach(el=>el.onclick=()=>{state.userStyle.ink=el.dataset.ink; state.notes.filter(n=>n.type==='personal').forEach(n=>n.ink=state.userStyle.ink); saveState(); render();});
+          memoInput.style.fontFamily = getComputedStyle(document.querySelector('.'+state.userStyle.hand)).getPropertyValue('--note-font') || 'KaiTi';
+          memoInput.style.color = state.userStyle.ink;
+        }
+        function renderCrisis(){ const panel=$('#crisisPanel'); panel.textContent=COPY[state.lang].crisis; panel.classList.toggle('show',!!state.crisis); }
+        function toggleLanguage(){ state.lang=state.lang==='zh'?'en':'zh'; saveState(); render(); }
+        $('#postButton').addEventListener('click',addMemo);
+        memoInput.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')addMemo();});
+        $('#languageButton').addEventListener('click',toggleLanguage);
+        $('#styleButton').addEventListener('click',()=>{ $('#stylePanel').classList.toggle('open'); $('#infoPanel').classList.remove('open'); });
+        $('#soundButton').addEventListener('click',()=>{ state.soundOn=!state.soundOn; saveState(); applyCopy(); });
+        $('#infoButton').addEventListener('click',()=>{ $('#infoPanel').classList.toggle('open'); $('#stylePanel').classList.remove('open'); });
+        $('#clearButton').addEventListener('click',()=>{if(confirm(COPY[state.lang].clearConfirm)){localStorage.removeItem(STORAGE_KEY);state=defaultState();render();$('#infoPanel').classList.remove('open');}});
+        $('#mobileAddButton').addEventListener('click',()=>{ if(replyToId){clearReplyMode();} document.querySelector('.compose-strip').scrollIntoView({behavior:'smooth',block:'start'}); window.setTimeout(()=>memoInput.focus(),230); });
+        $('#mobileLanguageButton').addEventListener('click',toggleLanguage);
+        $('#mobileStyleButton').addEventListener('click',()=>{ $('#stylePanel').classList.toggle('open'); $('#infoPanel').classList.remove('open'); });
+        $('#mobileSoundButton').addEventListener('click',()=>{ state.soundOn=!state.soundOn; saveState(); applyCopy(); });
+        $('#zoomInButton').addEventListener('click',()=>zoomBoard(.12));
+        $('#zoomOutButton').addEventListener('click',()=>zoomBoard(-.12));
+        $('#resetBoardButton').addEventListener('click',()=>{centerBoard(true);saveState();});
+        $('#cancelReply').addEventListener('click',()=>{memoInput.value='';clearReplyMode();memoInput.focus();});
+        wall.addEventListener('pointerdown',boardPointerDown);
+        wall.addEventListener('pointermove',boardPointerMove);
+        wall.addEventListener('pointerup',boardPointerUp);
+        wall.addEventListener('pointercancel',boardPointerUp);
+        window.addEventListener('resize',()=>{ if(isMobileBoard()) { centerBoard(false); applyBoard(); } });
+        $('#modalClose').addEventListener('click',closeModal); $('#modalLayer').addEventListener('click',e=>{if(e.target===$('#modalLayer'))closeModal();});
+        document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+        maybeCatchUp(); centerBoard(false); render(); window.setInterval(maybeTimedNote,60000); window.addEventListener('beforeunload',()=>{state.lastVisit=now();saveState();});
+      })();
+    </script>
+  </body>
+</html>
