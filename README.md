@@ -1,14 +1,14 @@
 # Welcome to My MusicTokenRelationship Home Page
-(Token so expensive) 
+(vibe coding and Token so expensive) 
 
 ++++++++++++++++++++++++++++++++++++++++
-Look!
+                 Look!
 ----------------------------------------
 !!! Go Click the below 
-Hamburger Menu->->->   (≡) 
-in this website !!!!
+          Hamburger Menu->->->   (≡) 
+       in this website !!!!
 ----------------------------------------
-to visit the other websites that I made/ collect from internet 
+  ->to visit the other websites that I made/ collect from internet 
 
 
 
