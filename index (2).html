@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>🧠 思考與任務牆 · Thought Wall</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://thoughtwall-8cchn6cj.manus.space/assets/index-wW_q0biY.css" />
+    <meta name="theme-color" content="#f3ebd3" />
+    <style>
+      /* 唯一覆寫：以白色圓角背景最底線及畫布木質端點的實際座標作為共同錨點。
+         此變數由下方觀察器依目前斷點計算，不會改變任何其他視覺規則。 */
+      .meditation-hourglass {
+        --floor-idle-shift: 0px;
+        --floor-flipped-shift: 0px;
+      }
+      .meditation-hourglass:not(.is-turned-after-flip):not(.is-turning-forward) { transform: translateY(var(--floor-idle-shift)); }
+      .meditation-hourglass.is-clickable:active:not(.is-turned-after-flip):not(.is-turning-forward) { transform: translateY(var(--floor-idle-shift)) scale(.982); }
+      .meditation-hourglass.is-turned-after-flip { transform: translateY(var(--floor-flipped-shift)) rotate(180deg); }
+      @keyframes turn-forward {
+        0% { transform: translateY(var(--floor-idle-shift)) rotate(0); }
+        to { transform: translateY(var(--floor-flipped-shift)) rotate(180deg); }
+      }
+      @keyframes turn-forward-from-turned {
+        0% { transform: translateY(var(--floor-flipped-shift)) rotate(180deg); }
+        to { transform: translateY(var(--floor-idle-shift)) rotate(360deg); }
+      }
+      .meditation-hourglass.is-settling-after-turn .meditation-hourglass-turn-snapshot { animation: turn-snapshot-release-floor .18s cubic-bezier(.23,1,.32,1) both; }
+      @keyframes turn-snapshot-release-floor {
+        0% { opacity: 1; transform: translateY(var(--floor-flipped-shift)) rotate(180deg); }
+        to { opacity: 0; transform: translateY(var(--floor-flipped-shift)) rotate(180deg); }
+      }
+      /* 僅在原始畫布交換狀態但尚未產生下一個物理繪製幀時保留最後完整一幀；不參與砂丘運動。 */
+      .hourglass-sand-readiness-guard {
+        position: absolute;
+        z-index: 4;
+        pointer-events: none;
+        opacity: 1;
+        will-change: opacity;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="https://thoughtwall-8cchn6cj.manus.space/assets/index-tvhr_rYH.js"></script>
+    <script>
+      /* The original canvas has asymmetric wooden end caps. Keep their visual floor locked to
+         the white backdrop at every responsive size, without touching the original renderer. */
+      (() => {
+        let lastAnchorSignature = "";
+        const findWoodLimits = (canvas) => {
+          const context = canvas.getContext("2d", { willReadFrequently: true });
+          if (!context) return null;
+          try {
+            const { width, height } = canvas;
+            const pixels = context.getImageData(0, 0, width, height).data;
+            let first = -1, last = -1;
+            for (let y = 0; y < height; y += 1) {
+              let hasWood = false;
+              for (let x = 0; x < width; x += 1) {
+                const index = (y * width + x) * 4;
+                const red = pixels[index], green = pixels[index + 1], blue = pixels[index + 2], alpha = pixels[index + 3];
+                if (alpha > 120 && red < 160 && green < 130 && blue < 100 && (red - green > 8 || green - blue > 8)) { hasWood = true; break; }
+              }
+              if (hasWood) { if (first < 0) first = y; last = y; }
+            }
+            return first >= 0 && last >= 0 ? { first, last } : null;
+          } catch { return null; }
+        };
+        const anchorHourglass = () => {
+          const scene = document.querySelector(".meditation-hourglass-scene");
+          const glass = document.querySelector(".meditation-hourglass");
+          const canvas = document.querySelector(".meditation-hourglass-canvas");
+          if (!scene || !glass || !canvas) return false;
+          if (glass.classList.contains("is-turning-forward")) return false;
+          const limits = findWoodLimits(canvas);
+          const backdrop = getComputedStyle(scene, "::after");
+          const backdropFloor = parseFloat(backdrop.top) + parseFloat(backdrop.height);
+          if (!limits || !Number.isFinite(backdropFloor)) return false;
+          const signature = [glass.className, scene.clientWidth, scene.clientHeight, canvas.width, canvas.height, canvas.offsetWidth, canvas.offsetHeight].join("|");
+          if (signature === lastAnchorSignature) return true;
+          const style = getComputedStyle(glass);
+          const canvasRect = canvas.getBoundingClientRect();
+          const sceneRect = scene.getBoundingClientRect();
+          const matrix = new DOMMatrixReadOnly(style.transform === "none" ? undefined : style.transform);
+          const isVisuallyFlipped = matrix.d < 0;
+          const rawToCss = canvasRect.height / canvas.height;
+          const woodFloor = isVisuallyFlipped
+            ? canvasRect.top + canvasRect.height - limits.first * rawToCss
+            : canvasRect.top + (limits.last + 1) * rawToCss;
+          const targetFloor = sceneRect.top + backdropFloor;
+          const property = glass.classList.contains("is-turned-after-flip") ? "--floor-flipped-shift" : "--floor-idle-shift";
+          const currentShift = parseFloat(style.getPropertyValue(property)) || 0;
+          const unshiftedWoodFloor = woodFloor - currentShift;
+          glass.style.setProperty(property, `${(targetFloor - unshiftedWoodFloor).toFixed(3)}px`);
+          lastAnchorSignature = signature;
+          return true;
+        };
+        const connect = () => {
+          if (!anchorHourglass()) { requestAnimationFrame(connect); return; }
+          const scene = document.querySelector(".meditation-hourglass-scene");
+          const glass = document.querySelector(".meditation-hourglass");
+          const canvas = document.querySelector(".meditation-hourglass-canvas");
+          let refreshQueued = false;
+          const refresh = () => {
+            if (refreshQueued) return;
+            refreshQueued = true;
+            requestAnimationFrame(() => requestAnimationFrame(() => { refreshQueued = false; anchorHourglass(); }));
+          };
+          new ResizeObserver(refresh).observe(scene);
+          new ResizeObserver(refresh).observe(canvas);
+          new MutationObserver(refresh).observe(glass, { attributes: true, attributeFilter: ["class"] });
+          window.addEventListener("orientationchange", refresh, { passive: true });
+        };
+        requestAnimationFrame(connect);
+      })();
+    </script>
+    <script>
+      /* 保持原始沙丘物理模型：守衛只等待原畫布畫出下一個砂丘幀，不覆蓋結算或流砂運動。 */
+      (() => {
+        let guard = null;
+        const clearGuard = () => {
+          if (!guard) return;
+          guard.remove();
+          guard = null;
+        };
+        const signature = (canvas) => {
+          const context = canvas.getContext("2d", { willReadFrequently: true });
+          if (!context) return "";
+          try {
+            const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+            let value = 0;
+            for (let y = 72; y < Math.min(canvas.height - 48, 256); y += 17) {
+              for (let x = 70; x < Math.min(canvas.width - 70, 235); x += 19) {
+                const index = (y * canvas.width + x) * 4;
+                value = (value * 33 + data[index] * 3 + data[index + 1] * 5 + data[index + 2] * 7 + data[index + 3]) >>> 0;
+              }
+            }
+            return `${canvas.width}x${canvas.height}:${value}`;
+          } catch { return ""; }
+        };
+        const captureGuard = (glass) => {
+          if (guard || !glass.classList.contains("is-clickable")) return;
+          const source = glass.querySelector(".meditation-hourglass-canvas");
+          if (!source || !source.width || !source.height) return;
+          const snapshot = document.createElement("canvas");
+          snapshot.className = "hourglass-sand-readiness-guard";
+          snapshot.width = source.width;
+          snapshot.height = source.height;
+          snapshot.style.left = `${source.offsetLeft}px`;
+          snapshot.style.top = `${source.offsetTop}px`;
+          snapshot.style.width = `${source.offsetWidth}px`;
+          snapshot.style.height = `${source.offsetHeight}px`;
+          const context = snapshot.getContext("2d");
+          if (!context) return;
+          context.drawImage(source, 0, 0);
+          snapshot.dataset.sourceSignature = signature(source);
+          glass.appendChild(snapshot);
+          guard = snapshot;
+        };
+        const onIntent = (event) => {
+          const glass = event.target.closest(".meditation-hourglass");
+          if (!glass) return;
+          if (event.type === "keydown" && event.key !== "Enter" && event.key !== " ") return;
+          captureGuard(glass);
+        };
+        const onTurnEnd = (event) => {
+          const glass = event.target;
+          if (!glass.classList?.contains("meditation-hourglass") || !guard) return;
+          let attempts = 0;
+          const releaseWhenPhysicalFrameReady = () => {
+            if (!guard) return;
+            const source = glass.querySelector(".meditation-hourglass-canvas");
+            attempts += 1;
+            if (source && (signature(source) !== guard.dataset.sourceSignature || attempts > 8)) {
+              clearGuard();
+              return;
+            }
+            requestAnimationFrame(releaseWhenPhysicalFrameReady);
+          };
+          requestAnimationFrame(releaseWhenPhysicalFrameReady);
+        };
+        document.addEventListener("pointerdown", onIntent, true);
+        document.addEventListener("keydown", onIntent, true);
+        document.addEventListener("animationend", onTurnEnd, true);
+      })();
+    </script>
+  </body>
+</html>
