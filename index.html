@@ -1,204 +1,276 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>my音樂學習平台</title>
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-            background-color: #000;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>my音樂學習平台</title>
+<style>
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: Arial, sans-serif; background-color: #000; }
 
-        /* 🌐 滿版網頁顯示區域：現在百分之百填滿螢幕 */
-        .site-container {
-            width: 100%;
-            height: 100%; 
-            border: none;
-            background-color: #fff;
-            display: block;
-        }
+  .site-container { width: 100%; height: 100%; border: none; background-color: #fff; display: block; }
 
-        /* 💡 縮小到角落的懸浮圓形按鈕 (FAB) */
-        .menu-fab {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background-color: #111;
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            cursor: pointer;
-            z-index: 10000; /* 保證在最上層 */
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            border: 1px solid #333;
-            transition: transform 0.2s, background-color 0.2s;
-        }
+  /* 💡 可拖曳的懸浮圓形按鈕 */
+  .menu-fab {
+    position: fixed; bottom: 25px; right: 25px;
+    width: 60px; height: 60px; border-radius: 50%;
+    background-color: #111; color: #fff;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 24px; cursor: pointer; z-index: 10000;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 1px solid #333;
+    transition: background-color 0.2s, transform 0.2s;
+    /* 🔑 拖曳關鍵：禁止瀏覽器把觸摸當成滾動或長按選字 */
+    touch-action: none;
+    -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .menu-fab:hover { background-color: #222; }
+  .menu-fab.grabbing { transform: scale(1.08); box-shadow: 0 8px 22px rgba(0,0,0,0.55); }
 
-        .menu-fab:hover {
-            background-color: #222;
-            transform: scale(1.05);
-        }
+  .foldable-nav {
+    position: fixed; bottom: 0; left: 0; width: 100%; max-height: 80%;
+    overflow-y: auto; background-color: #1a1a1a;
+    display: flex; flex-direction: column;
+    box-shadow: 0 -5px 25px rgba(0,0,0,0.6); z-index: 9999;
+    transition: transform 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94);
+    transform: translateY(105%);
+    border-top-left-radius: 15px; border-top-right-radius: 15px;
+  }
+  .foldable-nav.show { transform: translateY(0); }
+  .foldable-nav button, .foldable-nav a {
+    background: none; border: none; border-bottom: 1px solid #2a2a2a;
+    color: #bbb !important; font-size: 16px; text-decoration: none;
+    display: flex; align-items: center; padding: 16px 25px;
+    box-sizing: border-box; width: 100%; transition: 0.2s;
+  }
+  .foldable-nav button:hover, .foldable-nav a:hover, .foldable-nav button.active-btn {
+    color: #fff !important; background-color: #333; font-weight: bold;
+  }
 
-        /* 💡 可摺疊的直式導覽選單（調整為從底部往上滑出） */
-        .foldable-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            max-height: 80%; /* 限制最大高度，留出上方空間，避免全遮擋 */
-            overflow-y: auto; /* 項目多時可滾動 */
-            background-color: #1a1a1a;
-            display: flex;
-            flex-direction: column; 
-            box-shadow: 0 -5px 25px rgba(0,0,0,0.6);
-            z-index: 9999;
-            transition: transform 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94); /* 更流暢的動畫 */
-            transform: translateY(105%); /* 預設完全隱藏在螢幕下方 */
-            border-top-left-radius: 15px; /* 圓角看起來更精緻 */
-            border-top-right-radius: 15px;
-        }
-
-        /* 當啟動 .show 時，選單滑出顯示 */
-        .foldable-nav.show {
-            transform: translateY(0);
-        }
-
-        /* 選單內項目樣式 */
-        .foldable-nav button, .foldable-nav a {
-            background: none;
-            border: none;
-            border-bottom: 1px solid #2a2a2a; 
-            color: #bbb !important;
-            font-size: 16px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            padding: 16px 25px; 
-            box-sizing: border-box;
-            width: 100%;
-            transition: 0.2s;
-        }
-
-        /* 高亮變色 */
-        .foldable-nav button:hover, .foldable-nav a:hover,
-        .foldable-nav button.active-btn {
-            color: #fff !important;
-            background-color: #333;
-            font-weight: bold;
-        }
-    </style>
+  /* 🔒 密碼遮罩 */
+  #pw-mask {
+    position: fixed; inset: 0; background: #000; z-index: 20000;
+    display: flex; justify-content: center; align-items: center;
+  }
+  .pw-card {
+    width: min(85vw, 340px); background: #161616;
+    border: 1px solid #333; border-radius: 14px;
+    padding: 26px 22px; text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  }
+  .pw-title { color: #fff; font-size: 18px; margin-bottom: 16px; letter-spacing: 1px; }
+  #pw-input {
+    width: 100%; box-sizing: border-box; padding: 12px 14px; font-size: 16px;
+    border-radius: 10px; border: 1px solid #444;
+    background: #0d0d0d; color: #fff; outline: none; text-align: center;
+  }
+  #pw-input:focus { border-color: #888; }
+  #pw-btn {
+    margin-top: 14px; width: 100%; padding: 12px; cursor: pointer;
+    border: 1px solid #333; border-radius: 10px;
+    background: #111; color: #fff; font-size: 16px;
+  }
+  #pw-btn:active { background: #222; }
+  #pw-error { color: #ff5555; font-size: 13px; margin-top: 10px; min-height: 16px; }
+  .pw-hint { color: #666; font-size: 11px; margin-top: 12px; }
+</style>
 </head>
 <body>
 
-    <!-- ─── 🌐 滿版網頁顯示視窗 ─── -->
-    <iframe 
-        id="web-window" 
-        class="site-container" 
-        src="README.md">
-    </iframe>
+<!-- 🌐 滿版網頁顯示視窗（解鎖後才開始載入內容） -->
+<iframe id="web-window" class="site-container"></iframe>
 
-    <!-- ─── 💡 垂直摺疊選單（已包含您所有的 10 個項目） ─── -->
-    <nav id="my-nav" class="foldable-nav">
-        
-        <!-- 情況 A：同倉庫檔案，點擊直接在上方框框切換 -->
-        <button onclick="switchSite('README.md', this)" class="active-btn">🏠 Home (首頁)</button>
-        <button onclick="switchSite('note-wall.html', this)">不好意思，留言版上有一張陌生人給你的便利貼</button>
-        <button onclick="switchSite('heart-market-mobile-single-file.html', this)">🛍️ 所見即所得多巴胺心動集市</button>
- 
-        <button onclick="switchSite('violin_lesson_log_v2 (5).html', this)">🎻 上課紀錄表by me</button>
-        
-        <button onclick="switchSite('orchestra.html', this)">🎼 作曲家 + 樂團閃卡by me</button>
-        <button onclick="switchSite('Musicterms.html', this)">📝 Music Term 閃卡by me</button>
-        <button onclick="switchSite('abrsm_dual_scoring_v3 (1).html', this)">📊 ABRSM 打分系統 by me</button>
-        <button onclick="switchSite('abrsm-all-instruments-scale-draw (2).html', this)">📊 ABRSM scale 抽籤池</button>
-        <button onclick="switchSite('小提琴練習選擇器.html', this)">小提琴練琴流程生成</button>
-        <button onclick="switchSite('sand.html', this)">䆁放與呼吸——沙漏</button>
-        <button onclick="switchSite('https://tongyedda-max.github.io/MusiccollectionCard/', this)">Logseq音樂記錄生成器</button>
-<button onclick="switchSite('https://tongyedda-max.github.io/feynan-game-offline/', this)">費曼教學法應用一對一線上課模擬教學</button>
-        
- 
-        <p style="color: #ffffff;"><br>--below are made by others--</p>
+<!-- 💡 垂直摺疊選單 -->
+<nav id="my-nav" class="foldable-nav">
+  <button onclick="lockNow()">🔒 重新上鎖</button>
+  <button onclick="switchSite('README.md', this)" class="active-btn">🏠 Home (首頁)</button>
+  <button onclick="switchSite('note-wall.html', this)">不好意思，留言版上有一張陌生人給你的便利貼</button>
+  <button onclick="switchSite('heart-market-mobile-single-file.html', this)">🛍️ 所見即所得多巴胺心動集市</button>
+  <button onclick="switchSite('violin_lesson_log_v2 (5).html', this)">🎻 上課紀錄表by me</button>
+  <button onclick="switchSite('orchestra.html', this)">🎼 作曲家 + 樂團閃卡by me</button>
+  <button onclick="switchSite('Musicterms.html', this)">📝 Music Term 閃卡by me</button>
+  <button onclick="switchSite('abrsm_dual_scoring_v3 (1).html', this)">📊 ABRSM 打分系統 by me</button>
+  <button onclick="switchSite('abrsm-all-instruments-scale-draw (2).html', this)">📊 ABRSM scale 抽籤池</button>
+  <button onclick="switchSite('小提琴練習選擇器.html', this)">小提琴練琴流程生成</button>
+  <button onclick="switchSite('sand.html', this)">䆁放與呼吸——沙漏</button>
+  <button onclick="switchSite('https://tongyedda-max.github.io/MusiccollectionCard/', this)">Logseq音樂記錄生成器</button>
+  <button onclick="switchSite('https://tongyedda-max.github.io/feynan-game-offline/', this)">費曼教學法應用一對一線上課模擬教學</button>
+  <p style="color: #ffffff;"><br>--below are made by others--</p>
+  <button onclick="switchSite('https://music.school.nz/violin/', this)"> 🌐 Violin Music School 認音</button>
+  <button onclick="switchSite('https://clarinet.neocities.org/jazz-lab', this)"> 📝Jazz Lab </button>
+  <button onclick="switchSite('https://joyceonkeys.com/recital-planner/', this)">📅 發表會籌備指南</button>
+  <button onclick="switchSite('https://andywu1101.github.io/ear-training/', this)">👂 音樂聽力練習</button>
+  <button onclick="switchSite('https://17gugugu.tw/', this)">🥁 鼓咕顧 GUGUGU</button>
+  <button onclick="switchSite('https://www.knowphilosophers.site/', this)">🧠 東西方哲學家哲學圖譜</button>
+  <button onclick="switchSite('https://service-692392470248.europe-west2.run.app/', this)">🎼 西方經典音樂家發展圖譜</button>
+  <button onclick="switchSite('https://abrsm-teach.musecode.de/', this)">📝 ABRSM G5 樂理測驗（中文）</button>
+  <button onclick="switchSite('https://mymusictheory.com/music-theory-quizzes/grade-5-music-theory-test/', this)">📝 ABRSM G5 樂理測驗（英文）</button>
+  <button onclick="switchSite('https://release-dbd.pages.dev/release/', this)">聖多納釋放法</button>
+  <p style="color: #ffffff;"><br>--below are by others will jump out to another website--</p>
+  <a href="https://tonesavvy.com/music-practice-exercises/">🎹 音樂ear training練習</a>
+  <a href="https://dialed.gg/sound">Sound Hz game聽音找音</a>
+</nav>
 
-        
-        <!-- 情況 B：外部網站，但允許被內嵌（點擊一樣在上方框框切換，不跳轉） -->
-        <button onclick="switchSite('https://music.school.nz/violin/', this)"> 🌐 Violin Music School 認音</button>
-        
-        <button onclick="switchSite('https://clarinet.neocities.org/jazz-lab', this)"> 📝Jazz Lab </button>
-        <button onclick="switchSite('https://joyceonkeys.com/recital-planner/', this)">📅 發表會籌備指南</button>
-<button onclick="switchSite('https://andywu1101.github.io/ear-training/', this)">👂 音樂聽力練習</button>
-<button onclick="switchSite('https://17gugugu.tw/', this)">🥁 鼓咕顧 GUGUGU</button>
-<button onclick="switchSite('https://www.knowphilosophers.site/', this)">🧠 東西方哲學家哲學圖譜</button>
-<button onclick="switchSite('https://service-692392470248.europe-west2.run.app/', this)">🎼 西方經典音樂家發展圖譜</button>
-<button onclick="switchSite('https://abrsm-teach.musecode.de/', this)">📝 ABRSM G5 樂理測驗（中文）</button>
-<button onclick="switchSite('https://mymusictheory.com/music-theory-quizzes/grade-5-music-theory-test/', this)">📝 ABRSM G5 樂理測驗（英文）</button>
-<button onclick="switchSite('https://release-dbd.pages.dev/release/', this)">聖多納釋放法</button>
+<!-- 💡 可拖曳的圓形懸浮按鈕 -->
+<div id="fab-btn" class="menu-fab">☰</div>
 
-        <p style="color: #ffffff;"><br>--below are by others will jump out to another website--</p>
+<!-- 🔒 密碼遮罩 -->
+<div id="pw-mask">
+  <div class="pw-card">
+    <div class="pw-title">🔒 請輸入密碼</div>
+    <input id="pw-input" type="password" placeholder="請輸入密碼" autocomplete="off">
+    <button id="pw-btn">進　入</button>
+    <div id="pw-error"></div>
+    <div class="pw-hint">同一分頁只需輸入一次，關閉分頁後會重新上鎖</div>
+  </div>
+</div>
 
-        
-        <!-- 情況 C：會拒絕連線的限制網站（點擊直接整頁跳轉過去） -->
-        <a href="https://tonesavvy.com/music-practice-exercises/">🎹 音樂ear training練習 (ToneSavvy)</a>
-        
-        <a href="https://dialed.gg/sound">Sound Hz game聽音找音</a>
-        
-        
-        
-        
+<script>
+/* ═══════════ 🔒 密碼遮罩功能 ═══════════ */
+const PW_FILE = 'pw.txt';        // 密碼檔，放在 index.html 同一層
+const FALLBACK_PW = '1234';      // 找不到 pw.txt 時的備用密碼（建議還是建一個）
 
-    </nav>
+const mask   = document.getElementById('pw-mask');
+const pwIn   = document.getElementById('pw-input');
+const pwBtn  = document.getElementById('pw-btn');
+const pwErr  = document.getElementById('pw-error');
+const iframe = document.getElementById('web-window');
+let storedPw = null;
 
-    <!-- 💡 右下角圓形懸浮按鈕 -->
-    <div id="fab-btn" class="menu-fab" onclick="toggleMenu()">
-        ☰
-    </div>
+async function sha256(text){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
 
-    <!-- ─── ⚙️ 控制摺疊與切換的 JavaScript ─── -->
-    <script>
-        // 切換選單的展開與收合
-        function toggleMenu() {
-            const nav = document.getElementById('my-nav');
-            const fab = document.getElementById('fab-btn');
-            
-            nav.classList.toggle('show');
-            
-            if (nav.classList.contains('show')) {
-                fab.innerHTML = "✕";
-                fab.style.backgroundColor = "#cc0000"; /* 展開時按鈕變紅色，提示關閉 */
-                fab.style.border = "1px solid #ff3333";
-            } else {
-                fab.innerHTML = "☰";
-                fab.style.backgroundColor = "#111";   /* 恢復黑色 */
-                fab.style.border = "1px solid #333";
-            }
-        }
+async function loadPassword(){
+  try{
+    const r = await fetch(PW_FILE + '?t=' + Date.now(), {cache:'no-store'});
+    if(r.ok){ const t = (await r.text()).trim(); if(t) return t; }
+  }catch(e){}
+  console.warn('找不到 ' + PW_FILE + '，使用預設密碼：' + FALLBACK_PW);
+  return FALLBACK_PW;
+}
 
-        // 切換內嵌框框的網址
-        function switchSite(siteUrl, buttonElement) {
-            // 1. 讓上方的 iframe 載入新頁面
-            document.getElementById('web-window').src = siteUrl;
+function unlockSite(){
+  sessionStorage.setItem('mySiteUnlocked','1');
+  mask.style.display = 'none';
+  if(!iframe.getAttribute('src')) iframe.src = 'README.md';  // 解鎖後才載入內容
+}
 
-            // 2. 清除所有按鈕的高亮狀態
-            const navItems = document.querySelectorAll('.foldable-nav button, .foldable-nav a');
-            navItems.forEach(item => item.classList.remove('active-btn'));
+async function tryUnlock(){
+  if(storedPw === null) storedPw = await loadPassword();
+  const val = pwIn.value;
+  let ok = false;
+  if(/^[0-9a-f]{64}$/i.test(storedPw) && window.crypto && crypto.subtle){
+    ok = (await sha256(val)) === storedPw.toLowerCase();   // pw.txt 放的是 SHA-256 雜湊
+  }else{
+    ok = (val === storedPw);                               // pw.txt 放的是明文密碼
+  }
+  if(ok){ unlockSite(); }
+  else{ pwErr.textContent = '❌ 密碼錯誤，請再試一次'; pwIn.value = ''; pwIn.focus(); }
+}
 
-            // 3. 讓當前按鈕變亮
-            buttonElement.classList.add('active-btn');
+pwBtn.addEventListener('click', tryUnlock);
+pwIn.addEventListener('keydown', e => { if(e.key === 'Enter') tryUnlock(); });
 
-            // 4. 選好網頁後，自動把選單收起來
-            toggleMenu();
-        }
-    </script>
+function lockNow(){
+  sessionStorage.removeItem('mySiteUnlocked');
+  iframe.removeAttribute('src');
+  mask.style.display = 'flex';
+  pwIn.value = ''; pwErr.textContent = '';
+  closeNav();
+  pwIn.focus();
+}
 
+/* ═══════════ 💡 可拖曳 FAB（點一下＝原本功能） ═══════════ */
+const fab = document.getElementById('fab-btn');
+const nav = document.getElementById('my-nav');
+
+function fabUseXY(){                    // 把按鈕定位方式從「右下」改成「左上座標」方便拖曳
+  const r = fab.getBoundingClientRect();
+  fab.style.left = r.left + 'px';  fab.style.top = r.top + 'px';
+  fab.style.right = 'auto';        fab.style.bottom = 'auto';
+}
+function clampFab(){                    // 防止按鈕被拖出螢幕外
+  const w = fab.offsetWidth, h = fab.offsetHeight;
+  let x = parseFloat(fab.style.left), y = parseFloat(fab.style.top);
+  x = Math.min(Math.max(0, x), window.innerWidth  - w);
+  y = Math.min(Math.max(0, y), window.innerHeight - h);
+  fab.style.left = x + 'px';  fab.style.top = y + 'px';
+}
+function saveFabPos(){ try{ localStorage.setItem('fabPos', JSON.stringify({x:fab.style.left, y:fab.style.top})); }catch(e){} }
+function restoreFabPos(){
+  try{
+    const p = JSON.parse(localStorage.getItem('fabPos') || 'null');
+    if(p && p.x != null){
+      fab.style.left = p.x; fab.style.top = p.y;
+      fab.style.right = 'auto'; fab.style.bottom = 'auto';
+      clampFab();
+    }
+  }catch(e){}
+}
+
+let dragOn = false, dragMoved = false, sx = 0, sy = 0, ox = 0, oy = 0;
+
+fab.addEventListener('pointerdown', e => {
+  fabUseXY();
+  dragOn = true;  dragMoved = false;
+  sx = e.clientX;  sy = e.clientY;
+  ox = parseFloat(fab.style.left);  oy = parseFloat(fab.style.top);
+  fab.setPointerCapture(e.pointerId);
+  fab.classList.add('grabbing');
+});
+fab.addEventListener('pointermove', e => {
+  if(!dragOn) return;
+  const dx = e.clientX - sx, dy = e.clientY - sy;
+  if(!dragMoved && Math.hypot(dx, dy) > 8) dragMoved = true;   // 移動超過8px才算「拖曳」
+  if(dragMoved){
+    const w = fab.offsetWidth, h = fab.offsetHeight;
+    let nx = ox + dx, ny = oy + dy;
+    nx = Math.min(Math.max(0, nx), window.innerWidth  - w);
+    ny = Math.min(Math.max(0, ny), window.innerHeight - h);
+    fab.style.left = nx + 'px';  fab.style.top = ny + 'px';
+  }
+  e.preventDefault();
+});
+function endDrag(){
+  if(!dragOn) return;
+  dragOn = false;  fab.classList.remove('grabbing');
+  if(!dragMoved){ toggleMenu(); }   // 👆 沒移動＝點一下 → 原本開關選單
+  else{ saveFabPos(); }             // 🖐 有移動＝拖曳 → 記住新位置
+}
+fab.addEventListener('pointerup', endDrag);
+fab.addEventListener('pointercancel', endDrag);
+fab.addEventListener('contextmenu', e => e.preventDefault());  // 防 Android 長按彈出選單
+
+/* ═══════════ 選單開關 / 切換（原本功能） ═══════════ */
+function toggleMenu() {
+  nav.classList.toggle('show');
+  if (nav.classList.contains('show')) {
+    fab.innerHTML = "✕"; fab.style.backgroundColor = "#cc0000"; fab.style.border = "1px solid #ff3333";
+  } else {
+    fab.innerHTML = "☰"; fab.style.backgroundColor = "#111"; fab.style.border = "1px solid #333";
+  }
+}
+function closeNav() {
+  nav.classList.remove('show');
+  fab.innerHTML = "☰"; fab.style.backgroundColor = "#111"; fab.style.border = "1px solid #333";
+}
+function switchSite(siteUrl, buttonElement) {
+  document.getElementById('web-window').src = siteUrl;
+  document.querySelectorAll('.foldable-nav button, .foldable-nav a').forEach(item => item.classList.remove('active-btn'));
+  buttonElement.classList.add('active-btn');
+  toggleMenu();
+}
+
+/* ═══════════ ⚙️ 啟動 ═══════════ */
+restoreFabPos();
+window.addEventListener('resize', () => { if(fab.style.left) clampFab(); });
+if (sessionStorage.getItem('mySiteUnlocked') === '1') {
+  unlockSite();                                  // 同分頁內已解鎖 → 直接進入
+} else {
+  loadPassword().then(p => storedPw = p);        // 預先載入密碼，輸入時反應更快
+  setTimeout(() => pwIn.focus(), 300);
+}
+</script>
 </body>
 </html>
