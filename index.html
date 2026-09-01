@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>my音樂學習平台</title>
+<title>my音樂學習平台 v2</title>
 <style>
   html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: clip; font-family: Arial, sans-serif; background-color: #000; }
 
   .site-container { position: absolute; top: 0; left: 0; width: 100%; height: 100vh; height: 100dvh; border: none; background-color: #fff; display: block; z-index: 0; }
 
-  /* 💡 可拖曳的懸浮圓形按鈕 */
   .menu-fab {
     position: fixed; bottom: 25px; right: 25px;
     width: 60px; height: 60px; border-radius: 50%;
@@ -18,12 +17,10 @@
     font-size: 24px; cursor: pointer; z-index: 10000;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 1px solid #333;
     transition: background-color 0.2s, transform 0.2s;
-    /* 🔑 拖曳關鍵：禁止瀏覽器把觸摸當成滾動或長按選字 */
     touch-action: none;
-      transform: translateZ(0);
-
     -webkit-user-select: none; user-select: none;
     -webkit-touch-callout: none;
+    transform: translateZ(0);
   }
   .menu-fab:hover { background-color: #222; }
   .menu-fab.grabbing { transform: translateZ(0) scale(1.08); box-shadow: 0 8px 22px rgba(0,0,0,0.55); }
@@ -34,11 +31,10 @@
     display: flex; flex-direction: column;
     box-shadow: 0 -5px 25px rgba(0,0,0,0.6); z-index: 9999;
     transition: transform 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94);
-      transform: translateZ(0) translateY(0);
-
+    transform: translateZ(0) translateY(105%);
     border-top-left-radius: 15px; border-top-right-radius: 15px;
   }
-  .foldable-nav.show {   transform: translateZ(0) translateY(0); }
+  .foldable-nav.show { transform: translateZ(0) translateY(0); }
   .foldable-nav button, .foldable-nav a {
     background: none; border: none; border-bottom: 1px solid #2a2a2a;
     color: #bbb !important; font-size: 16px; text-decoration: none;
@@ -49,11 +45,10 @@
     color: #fff !important; background-color: #333; font-weight: bold;
   }
 
-  /* 🔒 密碼遮罩 */
   #pw-mask {
     position: fixed; inset: 0; background: #000; z-index: 20000;
-    display: flex;#pw-mask { position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; justify-content: center; align-items: center; transform: translateZ(0); }
- justify-content: center; align-items: center;
+    display: flex; justify-content: center; align-items: center;
+    transform: translateZ(0);
   }
   .pw-card {
     width: min(85vw, 340px); background: #161616;
@@ -80,10 +75,8 @@
 </head>
 <body>
 
-<!-- 🌐 滿版網頁顯示視窗（解鎖後才開始載入內容） -->
 <iframe id="web-window" class="site-container"></iframe>
 
-<!-- 💡 垂直摺疊選單 -->
 <nav id="my-nav" class="foldable-nav">
   <button onclick="lockNow()">🔒 重新上鎖</button>
   <button onclick="switchSite('README.md', this)" class="active-btn">🏠 Home (首頁)</button>
@@ -114,10 +107,8 @@
   <a href="https://dialed.gg/sound">Sound Hz game聽音找音</a>
 </nav>
 
-<!-- 💡 可拖曳的圓形懸浮按鈕 -->
 <div id="fab-btn" class="menu-fab">☰</div>
 
-<!-- 🔒 密碼遮罩 -->
 <div id="pw-mask">
   <div class="pw-card">
     <div class="pw-title">🔒 請輸入密碼</div>
@@ -128,10 +119,15 @@
   </div>
 </div>
 
+<!-- 🔔 除錯哨兵：以後如果不小心改壞 JS，會直接跳視窗告訴你，不會再默默失效 -->
+<script>
+window.addEventListener('error', function(e){ alert('程式錯誤：' + e.message); });
+</script>
+
 <script>
 /* ═══════════ 🔒 密碼遮罩功能 ═══════════ */
-const PW_FILE = 'pw.txt';        // 密碼檔，放在 index.html 同一層
-const FALLBACK_PW = '1234';      // 找不到 pw.txt 時的備用密碼（建議還是建一個）
+const PW_FILE = 'pw.txt';
+const FALLBACK_PW = '1234';
 
 const mask   = document.getElementById('pw-mask');
 const pwIn   = document.getElementById('pw-input');
@@ -156,10 +152,9 @@ async function loadPassword(){
 
 function unlockSite(){
   sessionStorage.setItem('mySiteUnlocked','1');
-  pwIn.blur();                                  // 收起鍵盤、放開輸入框
+  pwIn.blur();
   mask.style.display = 'none';
-  if(!iframe.getAttribute('src')) iframe.src = 'README.md';  // 解鎖後才載入內容
-  // 把視窗強制捲回最上方，避免被鍵盤卡住
+  if(!iframe.getAttribute('src')) iframe.src = 'README.md';
   requestAnimationFrame(() => {
     window.scrollTo(0, 0);
     document.documentElement.scrollTop = 0;
@@ -167,15 +162,14 @@ function unlockSite(){
   });
 }
 
-
 async function tryUnlock(){
   if(storedPw === null) storedPw = await loadPassword();
   const val = pwIn.value;
   let ok = false;
   if(/^[0-9a-f]{64}$/i.test(storedPw) && window.crypto && crypto.subtle){
-    ok = (await sha256(val)) === storedPw.toLowerCase();   // pw.txt 放的是 SHA-256 雜湊
+    ok = (await sha256(val)) === storedPw.toLowerCase();
   }else{
-    ok = (val === storedPw);                               // pw.txt 放的是明文密碼
+    ok = (val === storedPw);
   }
   if(ok){ unlockSite(); }
   else{ pwErr.textContent = '❌ 密碼錯誤，請再試一次'; pwIn.value = ''; }
@@ -190,29 +184,28 @@ function lockNow(){
   mask.style.display = 'flex';
   pwIn.value = ''; pwErr.textContent = '';
   closeNav();
-  pwIn.focus();
 }
 
-/* ═══════════ 💡 可拖曳 FAB（點一下＝原本功能） ═══════════ */
+/* ═══════════ 💡 可拖曳 FAB ═══════════ */
 const fab = document.getElementById('fab-btn');
 const nav = document.getElementById('my-nav');
 
-function fabUseXY(){                    // 把按鈕定位方式從「右下」改成「左上座標」方便拖曳
+function fabUseXY(){
   const r = fab.getBoundingClientRect();
   fab.style.left = r.left + 'px';  fab.style.top = r.top + 'px';
   fab.style.right = 'auto';        fab.style.bottom = 'auto';
 }
-function clampFab(){                    // 防止按鈕被拖出螢幕外
+function clampFab(){
   const w = fab.offsetWidth, h = fab.offsetHeight;
   let x = parseFloat(fab.style.left), y = parseFloat(fab.style.top);
   x = Math.min(Math.max(0, x), window.innerWidth  - w);
   y = Math.min(Math.max(0, y), window.innerHeight - h);
   fab.style.left = x + 'px';  fab.style.top = y + 'px';
 }
-function saveFabPos(){ try{ localStorage.setItem('fabPos', JSON.stringify({x:fab.style.left, y:fab.style.top})); }catch(e){} }
+function saveFabPos(){ try{ localStorage.setItem('fabPosV2', JSON.stringify({x:fab.style.left, y:fab.style.top})); }catch(e){} }
 function restoreFabPos(){
   try{
-    const p = JSON.parse(localStorage.getItem('fabPos') || 'null');
+    const p = JSON.parse(localStorage.getItem('fabPosV2') || 'null');
     const x = parseFloat(p && p.x), y = parseFloat(p && p.y);
     if(Number.isFinite(x) && Number.isFinite(y)){
       fab.style.left = x + 'px';
@@ -221,8 +214,6 @@ function restoreFabPos(){
       clampFab();
     }
   }catch(e){}
-}
-
 }
 
 let dragOn = false, dragMoved = false, sx = 0, sy = 0, ox = 0, oy = 0;
@@ -238,7 +229,7 @@ fab.addEventListener('pointerdown', e => {
 fab.addEventListener('pointermove', e => {
   if(!dragOn) return;
   const dx = e.clientX - sx, dy = e.clientY - sy;
-  if(!dragMoved && Math.hypot(dx, dy) > 8) dragMoved = true;   // 移動超過8px才算「拖曳」
+  if(!dragMoved && Math.hypot(dx, dy) > 8) dragMoved = true;
   if(dragMoved){
     const w = fab.offsetWidth, h = fab.offsetHeight;
     let nx = ox + dx, ny = oy + dy;
@@ -251,14 +242,14 @@ fab.addEventListener('pointermove', e => {
 function endDrag(){
   if(!dragOn) return;
   dragOn = false;  fab.classList.remove('grabbing');
-  if(!dragMoved){ toggleMenu(); }   // 👆 沒移動＝點一下 → 原本開關選單
-  else{ saveFabPos(); }             // 🖐 有移動＝拖曳 → 記住新位置
+  if(!dragMoved){ toggleMenu(); }
+  else{ saveFabPos(); }
 }
 fab.addEventListener('pointerup', endDrag);
 fab.addEventListener('pointercancel', endDrag);
-fab.addEventListener('contextmenu', e => e.preventDefault());  // 防 Android 長按彈出選單
+fab.addEventListener('contextmenu', e => e.preventDefault());
 
-/* ═══════════ 選單開關 / 切換（原本功能） ═══════════ */
+/* ═══════════ 選單開關 / 切換 ═══════════ */
 function toggleMenu() {
   nav.classList.toggle('show');
   if (nav.classList.contains('show')) {
@@ -282,10 +273,9 @@ function switchSite(siteUrl, buttonElement) {
 restoreFabPos();
 window.addEventListener('resize', () => { if(fab.style.left) clampFab(); });
 if (sessionStorage.getItem('mySiteUnlocked') === '1') {
-  unlockSite();                                  // 同分頁內已解鎖 → 直接進入
+  unlockSite();
 } else {
-  loadPassword().then(p => storedPw = p);        // 預先載入密碼，輸入時反應更快
-//  setTimeout(() => pwIn.focus(), 300);//
+  loadPassword().then(p => storedPw = p);
 }
 </script>
 </body>
