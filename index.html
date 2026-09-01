@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>my音樂學習平台</title>
 <style>
-  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: Arial, sans-serif; background-color: #000; }
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: clip; font-family: Arial, sans-serif; background-color: #000; }
 
-  .site-container { width: 100%; height: 100%; border: none; background-color: #fff; display: block; }
+  .site-container { width: 100%; height: 100vh; height: 100dvh; border: none; background-color: #fff; display: block; }
 
   /* 💡 可拖曳的懸浮圓形按鈕 */
   .menu-fab {
@@ -152,9 +152,17 @@ async function loadPassword(){
 
 function unlockSite(){
   sessionStorage.setItem('mySiteUnlocked','1');
+  pwIn.blur();                                  // 收起鍵盤、放開輸入框
   mask.style.display = 'none';
   if(!iframe.getAttribute('src')) iframe.src = 'README.md';  // 解鎖後才載入內容
+  // 把視窗強制捲回最上方，避免被鍵盤卡住
+  requestAnimationFrame(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  });
 }
+
 
 async function tryUnlock(){
   if(storedPw === null) storedPw = await loadPassword();
@@ -166,7 +174,7 @@ async function tryUnlock(){
     ok = (val === storedPw);                               // pw.txt 放的是明文密碼
   }
   if(ok){ unlockSite(); }
-  else{ pwErr.textContent = '❌ 密碼錯誤，請再試一次'; pwIn.value = ''; pwIn.focus(); }
+  else{ pwErr.textContent = '❌ 密碼錯誤，請再試一次'; pwIn.value = ''; }
 }
 
 pwBtn.addEventListener('click', tryUnlock);
@@ -269,7 +277,7 @@ if (sessionStorage.getItem('mySiteUnlocked') === '1') {
   unlockSite();                                  // 同分頁內已解鎖 → 直接進入
 } else {
   loadPassword().then(p => storedPw = p);        // 預先載入密碼，輸入時反應更快
-  setTimeout(() => pwIn.focus(), 300);
+//  setTimeout(() => pwIn.focus(), 300);//
 }
 </script>
 </body>
