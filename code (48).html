@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小提琴練琴工具箱（流程・選擇器・冥想語音・心智練習・啟動卡）</title>
+<script src="https://cdn.bootcdn.net/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box;
+      -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body { font-family:"PingFang TC","Microsoft JhengHei","Noto Sans TC","Heiti TC",sans-serif;
+    background:#1a1a1a; display:flex; flex-direction:column;
+    align-items:center; padding:20px 8px; gap:16px; }
+  button { cursor:pointer; }
+
+  /* ===== 分頁 ===== */
+  .tabs { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .tab { padding:10px 18px; border:none; border-radius:24px; background:#333;
+    color:#ccc; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .tab.active { background:#f7f4ec; color:#111; }
+
+  .sheet { width:min(94vw,820px); background:#f7f4ec; border-radius:8px;
+    padding:26px 24px; box-shadow:0 8px 30px rgba(0,0,0,.4); color:#111; display:none; }
+  .sheet.active { display:block; }
+
+  .head { text-align:center; border-bottom:3px solid #111; padding-bottom:10px; margin-bottom:12px; }
+  .head h1 { font-size:25px; letter-spacing:2px; }
+  .head p  { font-size:12px; color:#666; margin-top:4px; }
+
+  .inforow { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .fld { flex:1; min-width:150px; background:#fff; border:1.5px dashed #999;
+    border-radius:6px; padding:7px 12px; font-size:14px; color:#111;
+    font-family:inherit; font-weight:600; }
+  .fld::placeholder { color:#aaa; font-weight:400; }
+  .fld:focus { outline:2px solid #4f8cff; border-style:solid; }
+
+  .prep { background:#aed9ff; border-radius:8px; padding:10px 14px; margin-bottom:12px; }
+  .prep b { font-size:15px; }
+  .cks { display:flex; flex-wrap:wrap; gap:4px 18px; margin-top:6px; }
+
+  .steps { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .step { background:#fff; border:1.5px solid #e2dcc9; border-radius:8px; padding:10px 12px; }
+  .shead { display:flex; align-items:center; gap:8px; margin-bottom:7px; flex-wrap:wrap; }
+  .badge { width:26px; height:26px; border-radius:50%; color:#111; font-weight:900;
+    display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .stitle { font-weight:900; font-size:15px; flex:1; }
+  .time { font-size:11px; background:#f0ece0; border-radius:20px; padding:2px 9px; color:#555; }
+  .step .cks { flex-direction:column; gap:5px; flex-wrap:nowrap; }
+
+  .ck { display:flex; align-items:flex-start; gap:7px; font-size:12.5px; line-height:1.45;
+    cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent; }
+  .ck input { position:absolute; opacity:0; }
+  .box { width:16px; height:16px; border:2px solid #333; border-radius:4px;
+    flex-shrink:0; margin-top:1px; background:#fff; color:transparent;
+    display:flex; align-items:center; justify-content:center; font-size:12px; }
+  .ck input:checked ~ .box { background:#111; color:#fff; }
+  .ck input:checked ~ .box::after { content:"✓"; font-weight:900; }
+  .ck input:checked ~ .txt { color:#888; text-decoration:line-through; }
+
+  .b1{background:#d9b8ff}.b2{background:#ff9ec1}.b3{background:#aed9ff}
+  .b4{background:#ffe08a}.b5{background:#c8e878}.b6{background:#ffc89e}
+
+  .tag { display:inline-block; font-size:10.5px; background:#f0ece0; border-radius:12px;
+    padding:1px 8px; color:#555; }
+  .note { font-size:11.5px; color:#666; margin-top:6px; line-height:1.5; }
+
+  .pet { margin-top:12px; background:#c8e878; border-radius:8px; padding:10px 14px; }
+  .pet b { font-size:14px; }
+  .pet .cks { margin-top:6px; gap:4px 14px; }
+  .pet .ck { font-size:12px; flex:1 1 44%; }
+
+  .warn { margin-top:12px; background:#ffe08a; border-radius:8px; padding:10px 14px; font-size:12.5px; }
+  .warn b { font-size:14px; }
+  .warn p { margin-top:5px; line-height:1.6; }
+  .warn.red { background:#ff9ec1; }
+  .warn.green { background:#c8e878; }
+  .warn.purple { background:#d9b8ff; }
+  .warn.blue { background:#aed9ff; }
+  .foot { margin-top:10px; text-align:center; font-size:11px; color:#888; }
+
+  .tbl { width:100%; border-collapse:collapse; font-size:12px; margin-top:8px;
+    background:#fff; overflow:hidden; border-radius:8px; }
+  .tbl td, .tbl th { border:1px solid #e2dcc9; padding:5px 8px; text-align:left; line-height:1.45; }
+  .tbl th { background:#f0ece0; font-size:11.5px; }
+
+  .quadwrap { background:#fff; border:1.5px solid #e2dcc9; border-radius:8px; padding:12px 14px; margin-top:12px; }
+  .axlab { text-align:center; font-size:11px; font-weight:700; color:#555; }
+  .quad { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:8px 0; }
+  .qcell { border-radius:8px; padding:9px 11px; font-size:11.5px; line-height:1.55;
+    cursor:pointer; border:2.5px solid transparent; }
+  .qcell b { font-size:12.5px; display:block; }
+  .qcell.sel { border-color:#111; box-shadow:0 0 0 2px #111 inset; }
+  .qside { display:flex; justify-content:space-between; font-size:11px;
+    font-weight:700; color:#555; padding:0 4px; }
+
+  .btns { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .btns button { padding:12px 22px; font-size:16px; font-weight:700; border:none;
+    border-radius:30px; cursor:pointer; font-family:inherit; }
+  #pdfBtn{background:#e05656;color:#fff} #pdfBtn:hover{background:#c74343}
+  #printBtn, #printAllBtn { background:#4f8cff; color:#fff; }
+  #clearBtn { background:#555; color:#fff; }
+
+  /* ================= 🧘 冥想語音播放器 ================= */
+  .medp { background:#fff; border:2px solid #7a668b; border-radius:12px; padding:14px; margin-bottom:14px; }
+  .medp > b { font-size:15px; }
+  .medp-progs { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .medp-prog { padding:11px 14px; border:2px solid #ccc; border-radius:10px; background:#fff;
+    font-weight:800; font-size:13.5px; font-family:inherit; transition:.15s; }
+  .medp-prog.on { border-color:#7a668b; background:#e9e2f2; color:#4a3a5c; }
+  .medp-stage { text-align:center; padding:16px 10px 14px;
+    background:linear-gradient(160deg,#f3eefa,#e4f0eb); border-radius:10px; margin-top:12px; }
+  .medp-circle-wrap { height:200px; display:flex; align-items:center; justify-content:center; }
+  .medp-circle { width:92px; height:92px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #c4b0e0, #7a668b);
+    transition:transform 4s ease-in-out; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:900; font-size:15px; box-shadow:0 6px 22px rgba(90,70,120,.35); }
+  .medp-sub { font-size:16.5px; font-weight:700; line-height:1.65; min-height:86px;
+    display:flex; align-items:center; justify-content:center; padding:0 8px; }
+  .medp-status { font-size:11.5px; color:#666; margin-top:6px; }
+  .medp-ctl { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
+  .medp-btn { padding:12px 20px; font-size:15px; font-weight:800; border:none;
+    border-radius:24px; font-family:inherit; }
+  .medp-btn.play { background:#7a668b; color:#fff; }
+  .medp-btn.play:active { transform:scale(.97); }
+  .medp-btn.stop { background:#555; color:#fff; }
+  .medp-btn.small { padding:9px 14px; font-size:13px; }
+  .medp-bgm { margin-top:14px; border-top:1.5px dashed #ccc; padding-top:12px; }
+  .medp-bgm b { font-size:13px; }
+  .medp-bgm-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:8px; }
+  .medp select, .medp input[type=text] { padding:9px 10px; border:1.5px solid #999;
+    border-radius:8px; font-size:13px; font-family:inherit; background:#fff; }
+  .medp input[type=text] { flex:1; min-width:170px; }
+  .medp input[type=range] { accent-color:#7a668b; width:140px; }
+  #ytFrame { width:100%; height:170px; border:0; border-radius:8px; margin-top:8px; }
+  .medp-vol { display:flex; align-items:center; gap:6px; font-size:12px; color:#555; }
+
+  /* ================= 🎯 練習選擇器（scoped under #s4） ================= */
+  :root { --ink:#1f2a2b; --muted:#596665; --vcard:#fffdf8; --vline:#dcd5c6;
+    --forest:#174f4a; --forest-dark:#103b37; --gold:#c89136; --gold-soft:#f4e5c9;
+    --mint:#e4f0eb; --rose:#f8e8e2; --vshadow:0 12px 32px rgba(26,47,44,.09); }
+  #s4 { background:linear-gradient(180deg,#e7efe8 0,#f8f5ed 420px); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+    line-height:1.65; width:min(96vw,1120px); }
+  #s4 .wrap { width:100%; margin:0 auto; }
+  #s4 header { padding:6px 0 18px; }
+  #s4 .eyebrow { margin:0 0 8px; color:var(--forest); font-size:.88rem; font-weight:800; letter-spacing:.12em; }
+  #s4 h1 { margin:0; font-family:Georgia,"Noto Serif TC",serif; color:var(--forest-dark);
+    font-size:clamp(1.7rem,4vw,2.6rem); letter-spacing:-.02em; line-height:1.1; }
+  #s4 .lede { max-width:710px; margin:12px 0 0; color:var(--muted); font-size:.98rem; }
+  #s4 .notice { display:flex; gap:12px; align-items:flex-start; max-width:820px; margin-top:16px;
+    padding:12px 15px; background:rgba(255,255,255,.64); border:1px solid var(--vline); border-radius:14px;
+    font-size:.9rem; color:var(--muted); }
+  #s4 .notice strong { color:var(--forest); white-space:nowrap; }
+  #s4 .controls { display:grid; grid-template-columns:1.02fr .98fr; gap:18px; margin:14px 0 26px; }
+  #s4 .panel { background:rgba(255,253,248,.93); border:1px solid var(--vline); border-radius:20px;
+    box-shadow:var(--vshadow); padding:clamp(18px,3vw,28px); }
+  #s4 h2 { margin:0 0 4px; color:var(--forest-dark); font-family:Georgia,"Noto Serif TC",serif; font-size:1.35rem; }
+  #s4 .section-note { margin:0 0 16px; color:var(--muted); font-size:.9rem; }
+  #s4 .choice-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; }
+  #s4 .time-grid { grid-template-columns:repeat(4,1fr); }
+  #s4 .choice { position:relative; }
+  #s4 .choice input { position:absolute; opacity:0; pointer-events:none; }
+  #s4 .choice label { display:block; min-height:62px; padding:10px 12px; border:1px solid var(--vline);
+    border-radius:12px; background:#fff; color:var(--ink); font-weight:700; transition:.18s ease; }
+  #s4 .choice label small { display:block; margin-top:1px; color:var(--muted); font-weight:500; font-size:.77rem; }
+  #s4 .choice input:checked + label { border-color:var(--forest); background:var(--mint);
+    box-shadow:inset 0 0 0 1px var(--forest); color:var(--forest-dark); }
+  #s4 .choice label:hover { transform:translateY(-1px); border-color:var(--forest); }
+  #s4 .custom-time { display:flex; align-items:center; gap:8px; margin-top:13px; color:var(--muted); font-size:.9rem; }
+  #s4 .custom-time input { width:78px; padding:6px 8px; border:1px solid var(--vline); border-radius:8px;
+    color:var(--ink); background:#fff; }
+  #s4 .fields { display:grid; gap:13px; margin-top:20px; }
+  #s4 .field-label { display:block; margin-bottom:5px; color:var(--forest-dark); font-size:.88rem; font-weight:800; }
+  #s4 textarea { display:block; width:100%; min-height:70px; padding:10px 12px; resize:vertical;
+    color:var(--ink); border:1px solid var(--vline); border-radius:10px; background:#fff; font-family:inherit; }
+  #s4 textarea:focus, #s4 input:focus { outline:3px solid rgba(200,145,54,.25); border-color:var(--gold); }
+  #s4 .generate { width:100%; margin-top:20px; padding:13px 18px; border:0; border-radius:12px;
+    color:#fff; background:var(--forest); font-weight:800; font-size:1rem; transition:.18s ease; }
+  #s4 .generate:hover { background:var(--forest-dark); transform:translateY(-1px); }
+  #s4 .result { margin:4px 0 40px; }
+  #s4 .result[hidden], #s4 .roadmap-result[hidden] { display:none; }
+  #s4 .result-head { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; margin:0 0 14px; }
+  #s4 .result-head h2 { font-size:clamp(1.5rem,3vw,2rem); }
+  #s4 .pbadge { display:inline-block; padding:5px 10px; border-radius:99px; background:var(--gold-soft);
+    color:#77501c; font-size:.82rem; font-weight:800; }
+  #s4 .summary { margin:8px 0 0; color:var(--muted); }
+  #s4 .goal-card { display:grid; grid-template-columns:1fr auto; align-items:center; gap:16px;
+    padding:15px 18px; background:#f1f6f1; border:1px solid #cee0d7; border-radius:14px; }
+  #s4 .goal-card p { margin:0; }
+  #s4 .goal-card strong { color:var(--forest-dark); }
+  #s4 .print { padding:9px 12px; white-space:nowrap; border:1px solid var(--forest); border-radius:9px;
+    color:var(--forest); background:transparent; font-weight:800; text-decoration:none; }
+  #s4 .timeline { position:relative; display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-top:22px; }
+  #s4 .timeline::before { content:""; position:absolute; z-index:0; top:28px; right:5%; left:5%;
+    height:2px; background:var(--vline); }
+  #s4 .timeline .step { position:relative; z-index:1; min-height:180px; padding:14px 13px;
+    background:var(--vcard); border:1px solid var(--vline); border-radius:15px;
+    box-shadow:0 4px 14px rgba(30,50,46,.05); }
+  #s4 .step.accent { border-color:#dcbf8b; background:#fffaf0; }
+  #s4 .step.muted { opacity:.66; }
+  #s4 .step-mark { display:grid; place-items:center; width:30px; height:30px; margin-bottom:12px;
+    border-radius:50%; color:#fff; background:var(--forest); font-size:.82rem; font-weight:900; }
+  #s4 .timeline .step:nth-child(2) .step-mark { background:#a36539; }
+  #s4 .timeline .step:nth-child(3) .step-mark { background:#557b94; }
+  #s4 .timeline .step:nth-child(4) .step-mark { background:#7a668b; }
+  #s4 .timeline .step:nth-child(5) .step-mark { background:#b57872; }
+  #s4 .timeline .step:nth-child(6) .step-mark { background:#61746b; }
+  #s4 .step-time { margin:0; color:var(--gold); font-size:.84rem; font-weight:900; }
+  #s4 .step h3 { margin:2px 0 5px; color:var(--forest-dark); font-size:1rem; }
+  #s4 .step p { margin:0; color:var(--muted); font-size:.84rem; line-height:1.48; }
+  #s4 .step label { display:flex; align-items:center; gap:6px; margin-top:11px; color:var(--muted); font-size:.78rem; }
+  #s4 .step input { accent-color:var(--forest); }
+  #s4 .details { display:grid; grid-template-columns:1.05fr .95fr; gap:18px; margin-top:22px; }
+  #s4 .details .panel { padding:20px; box-shadow:none; }
+  #s4 .details h3 { margin:0 0 7px; color:var(--forest-dark); font-family:Georgia,"Noto Serif TC",serif; font-size:1.12rem; }
+  #s4 .details p { margin:0; color:var(--muted); }
+  #s4 .tip-list { display:grid; gap:10px; margin:14px 0 0; }
+  #s4 .tip { padding:10px 12px; border-left:3px solid var(--gold); background:#fdf8ee;
+    border-radius:0 8px 8px 0; color:#4e514c; font-size:.88rem; }
+  #s4 .reflection { margin-top:10px; min-height:125px; }
+  #s4 .safety { margin:24px 0 0; padding:14px 17px; border:1px solid #ebc9bd; border-radius:13px;
+    background:var(--rose); color:#70483d; font-size:.9rem; }
+  #s4 .daily-checklist-bridge { margin-top:14px; padding:12px 15px; border:1px dashed #b7d0c4;
+    border-radius:12px; background:#f4faf6; color:#46605a; font-size:.9rem; }
+  #s4 .daily-checklist-bridge strong { color:var(--forest-dark); }
+  #s4 .daily-checklist-bridge a { color:var(--forest); font-weight:800; text-decoration:none; }
+  #s4 .checklist-section { margin:34px 0 12px; padding:clamp(20px,3.5vw,30px); border:1px solid #d7cfb8;
+    border-radius:20px; background:linear-gradient(135deg,#fff8ed 0,#fffdf8 62%); box-shadow:var(--vshadow); }
+  #s4 .checklist-head { display:flex; justify-content:space-between; align-items:end; gap:18px; margin-bottom:16px; }
+  #s4 .checklist-head h2 { margin:0; font-size:clamp(1.4rem,3vw,1.9rem); }
+  #s4 .checklist-head p { max-width:700px; margin:7px 0 0; color:var(--muted); }
+  #s4 .checklist-kicker { margin:0 0 5px; color:#a36539; font-size:.8rem; font-weight:900; letter-spacing:.1em; }
+  #s4 .checklist-setup { display:grid; grid-template-columns:1.18fr .82fr auto; gap:12px; align-items:end;
+    padding:16px; border:1px solid #ebdfc6; border-radius:14px; background:rgba(255,255,255,.62); }
+  #s4 .checklist-setup input { width:100%; padding:10px 12px; border:1px solid var(--vline);
+    border-radius:9px; background:#fff; color:var(--ink); }
+  #s4 .scope-options { display:flex; gap:8px; flex-wrap:wrap; }
+  #s4 .scope-options .choice label { min-height:auto; padding:8px 11px; font-size:.87rem; }
+  #s4 .prepare-button, #s4 .reset-button { padding:10px 13px; border-radius:9px; font-weight:800; white-space:nowrap; }
+  #s4 .prepare-button { border:0; color:#fff; background:var(--forest); }
+  #s4 .reset-button { border:1px solid #b58b53; color:#81531d; background:transparent; }
+  #s4 .checklist-priority { display:flex; align-items:start; gap:10px; margin:16px 0; padding:12px 14px;
+    border-left:3px solid var(--gold); border-radius:0 10px 10px 0; background:#fff4dc; color:#5f5137; font-size:.9rem; }
+  #s4 .checklist-priority strong { color:#73501f; }
+  #s4 .checklist-items { display:grid; gap:9px; }
+  #s4 .check-item { display:grid; grid-template-columns:37px 1fr auto; align-items:center; gap:13px;
+    padding:13px; border:1px solid var(--vline); border-radius:13px; background:rgba(255,255,255,.76); transition:.16s ease; }
+  #s4 .check-item.is-recommended { border-color:#d9b778; box-shadow:inset 3px 0 0 var(--gold); }
+  #s4 .check-item.is-done { border-color:#b4d5c3; background:#f1f9f4; }
+  #s4 .check-item.is-defer { border-color:#e4b6b3; background:#fff5f4; }
+  #s4 .task-letter { display:grid; place-items:center; width:31px; height:31px; border-radius:50%;
+    color:#fff; background:#745083; font-size:.84rem; font-weight:900; }
+  #s4 .check-item:nth-child(2) .task-letter { background:#457b75; }
+  #s4 .check-item:nth-child(3) .task-letter { background:#ad7245; }
+  #s4 .check-item:nth-child(4) .task-letter { background:#547a96; }
+  #s4 .check-item:nth-child(5) .task-letter { background:#b67578; }
+  #s4 .check-item:nth-child(6) .task-letter { background:#697955; }
+  #s4 .check-item:nth-child(7) .task-letter { background:#7d6690; }
+  #s4 .check-item:nth-child(8) .task-letter { background:#4a7e82; }
+  #s4 .task-title { margin:0; color:var(--forest-dark); font-weight:800; }
+  #s4 .task-note { margin:1px 0 0; color:var(--muted); font-size:.81rem; }
+  #s4 .status-controls { display:flex; gap:6px; flex-wrap:wrap; justify-content:end; }
+  #s4 .status-button { padding:7px 9px; border:1px solid var(--vline); border-radius:8px; background:#fff;
+    color:var(--muted); font-size:.78rem; font-weight:800; }
+  #s4 .status-button:hover { border-color:var(--forest); color:var(--forest); }
+  #s4 .status-button.is-done { border-color:#509473; background:#e8f5ed; color:#257050; }
+  #s4 .status-button.is-defer { border-color:#d47c79; background:#fff0ef; color:#ad3f3d; }
+  #s4 .status-button.is-na { border-color:#93a19c; background:#f1f3f2; color:#58645f; }
+  #s4 .checklist-summary { display:flex; align-items:center; justify-content:space-between; gap:14px;
+    margin-top:16px; padding:14px 16px; border-radius:12px; background:#edf5ef; }
+  #s4 .checklist-summary p { margin:0; color:#40534c; }
+  #s4 .checklist-summary strong { color:var(--forest-dark); }
+  #s4 .checklist-summary-actions { display:flex; gap:9px; align-items:center; }
+  #s4 .roadmap-checklist-link { margin:0 0 18px; padding:13px 15px; border:1px solid #ddd0b4;
+    border-radius:12px; background:#fffaf0; color:#5b513e; font-size:.9rem; }
+  #s4 .roadmap-checklist-link strong { color:#75531d; }
+  #s4 .roadmap-checklist-link a { color:var(--forest); font-weight:800; text-decoration:none; }
+  #s4 .roadmap-section { margin:40px 0 8px; padding:clamp(20px,3.5vw,30px); border:1px solid #cbded5;
+    border-radius:20px; background:linear-gradient(135deg,#eaf4ef,#fffdf8 62%); box-shadow:var(--vshadow); }
+  #s4 .roadmap-head { display:flex; align-items:end; justify-content:space-between; gap:18px; margin-bottom:20px; }
+  #s4 .roadmap-head h2 { margin:0; font-size:clamp(1.4rem,3vw,1.9rem); }
+  #s4 .roadmap-head p { max-width:660px; margin:7px 0 0; color:var(--muted); }
+  #s4 .roadmap-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  #s4 .roadmap-grid .full { grid-column:1/-1; }
+  #s4 .roadmap-grid select, #s4 .roadmap-grid input, #s4 .roadmap-grid textarea { display:block; width:100%;
+    padding:10px 12px; color:var(--ink); border:1px solid var(--vline); border-radius:10px; background:#fff; font-family:inherit; }
+  #s4 .number-pair { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  #s4 .roadmap-result { margin-top:24px; }
+  #s4 .roadmap-overview { display:grid; grid-template-columns:1.25fr repeat(3,.75fr); gap:10px; margin-bottom:18px; }
+  #s4 .overview-card { padding:13px 14px; border:1px solid #c6ddd2; border-radius:12px; background:rgba(255,255,255,.72); }
+  #s4 .overview-card .label { margin:0; color:var(--muted); font-size:.76rem; font-weight:800; letter-spacing:.04em; }
+  #s4 .overview-card .value { margin:2px 0 0; color:var(--forest-dark); font-weight:800; font-size:.95rem; }
+  #s4 .roadmap-outcomes { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; }
+  #s4 .outcome { padding:14px; border-radius:12px; }
+  #s4 .outcome.outcome-main { background:#fff7e7; border:1px solid #e5cea2; }
+  #s4 .outcome.outcome-process { background:#eef7f2; border:1px solid #c8e1d5; }
+  #s4 .outcome h3 { margin:0 0 5px; color:var(--forest-dark); font-size:.95rem; }
+  #s4 .outcome p { margin:0; color:#4e5754; font-size:.88rem; }
+  #s4 .milestone-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  #s4 .milestone { position:relative; min-height:200px; padding:16px 14px; border:1px solid var(--vline);
+    border-radius:14px; background:#fffdf8; }
+  #s4 .milestone-number { display:grid; place-items:center; width:27px; height:27px; margin-bottom:10px;
+    border-radius:50%; color:#fff; background:var(--forest); font-size:.8rem; font-weight:900; }
+  #s4 .milestone:nth-child(2) .milestone-number { background:#a36539; }
+  #s4 .milestone:nth-child(3) .milestone-number { background:#557b94; }
+  #s4 .milestone:nth-child(4) .milestone-number { background:#7a668b; }
+  #s4 .milestone-window { margin:0; color:var(--gold); font-size:.77rem; font-weight:900; }
+  #s4 .milestone h3 { margin:3px 0 6px; color:var(--forest-dark); font-size:.98rem; }
+  #s4 .milestone p { margin:0; color:var(--muted); font-size:.83rem; line-height:1.5; }
+  #s4 .weekly-review { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:18px; }
+  #s4 .weekly-review .review-card { padding:16px; border:1px solid var(--vline); border-radius:12px;
+    background:rgba(255,255,255,.65); }
+  #s4 .weekly-review h3 { margin:0 0 6px; color:var(--forest-dark); font-size:1rem; }
+  #s4 .weekly-review p { margin:0 0 10px; color:var(--muted); font-size:.87rem; }
+  #s4 .weekly-review textarea { width:100%; min-height:112px; padding:10px; border:1px solid var(--vline);
+    border-radius:9px; background:#fff; color:var(--ink); resize:vertical; }
+  #s4 .roadmap-note { margin:16px 0 0; color:var(--muted); font-size:.84rem; }
+
+  @media (max-width:900px){
+    #s4 .controls, #s4 .details { grid-template-columns:1fr; }
+    #s4 .timeline { grid-template-columns:repeat(3,1fr); } #s4 .timeline::before { display:none; }
+    #s4 .milestone-grid { grid-template-columns:repeat(2,1fr); }
+    #s4 .roadmap-overview { grid-template-columns:1fr 1fr; }
+    #s4 .checklist-setup { grid-template-columns:1fr 1fr; }
+    #s4 .checklist-setup .prepare-button { grid-column:1/-1; }
+  }
+  @media (max-width:560px){
+    #s4 .time-grid { grid-template-columns:repeat(2,1fr); }
+    #s4 .choice-grid, #s4 .roadmap-grid, #s4 .roadmap-outcomes, #s4 .weekly-review, #s4 .checklist-setup { grid-template-columns:1fr; }
+    #s4 .roadmap-grid .full { grid-column:auto; } #s4 .number-pair { grid-template-columns:1fr; }
+    #s4 .timeline { grid-template-columns:1fr 1fr; } #s4 .milestone-grid { grid-template-columns:1fr; }
+    #s4 .roadmap-overview { grid-template-columns:1fr 1fr; }
+    #s4 .timeline .step { min-height:165px; }
+    #s4 .check-item { grid-template-columns:33px 1fr; }
+    #s4 .status-controls { grid-column:1/-1; justify-content:start; padding-left:46px; }
+    #s4 .checklist-summary { align-items:stretch; flex-direction:column; }
+    #s4 .checklist-summary-actions { justify-content:space-between; }
+    #s4 .goal-card, #s4 .result-head, #s4 .roadmap-head, #s4 .checklist-head { align-items:stretch; grid-template-columns:1fr; display:grid; }
+    #s4 .print { width:100%; }
+    .medp-sub { font-size:14.5px; }
+    .medp-circle { width:74px; height:74px; font-size:13px; }
+    .medp-circle-wrap { height:160px; }
+  }
+
+  @media print {
+    @page { size:A4 portrait; margin:9mm; }
+    body { background:#fff; padding:0; }
+    .tabs, .btns { display:none !important; }
+    .sheet { display:none !important; }
+    .sheet.active { display:block !important; width:100%; box-shadow:none; border-radius:0; padding:0; }
+    body.printall .sheet { display:block !important; }
+    #s4 { background:#fff; }
+    #s4 .controls, #s4 .notice { display:none !important; }
+    #s4 .timeline { grid-template-columns:repeat(3,1fr); } #s4 .timeline::before { display:none; }
+    #s4 .timeline .step { min-height:140px; }
+    #s4 .details { grid-template-columns:1fr 1fr; }
+    #s4 .panel, #s4 .timeline .step { box-shadow:none; }
+    .medp { display:none !important; }
+  }
+  @media (max-width:600px){ .steps{grid-template-columns:1fr} .pet .ck{flex:1 1 100%} }
+</style>
+</head>
+<body>
+
+<div class="btns">
+  <button id="pdfBtn">📄 存成 PDF（當前頁）</button>
+  <button id="printBtn">🖨️ 列印（當前頁）</button>
+  <button id="printAllBtn">🖨️ 列印全部五頁</button>
+  <button id="clearBtn">🔄 清空勾選</button>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="s1">🗓️ 每日流程</button>
+  <button class="tab" data-tab="s4">🎯 練習選擇器</button>
+  <button class="tab" data-tab="s2">🧘 冥想休息卡</button>
+  <button class="tab" data-tab="s3">🎻 心智練習</button>
+  <button class="tab" data-tab="s5">🚀 啟動急救卡</button>
+</div>
+
+<!-- ============ 第1頁：每日流程 ============ -->
+<div id="s1" class="sheet active">
+  <div class="head">
+    <h1>🗓️ 小提琴高效練習一日流程</h1>
+    <p>Daily Practice Flow・90分鐘示範・冥想休息 × 問題導向練習</p>
+  </div>
+  <p class="note" style="margin-bottom:8px">🔹 只有 15 分鐘？要排練／演出前／即興探索？→ 切到「🎯 練習選擇器」分頁，按時間與情境產生專屬流程。</p>
+  <p class="note" style="margin-bottom:10px">🔹 今日完全唔想開始？→ 切到「🚀 啟動急救卡」分頁，五級階梯 5 分鐘上弓。</p>
+
+  <div class="inforow">
+    <input class="fld" data-key="d1" placeholder="日期（點此輸入）">
+    <input class="fld" data-key="d2" placeholder="曲目／段落">
+    <input class="fld" data-key="d3" placeholder="今日想解決的1–3個問題（具體！如：A弦三把位音準偏高）">
+  </div>
+
+  <div class="steps" style="grid-template-columns:1fr">
+    <div class="step">
+      <div class="shead"><span class="badge b5">1</span><span class="stitle">音階與基本功熱身</span><span class="time">0–10分</span></div>
+      <span class="tag">音階</span><span class="tag">技巧訓練</span>
+      <div class="cks">
+        <label class="ck"><input type="checkbox" data-key="fl1"><span class="box"></span><span class="txt">目標只有一個：手暖、耳開——唔判斷好壞</span></label>
+      </div>
+    </div>
+    <div class="step">
+      <div class="shead"><span class="badge b1">2</span><span class="stitle">攻堅難句①</span><span class="time">10–40分</span></div>
+      <span class="tag">慢練</span><span class="tag">節拍器</span><span class="tag">錄音自查</span>
+      <div class="cks">
+        <label class="ck"><input type="checkbox" data-key="fl2"><span class="box"></span><span class="txt">只練出錯的前後2小節——<b>絕不從頭彈起</b></span></label>
+        <label class="ck"><input type="checkbox" data-key="fl3"><span class="box"></span><span class="txt">每10分鐘錄一次，聽完先修正</span></label>
+      </div>
+    </div>
+    <div class="step">
+      <div class="shead"><span class="badge b3">3</span><span class="stitle">🧘 冥想休息＋心理默練</span><span class="time">40–50分</span></div>
+      <span class="tag">冥想卡（第3頁・有🔊語音版）</span><span class="tag">心理默練（第4頁）</span>
+      <div class="cks">
+        <label class="ck"><input type="checkbox" data-key="fl4"><span class="box"></span><span class="txt">開聲音引導：版本A呼吸覺察10分鐘 → 回琴橋接三步</span></label>
+        <label class="ck"><input type="checkbox" data-key="fl5"><span class="box"></span><span class="txt">加碼：結束後閉眼「默拉」今日難句2分鐘</span></label>
+      </div>
+    </div>
+    <div class="step">
+      <div class="shead"><span class="badge b4">4</span><span class="stitle">第二輪：轉頻道</span><span class="time">50–80分</span></div>
+      <span class="tag">讀譜研究</span><span class="tag">節奏練習</span><span class="tag">再攻一個問題</span>
+      <div class="cks">
+        <label class="ck"><input type="checkbox" data-key="fl6"><span class="box"></span><span class="txt">手累但腦清醒 → 讀譜研究；精神好 → 再攻一個問題</span></label>
+      </div>
+    </div>
+    <div class="step">
+      <div class="shead"><span class="badge b6">5</span><span class="stitle">完整跑譜＝驗收</span><span class="time">80–90分</span></div>
+      <span class="tag">錄音自查</span>
+      <div class="cks">
+        <label class="ck"><input type="checkbox" data-key="fl7"><span class="box"></span><span class="txt">帶著目的跑：錄音、對比上次——它是驗收工具，不是主菜</span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="warn red">
+    <b>🚨 兩個紅燈訊號 → 立即30秒微重啟（第3頁有🔊語音版）</b>
+    <p>1️⃣ 抓到自己想「從頭再來一遍」<br>
+       2️⃣ 拉了5分鐘，完全不記得剛剛發生了什麼<br>
+       <span style="font-size:11.5px">→ 兩個都是自動駕駛模式啟動的證據，正是右下象限的入口</span></p>
+  </div>
+
+  <div class="quadwrap">
+    <b style="font-size:14px">🧭 今日象限檢核</b>
+    <div class="note">練完點一下你今天<b>大部分時間</b>待的象限（會自動記住）</div>
+    <div class="axlab">▲ 高效</div>
+    <div class="quad">
+      <div class="qcell" data-q="lt" style="background:#d9b8ff"><b>左上・高效但少用</b>讀譜研究・心理默練・節奏練習<br><span style="font-size:10.5px;color:#444">解法：給它們固定時段（冥想後／睡前）</span></div>
+      <div class="qcell" data-q="rt" style="background:#c8e878"><b>右上・高效每天用</b>慢練・節拍器・錄音自查・音階<br><span style="font-size:10.5px;color:#444">主場——今天大部分時間在這裡嗎？</span></div>
+      <div class="qcell" data-q="lb" style="background:#aed9ff"><b>左下・低效少用</b>無目的完整跑譜・硬練5小時以上<br><span style="font-size:10.5px;color:#444">疲勞製造機——跑譜只准放在最後驗收</span></div>
+      <div class="qcell" data-q="rb" style="background:#ff9ec1"><b>右下・低效每天用</b>從頭彈起・機械式練習<br><span style="font-size:10.5px;color:#444">＝疲勞的下游，出現即是紅燈</span></div>
+    </div>
+    <div class="axlab">▼ 浪費時間</div>
+    <div class="qside"><span>◀ 很少使用</span><span>每天使用 ▶</span></div>
+    <div class="note" style="margin-top:8px">真正的用法不是貼標籤，是<b>遷移</b>：左上→給固定時段、左下→降級成驗收、右下→用紅燈訊號即時叫停。連續幾天待在上半部＝練琴系統已升級。</div>
+  </div>
+
+  <div class="warn purple">
+    <b>😵 累了？先分清是哪種累（→ 第3頁對應處理）</b>
+    <table class="tbl">
+      <tr><th>疲勞類型</th><th>感覺</th><th>對應</th></tr>
+      <tr><td>身體累</td><td>手酸、肩頸緊、姿勢變形</td><td>版本B 身體掃描（🔊語音版）</td></tr>
+      <tr><td>精神累</td><td>專注渙散、聽不出問題</td><td>版本A 呼吸覺察（🔊語音版）</td></tr>
+      <tr><td>耳朵累</td><td>越拉越覺得難聽（其實未必）</td><td>靜默，完全不碰聲音</td></tr>
+      <tr><td>動機累</td><td>不想練，但身體其實有力</td><td>⚡微重啟語音版＋重看今日問題</td></tr>
+    </table>
+  </div>
+
+  <div class="foot">🎯 原則：疲勞也是資料，不是要硬扛的障礙｜90分鐘這樣練 ＞ 5小時硬撐</div>
+</div>
+
+<!-- ============ 第2頁：練習選擇器 ============ -->
+<div id="s4" class="sheet">
+  <header class="wrap">
+    <p class="eyebrow">VIOLIN PRACTICE PLANNER</p>
+    <h1>今天，怎樣練最有用？</h1>
+    <p class="lede">選擇你今天的可用時間與狀態，取得一份可立即開始的小提琴練習流程。它不是硬性的時數規定，而是幫你把有限時間留給當下最需要的事。</p>
+    <div class="notice"><strong>使用方法</strong><span>先選時間，再選情境；寫下今天唯一的主目標與最棘手的一點。產生流程後，只需跟著六個模組前進。</span></div>
+  </header>
+
+  <main class="wrap">
+    <section class="controls" aria-label="建立今天的練習計畫">
+      <section class="panel">
+        <h2>1. 今天有多少時間？</h2>
+        <p class="section-note">選擇最接近的時長；自訂分鐘數會依情境重新分配。</p>
+        <div class="choice-grid time-grid" role="radiogroup" aria-label="可用時間">
+          <div class="choice"><input type="radio" name="time" id="t15" value="15"><label for="t15">15 分<small>不中斷即可</small></label></div>
+          <div class="choice"><input type="radio" name="time" id="t30" value="30" checked><label for="t30">30 分<small>日常維持</small></label></div>
+          <div class="choice"><input type="radio" name="time" id="t60" value="60"><label for="t60">60 分<small>完整成長日</small></label></div>
+          <div class="choice"><input type="radio" name="time" id="t105" value="105"><label for="t105">90–120 分<small>深度練習</small></label></div>
+        </div>
+        <div class="custom-time"><span>或自訂：</span><input id="customMinutes" type="number" min="10" max="180" placeholder="分鐘" aria-label="自訂分鐘數"><span>分鐘（10–180）</span></div>
+      </section>
+
+      <section class="panel">
+        <h2>2. 今天是哪一種情況？</h2>
+        <p class="section-note">情境決定每個模組的比重與當日任務。</p>
+        <div class="choice-grid" role="radiogroup" aria-label="練習情境">
+          <div class="choice"><input type="radio" name="mode" id="mDaily" value="daily" checked><label for="mDaily">日常維持<small>穩定成長與不斷線</small></label></div>
+          <div class="choice"><input type="radio" name="mode" id="mRehearsal" value="rehearsal"><label for="mRehearsal">排練／樂團日<small>聲部、入拍與合奏準備</small></label></div>
+          <div class="choice"><input type="radio" name="mode" id="mPerformance" value="performance"><label for="mPerformance">演出／試演前<small>穩定、銜接與模擬</small></label></div>
+          <div class="choice"><input type="radio" name="mode" id="mFoundation" value="foundation"><label for="mFoundation">技術卡關<small>重建基本動作與音色</small></label></div>
+          <div class="choice"><input type="radio" name="mode" id="mImprovisation" value="improvisation"><label for="mImprovisation">民謠／即興探索<small>耳朵、素材與音樂性</small></label></div>
+          <div class="choice"><input type="radio" name="mode" id="mTired" value="tired"><label for="mTired">疲憊或壓力大<small>舒適地保持連結</small></label></div>
+        </div>
+      </section>
+
+      <section class="panel" style="grid-column:1/-1;">
+        <h2>3. 先定義今天的工作</h2>
+        <p class="section-note">不必寫很多。把「練好」轉成一件可聽見、可檢查的小事。</p>
+        <div class="fields">
+          <div><label class="field-label" for="goal">今天唯一的主目標（選填）</label><textarea id="goal" data-key="p_goal" placeholder="例如：第 17–24 小節在慢速下換弦清楚、音準穩定。"></textarea></div>
+          <div><label class="field-label" for="challenge">今天最棘手的地方（選填）</label><textarea id="challenge" data-key="p_challenge" placeholder="例如：第三拍換到 E 弦時右手緊、第二指常偏高。"></textarea></div>
+        </div>
+        <button class="generate" id="generate" type="button">產生今天的練習流程</button>
+      </section>
+    </section>
+
+    <section id="result" class="result" hidden aria-live="polite">
+      <div class="result-head">
+        <div><span id="resultBadge" class="pbadge">30 分鐘・日常維持</span><h2 id="resultTitle">今天的練習流程</h2><p id="resultSummary" class="summary"></p></div>
+        <button class="print" type="button" onclick="window.print()">列印／儲存 PDF</button>
+      </div>
+      <div class="goal-card"><p><strong>今天先記住：</strong><span id="goalDisplay">以一個小而清楚的目標開始。</span></p><p id="challengeDisplay"></p></div>
+      <div id="dailyChecklistBridge" class="daily-checklist-bridge"><strong>高效練琴連動：</strong>先產生今天的流程，即可取得相符的 A–H 技術檢核建議。</div>
+      <div id="meditationBridge" class="daily-checklist-bridge" style="border-color:#c9b7d8;background:#f6f2fa;color:#4d3f5e"><strong>🧘 中段冥想休息：</strong>60 分鐘以上的流程，建議在「B 難點攻堅」之後開啟「🧘 冥想休息卡」分頁的🔊語音引導（5–10 分鐘），完結後用「回琴橋接三步」回去。疲憊日改用語音版微重啟：練一段、休息一段。</div>
+      <div id="timeline" class="timeline"></div>
+      <div class="details">
+        <section class="panel"><h3>今天的操作提醒</h3><div id="tips" class="tip-list"></div></section>
+        <section class="panel"><h3>最後 1 分鐘：留給明天的自己</h3><p>寫下「有效的是……；仍不穩的是……；下次一開始要做……」。</p><textarea id="reflection" data-key="p_reflect" class="reflection" placeholder="例如：慢速確認弓段後，換弦明顯更穩；下次先從第 21 小節開始。"></textarea></section>
+      </div>
+      <div id="safety" class="safety" hidden></div>
+    </section>
+
+    <section class="checklist-section" id="efficientChecklist" aria-label="高效練琴檢核卡">
+      <div class="checklist-head"><div><p class="checklist-kicker">EFFICIENT PRACTICE CARD</p><h2>高效練琴檢核卡</h2><p>選一個小而清楚的練習範圍，依序處理讀譜、音準、換把、節奏、運弓與揉弦。每一項都可標示為完成、明天再練或不適用；延後項目會保留為下一次的優先提醒。</p></div></div>
+      <div class="checklist-setup">
+        <div><label class="field-label" for="checklistPiece">今天要練的曲名／樂段</label><input id="checklistPiece" data-key="p_piece" type="text" placeholder="例如：巴赫 G 小調奏鳴曲，第 17–24 小節"></div>
+        <div><span class="field-label">練習範圍</span><div class="scope-options" role="radiogroup" aria-label="練習範圍"><div class="choice"><input type="radio" name="practiceScope" id="scopeLines" value="4 行" checked><label for="scopeLines">4 行</label></div><div class="choice"><input type="radio" name="practiceScope" id="scopePage" value="一整頁"><label for="scopePage">一整頁</label></div></div></div>
+        <button class="prepare-button" id="prepareChecklist" type="button">建立這一輪檢核</button>
+      </div>
+      <div id="checklistPriority" class="checklist-priority"><strong>開始前提示：</strong><span>先選曲名與範圍，再建立本輪檢核；已延後的項目會顯示在這裡。</span></div>
+      <div id="checklistItems" class="checklist-items"></div>
+      <div class="checklist-summary"><p id="checklistSummary"><strong>尚未開始。</strong> 請先建立這一輪檢核。</p><div class="checklist-summary-actions"><button class="reset-button" id="resetChecklist" type="button">重設本輪</button><a href="#roadmapPlanner" class="print">查看長期目標</a></div></div>
+    </section>
+
+    <section class="roadmap-section" id="roadmapPlanner" aria-label="長期目標規劃器">
+      <div class="roadmap-head">
+        <div><p class="eyebrow">LONG-TERM ROADMAP</p><h2>把願望變成可走的路線圖</h2><p>一次只規劃一個主要目標。先寫出目標日的成功樣子，再以每週可控制的過程承諾，拆成 1–4 個里程碑。完成後，用每週檢視調整下一步，而不是硬撐原計畫。</p></div>
+      </div>
+      <div class="roadmap-grid">
+        <div><label class="field-label" for="planType">目標類型</label><select id="planType" data-key="p_rtype"><option value="repertoire">曲目學習／背譜</option><option value="technique">技術重建／突破</option><option value="performance">演出、試演或考試</option><option value="ensemble">樂團／室內樂準備</option><option value="open">自訂音樂目標</option></select></div>
+        <div><label class="field-label" for="planDate">目標日期</label><input id="planDate" data-key="p_rdate" type="date"></div>
+        <div class="full"><label class="field-label" for="planGoal">成果目標：到該日期要完成甚麼？</label><textarea id="planGoal" data-key="p_rgoal" placeholder="例如：能背譜演奏《巴赫無伴奏奏鳴曲》第 1 樂章，並維持穩定的節奏與音準。"></textarea></div>
+        <div class="full"><label class="field-label" for="planSuccess">成功標準：我如何知道自己做到了？</label><textarea id="planSuccess" data-key="p_rsuccess" placeholder="例如：可在錄影時不中斷完成；三次嘗試中至少兩次能維持設定速度；能指出每段的和聲與換把計畫。"></textarea></div>
+        <div class="number-pair full"><div><label class="field-label" for="planDays">每週可練幾天？</label><input id="planDays" data-key="p_rdays" type="number" min="1" max="7" value="5"></div><div><label class="field-label" for="planMinutes">平均每次可用幾分鐘？</label><input id="planMinutes" data-key="p_rmin" type="number" min="10" max="180" value="30"></div></div>
+      </div>
+      <button class="generate" id="generateRoadmap" type="button">建立我的長期路線圖</button>
+      <div id="roadmapResult" class="roadmap-result" hidden aria-live="polite">
+        <div id="roadmapOverview" class="roadmap-overview"></div>
+        <div class="roadmap-outcomes"><article class="outcome outcome-main"><h3>成果目標</h3><p id="outcomeGoal"></p></article><article class="outcome outcome-process"><h3>過程承諾</h3><p id="processGoal"></p></article></div>
+        <div id="roadmapChecklistLink" class="roadmap-checklist-link"></div>
+        <div id="milestoneGrid" class="milestone-grid"></div>
+        <div class="weekly-review"><article class="review-card"><h3>本週的驗收點</h3><p id="weeklyCheck"></p></article><article class="review-card"><h3>每週檢視與下一步</h3><p>每週末回答三件事：已完成甚麼？卡在哪裡？下週最先調整的一步是甚麼？</p><textarea id="weeklyReflection" data-key="p_weekly" placeholder="本週已完成……&#10;目前卡在……&#10;下週第一步……"></textarea></article></div>
+        <p class="roadmap-note">規劃原則：成果目標回答「到那天要做到甚麼」，過程承諾回答「本週我能控制甚麼」。如本週估算不準，調整下一週任務即可；不必把一次落後視為整體失敗。</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ============ 第3頁：冥想休息卡（含語音播放器） ============ -->
+<div id="s2" class="sheet">
+  <div class="head">
+    <h1>🧘 冥想休息卡</h1>
+    <p>Meditation Reset Card・🔊語音引導版・平板／手機都用到</p>
+  </div>
+
+  <!-- ===== 🔊 語音引導冥想播放器 ===== -->
+  <div class="medp" id="medPlayer">
+    <b>🔊 語音引導冥想播放器</b>
+    <div class="note">揀程序 → 撳「開始」，語音會逐段帶你完成；靜默段跟住呼吸圓圈。想有音樂就先開 BGM。播放時螢幕會保持長亮。</div>
+
+    <div class="medp-progs" id="medProgs">
+      <button class="medp-prog on" data-p="A" type="button">版本A・呼吸覺察（約10分）</button>
+      <button class="medp-prog" data-p="B" type="button">版本B・身體掃描（約15分）</button>
+      <button class="medp-prog" data-p="M" type="button">⚡ 微重啟（約1分）</button>
+    </div>
+
+    <div class="medp-stage">
+      <div class="medp-circle-wrap">
+        <div class="medp-circle" id="medCircle" style="transform:scale(1)"><span id="medCircleLabel">準備</span></div>
+      </div>
+      <div class="medp-sub" id="medSub">揀好程序，撳「▶️ 開始」。</div>
+      <div class="medp-status" id="medStatus"></div>
+    </div>
+
+    <div class="medp-ctl">
+      <button class="medp-btn play" id="medStart" type="button">▶️ 開始</button>
+      <button class="medp-btn" id="medPause" type="button">⏸️ 暫停</button>
+      <button class="medp-btn stop" id="medStop" type="button">⏹️ 停止</button>
+    </div>
+
+    <div class="medp-bgm">
+      <b>🎵 背景音樂（YouTube BGM）</b>
+      <div class="medp-bgm-row">
+        <select id="bgmPreset">
+          <option value="V1Pl8CzNzCw">溫柔鋼琴・放鬆音樂</option>
+          <option value="jfKfPfyJRdk">Lofi 電台（24小時直播）</option>
+          <option value="lTRiuFIWV54">Lofi・1AM Study Session</option>
+          <option value="custom">— 自訂 —</option>
+        </select>
+        <input type="text" id="bgmCustom" placeholder="貼上 YouTube 連結或 video ID（11碼）">
+        <button class="medp-btn small" id="bgmLoad" type="button" style="background:#4f8cff;color:#fff">載入</button>
+      </div>
+      <div class="medp-bgm-row">
+        <button class="medp-btn small play" id="bgmPlay" type="button">▶️ 播 BGM</button>
+        <button class="medp-btn small stop" id="bgmStop" type="button">⏹️ 停 BGM</button>
+        <label class="medp-vol">🔊 音量 <input type="range" id="bgmVol" min="0" max="100" value="30"></label>
+        <span class="tag">語音出聲時 BGM 自動變細聲</span>
+      </div>
+      <div id="ytFrame"></div>
+      <div class="medp-status" id="bgmNow">未載入。揀預設或貼自訂連結 → 撳「載入」。</div>
+      <div class="medp-status">連結失效？直接換自訂 video ID 就得。文字欄支援完整連結或 11 碼 ID。</div>
+    </div>
+  </div>
+
+  <div class="prep">
+    <b>📋 開始前三準備（開播放器之前）</b>
+    <div class="cks">
+      <label class="ck"><input type="checkbox" data-key="mdP1"><span class="box"></span><span class="txt">手機放遠處（抽屜／反面扣低）——最大陷阱</span></label>
+      <label class="ck"><input type="checkbox" data-key="mdP2"><span class="box"></span><span class="txt">呢個網頁就係計時器——唔使另設鬧鐘，全程跟語音</span></label>
+      <label class="ck"><input type="checkbox" data-key="mdP3"><span class="box"></span><span class="txt">琴放視線邊緣即可，唔使收埋</span></label>
+    </div>
+  </div>
+
+  <div class="warn blue" style="margin-top:12px">
+    <b>🪑 坐姿七檢查點（由下往上，1分鐘）</b>
+    <p>① 坐骨坐櫈前半・骨盆微前傾（不靠椅背）　② 脊柱自然直，如疊積木<br>
+    ③ 手放大腿手心向下——<b>手指攤開</b>（拉琴人休息時手指常虛擬按弦）<br>
+    ④ 肩膀向後一點再跌下來　⑤ 下巴微收・<b>牙關分開</b>・舌放下顎<br>
+    ⑥ 眼閉或半閉，視線落前方地面　⑦ 想象頭頂有線輕輕向上拉</p>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="shead"><span class="badge b3">A</span><span class="stitle">版本A・呼吸覺察</span><span class="time">10分</span></div>
+      <div class="note" style="margin:0 0 6px">💡 而家有🔊語音版——用上方播放器揀「版本A」就得；以下文字版照舊保留。</div>
+      <div class="cks">
+        <label class="ck"><input type="checkbox" data-key="mdA1"><span class="box"></span><span class="txt"><b>0–1分 落地</b>：重量沉櫈，3次深呼吸（吸4・停2・呼6）</span></label>
+        <label class="ck"><input type="checkbox" data-key="mdA2"><span class="box"></span><span class="txt"><b>1–3分 快掃</b>：眉心→牙關→肩→手→背→腿→腳，呼氣鬆一鬆（重點：牙關＋兩邊肩膀）</span></label>
+        <label class="ck"><input type="checkbox" data-key="mdA3"><span class="box"></span><span class="txt"><b>3–7分 主體</b>：注意力放鼻端，數呼氣到10重來；走神→帶回＝一次rep，不是失敗</span></label>
+        <label class="ck"><input type="checkbox" data-key="mdA4"><span class="box"></span><span class="txt"><b>7–10分 收結</b>：全身呼吸→定返去意圖（「返去搞A弦三把位」）→動手指腳趾→慢慢睜眼</span></label>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="shead"><span class="badge b5">B</span><span class="stitle">版本B・身體掃描</span><span class="time">15分</span></div>
+      <div class="note" style="margin:0 0 6px">公式：<b>停留→問「有咩感覺」→吸氣送氣去那裡→呼氣鬆開</b>（⭐拉琴人重點位）｜🔊語音版：播放器揀「版本B」</div>
+      <div class="cks">
+        <label class="ck"><input type="checkbox" data-key="mdB1"><span class="box"></span><span class="txt">雙腳小腿（1–2.5分）腳掌踩實、腳趾逐隻鬆</span></label>
+        <label class="ck"><input type="checkbox" data-key="mdB2"><span class="box"></span><span class="txt">大腿骨盆（2.5–4分）重量交給櫈</span></label>
+        <label class="ck"><input type="checkbox" data-key="mdB3"><span class="box"></span><span class="txt">⭐ 腰下背（4–6分）呼氣逐節鬆開</span></label>
+        <label class="ck"><input type="checkbox" data-key="mdB4"><span class="box"></span><span class="txt">上背肩胛（6–7.5分）留意左右不對稱</span></label>
+        <label class="ck"><input type="checkbox" data-key="mdB5"><span class="box"></span><span class="txt">⭐ 兩邊肩膀（7.5–9.5分）分開檢查，呼氣跌下來</span></label>
+        <label class="ck"><input type="checkbox" data-key="mdB6"><span class="box"></span><span class="txt">⭐ 下巴牙關（9.5–11分）下顎如睡覺般吊住</span></label>
+        <label class="ck"><input type="checkbox" data-key="mdB7"><span class="box"></span><span class="txt">面部眼周（11–12.5分）眉心攤開、眼珠沉低</span></label>
+        <label class="ck"><input type="checkbox" data-key="mdB8"><span class="box"></span><span class="txt">頭頂（12.5–13.5分）頭皮放鬆</span></label>
+        <label class="ck"><input type="checkbox" data-key="mdB9"><span class="box"></span><span class="txt">整體快掃＋收結（13.5–15分）</span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="warn red" style="margin-top:12px">
+    <b>⚡ 30秒微重啟（心浮氣躁時，不用坐下）｜🔊語音版：播放器揀「⚡ 微重啟」</b>
+    <p>放弓、手離弦 → 3次呼吸（吸4呼6）：①第一吸肩膀跌　②第二吸牙關分開　③第三吸重量沉櫈 → 攞返弓。就這30秒，重新聽到自己把聲。</p>
+  </div>
+
+  <div class="warn green">
+    <b>🌉 回琴橋接三步（冥想完不要碰手機！）</b>
+    <div class="cks" style="margin-top:6px">
+      <label class="ck"><input type="checkbox" data-key="mdBR1"><span class="box"></span><span class="txt">睜眼直接望向琴</span></label>
+      <label class="ck"><input type="checkbox" data-key="mdBR2"><span class="box"></span><span class="txt">慢速長弓或慢音階1–2分鐘，重新開機</span></label>
+      <label class="ck"><input type="checkbox" data-key="mdBR3"><span class="box"></span><span class="txt">接返原本卡住那段——通常感覺不一樣了</span></label>
+    </div>
+    <p style="margin-top:6px">🎁 狀態清？順勢做2分鐘<b>心理默練</b> → 切到「🎻 心智練習」頁</p>
+  </div>
+
+  <table class="tbl">
+    <tr><th colspan="2" style="background:#ffe08a">🛠️ 狀況處理表</th></tr>
+    <tr><td>走神好厲害</td><td>完全正常。帶回幾多次＝訓練咗幾多次，那是工作量不是失敗</td></tr>
+    <tr><td>呼吸變刻意</td><td>聽環境聲30秒（冷氣、街外聲），再返來會自然</td></tr>
+    <tr><td>癢、想動</td><td>先「看住它」10秒，多半自己散；頂不順就慢慢抓，不算失敗</td></tr>
+    <tr><td>眼睏</td><td>半睜眼視線向下；真累就睡15–20分（勿超30分，否則更累）</td></tr>
+    <tr><td>煩躁坐不住</td><td>縮到3分鐘或改用⚡微重啟語音版；煩躁本身也是觀察對象</td></tr>
+    <tr><td>腳痺腰累</td><td>慢慢調姿勢——冥想不是罰企，不用死忍</td></tr>
+  </table>
+
+  <div class="warn">
+    <b>📈 四週進度：規律 ＞ 時長</b>
+    <p>第1週：每次練30分鐘後做3–5分鐘（目標＝變成流程一部分）→ 第2–3週：5–10分鐘 → 第4週起：10–15分鐘，平日用A、深疲勞日用B。日日3分鐘 ＞ 一週一次30分鐘。</p>
+  </div>
+
+  <div class="foot">🎧 效果慢半拍浮現——真指標：回去第一條長弓穩了、把聲清了、冥想前後錄音對比</div>
+</div>
+
+<!-- ============ 第4頁：心智練習 ============ -->
+<div id="s3" class="sheet">
+  <div class="head">
+    <h1>🎻 小提琴心智練習檢查清單</h1>
+    <p>Violin Mental Practice Checklist・不碰琴，用大腦練琴（建議 10–15 分鐘）</p>
+  </div>
+
+  <div class="inforow">
+    <input class="fld" data-key="f1" placeholder="日期（點此輸入）">
+    <input class="fld" data-key="f2" placeholder="曲目／段落">
+    <input class="fld" data-key="f3" placeholder="用時（分鐘）" style="max-width:160px">
+  </div>
+
+  <div class="prep">
+    <b>📋 事前準備</b>
+    <div class="cks">
+      <label class="ck"><input type="checkbox" data-key="mp1"><span class="box"></span><span class="txt">選一段<b>已練過</b>的樂句（4–8 小節）</span></label>
+      <label class="ck"><input type="checkbox" data-key="mp2"><span class="box"></span><span class="txt">譜上標好指法／把位／弓法</span></label>
+      <label class="ck"><input type="checkbox" data-key="mp3"><span class="box"></span><span class="txt">環境安靜，琴放旁邊</span></label>
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="shead"><span class="badge b1">1</span><span class="stitle">讀譜分析</span><span class="time">約2分</span></div>
+      <div class="cks">
+        <label class="ck"><input type="checkbox" data-key="mp4"><span class="box"></span><span class="txt">說出這段的調性與和聲進行</span></label>
+        <label class="ck"><input type="checkbox" data-key="mp5"><span class="box"></span><span class="txt">標出樂句高峰與力度安排</span></label>
+        <label class="ck"><input type="checkbox" data-key="mp6"><span class="box"></span><span class="txt">圈出危險點：換把／雙音／快速換弦</span></label>
+      </div>
+    </div>
+    <div class="step">
+      <div class="shead"><span class="badge b2">2</span><span class="stitle">心裡先唱 Auralization</span><span class="time">約3分</span></div>
+      <div class="cks">
+        <label class="ck"><input type="checkbox" data-key="mp7"><span class="box"></span><span class="txt">腦中「聽見」每個音的音高與音色</span></label>
+        <label class="ck"><input type="checkbox" data-key="mp8"><span class="box"></span><span class="txt">想像揉音寬度、換把要滑或乾淨</span></label>
+        <label class="ck"><input type="checkbox" data-key="mp9"><span class="box"></span><span class="txt">聽不清楚的音 → 標記，稍後回琴確認</span></label>
+      </div>
+    </div>
+    <div class="step">
+      <div class="shead"><span class="badge b3">3</span><span class="stitle">左手視覺化</span><span class="time">約3分</span></div>
+      <div class="cks">
+        <label class="ck"><input type="checkbox" data-key="mp10"><span class="box"></span><span class="txt">想像指板位置：第幾把位、哪根手指、間距</span></label>
+        <label class="ck"><input type="checkbox" data-key="mp11"><span class="box"></span><span class="txt">換把：哪根指引導？拇指怎麼跟？</span></label>
+        <label class="ck"><input type="checkbox" data-key="mp12"><span class="box"></span><span class="txt">雙音：哪根手指留在弦上當導軌</span></label>
+      </div>
+    </div>
+    <div class="step">
+      <div class="shead"><span class="badge b4">4</span><span class="stitle">右手弓法視覺化</span><span class="time">約2分</span></div>
+      <div class="cks">
+        <label class="ck"><input type="checkbox" data-key="mp13"><span class="box"></span><span class="txt">想像接觸點、弓速、弓壓</span></label>
+        <label class="ck"><input type="checkbox" data-key="mp14"><span class="box"></span><span class="txt">感受弦的震動傳到弓與手指</span></label>
+        <label class="ck"><input type="checkbox" data-key="mp15"><span class="box"></span><span class="txt">需要時空手比劃弓臂（air bowing）</span></label>
+      </div>
+    </div>
+    <div class="step">
+      <div class="shead"><span class="badge b5">5</span><span class="stitle">整合慢速默練</span><span class="time">約3分</span></div>
+      <div class="cks">
+        <label class="ck"><input type="checkbox" data-key="mp16"><span class="box"></span><span class="txt">用「自己的眼睛」視角，慢速從頭走一遍</span></label>
+        <label class="ck"><input type="checkbox" data-key="mp17"><span class="box"></span><span class="txt">任何含糊錯音 → 退回該 2 小節重想</span></label>
+        <label class="ck"><input type="checkbox" data-key="mp18"><span class="box"></span><span class="txt">錯了絕不繼續往前（會固化錯誤！）</span></label>
+      </div>
+    </div>
+    <div class="step">
+      <div class="shead"><span class="badge b6">6</span><span class="stitle">回琴驗證</span><span class="time">約2分</span></div>
+      <div class="cks">
+        <label class="ck"><input type="checkbox" data-key="mp19"><span class="box"></span><span class="txt">實拉一次，對比心中的版本</span></label>
+        <label class="ck"><input type="checkbox" data-key="mp20"><span class="box"></span><span class="txt">記下「腦中清楚、手上做不到」的地方</span></label>
+        <label class="ck"><input type="checkbox" data-key="mp21"><span class="box"></span><span class="txt">列為下次實體練習的精準目標</span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="pet">
+    <b>⭐ 進階：PETTLEP 品質七檢查</b>
+    <div class="cks">
+      <label class="ck"><input type="checkbox" data-key="mp22"><span class="box"></span><span class="txt"><b>P</b>身體：想像握弓觸感、琴夾下顎</span></label>
+      <label class="ck"><input type="checkbox" data-key="mp23"><span class="box"></span><span class="txt"><b>E</b>環境：想像演出場地與舞台</span></label>
+      <label class="ck"><input type="checkbox" data-key="mp24"><span class="box"></span><span class="txt"><b>T</b>任務：想實際演奏時關注的點</span></label>
+      <label class="ck"><input type="checkbox" data-key="mp25"><span class="box"></span><span class="txt"><b>T</b>時值：用<b>原速</b>默想（排查才放慢）</span></label>
+      <label class="ck"><input type="checkbox" data-key="mp26"><span class="box"></span><span class="txt"><b>L</b>學習：隨進步升級想像細節</span></label>
+      <label class="ck"><input type="checkbox" data-key="mp27"><span class="box"></span><span class="txt"><b>E</b>情緒：預演帶著緊張感演奏</span></label>
+      <label class="ck"><input type="checkbox" data-key="mp28"><span class="box"></span><span class="txt"><b>P</b>視角：以內部視角為主</span></label>
+    </div>
+  </div>
+
+  <div class="warn">
+    <b>⚠️ 三大陷阱</b>
+    <p>1️⃣ 被動聽錄音 ≠ 心智練習，必須主動在腦中「演奏」<br>
+       2️⃣ 想的內容要正確——不確定的音準指法，先回譜確認<br>
+       3️⃣ 一次 10–15 分鐘為限：短而多次 ＞ 長而一次</p>
+  </div>
+
+  <div class="foot">🎧 適用時機：通車・睡前・冥想後加碼・手痠休息時・受傷恢復期・演出前｜Driskell 1994・Bernardi 2012・Highben &amp; Palmer 2004</div>
+</div>
+
+<!-- ============ 第5頁：啟動急救卡 ============ -->
+<div id="s5" class="sheet">
+  <div class="head">
+    <h1>🚀 啟動急救卡</h1>
+    <p>Practice Starter Kit・對付「知道要練但係唔想開始」・5分鐘內上弓</p>
+  </div>
+
+  <div class="inforow">
+    <input class="fld" data-key="stDate" placeholder="日期（點此輸入）">
+    <input class="fld" data-key="stPromise" placeholder="今日最低承諾（例：只拉5分鐘空弦）">
+  </div>
+
+  <div class="warn purple" style="margin-top:12px">
+    <b>🔍 第一步・診斷：你今日係邊種「唔想開始」？</b>
+    <p>拖延唔係懶，係大腦嘅保護反應——對症先至落藥：</p>
+    <table class="tbl">
+      <tr><th>類型</th><th>內心OS</th><th>對症解法</th></tr>
+      <tr><td><b>完美主義型</b></td><td>「今日狀態唔好，拉都係難聽」</td><td>答應自己「今日只摸琴，唔使拉好聽」</td></tr>
+      <tr><td><b>任務過大型</b></td><td>「要練90分鐘，好似好攰」</td><td>只承諾5分鐘，之後想停就停</td></tr>
+      <tr><td><b>能量不足型</b></td><td>「好攰，完全冇動力」</td><td>先切🧘冥想卡做⚡微重啟語音版，再決定</td></tr>
+    </table>
+  </div>
+
+  <div class="prep">
+    <b>🪜 第二步・微行動階梯：只需要「啟動」，唔需要「完成」</b>
+    <div class="note">規則：做完一級，先問自己「想繼續嗎？」——想就上，唔想都可以停。但通常你會想繼續（動態慣性）。</div>
+    <div class="cks">
+      <label class="ck"><input type="checkbox" data-key="st1"><span class="box"></span><span class="txt"><b>第1級</b>：行過去，打開琴盒</span></label>
+      <label class="ck"><input type="checkbox" data-key="st2"><span class="box"></span><span class="txt"><b>第2級</b>：上松香、鬆弓、調音</span></label>
+      <label class="ck"><input type="checkbox" data-key="st3"><span class="box"></span><span class="txt"><b>第3級</b>：夾琴，拉一條空弦長弓</span></label>
+      <label class="ck"><input type="checkbox" data-key="st4"><span class="box"></span><span class="txt"><b>第4級</b>：拉你最鍾意、最熟嗰條音階（唔判斷好壞）</span></label>
+      <label class="ck"><input type="checkbox" data-key="st5"><span class="box"></span><span class="txt"><b>第5級</b>：問自己「想繼續嗎？」——想就切到「🗓️ 每日流程」開工</span></label>
+    </div>
+  </div>
+
+  <div class="warn green">
+    <b>📍 第三步・環境觸發點：靠環境，唔靠意志力（設定一次，自動啟動）</b>
+    <div class="cks" style="margin-top:6px">
+      <label class="ck"><input type="checkbox" data-key="st6"><span class="box"></span><span class="txt">琴唔收埋——放喺每日會行過嘅位（視線範圍內）</span></label>
+      <label class="ck"><input type="checkbox" data-key="st7"><span class="box"></span><span class="txt">譜架預先開好今日要練嘅嗰頁（前一晚準備）</span></label>
+      <label class="ck"><input type="checkbox" data-key="st8"><span class="box"></span><span class="txt">固定「啟動信號」：每次都用同一條開場音階，拉落即刻進入狀態</span></label>
+      <label class="ck"><input type="checkbox" data-key="st9"><span class="box"></span><span class="txt">手機放遠（同冥想卡規則一樣）</span></label>
+    </div>
+  </div>
+
+  <div class="warn red">
+    <b>💭 卡住嗰陣・30秒情緒覺察</b>
+    <p>想拖延時，停一停問自己：「我而家真正感覺到嘅係咩？」<br>
+    係怕拉得唔好？（完美主義）　係覺得任務太大？（過大）　定係純粹攰？（能量）<br>
+    <b>接納情緒，唔好壓抑</b>——然後用階梯第1級回到正軌。</p>
+  </div>
+
+  <div class="warn">
+    <b>🏆 小勝利迴路：打勾就係燃料</b>
+    <p>每完成一個微步驟就打勾——呢頁階梯、「🗓️ 每日流程」、「🎯 高效練琴檢核卡」全部會自動記住。<br>
+    大腦鍾意被獎勵：視覺化嘅完成紀錄，就係行動力嘅永續燃料。<br>
+    <span style="font-size:11.5px">唔使大張旗鼓慶祝，一句「做得好」就夠。</span></p>
+  </div>
+
+  <div class="foot">💡「行動唔需要動機，行動本身先產生動機。」——啟動唔使勁，啟動之後先有勁</div>
+</div>
+
+<script>
+// ===== 分頁切換 =====
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.sheet').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+
+const save=(k,v)=>{ try{localStorage.setItem(k,v);}catch(e){} };
+const load=k=>{ try{return localStorage.getItem(k);}catch(e){return null;} };
+
+// ===== 輸入欄暫存（文字／數字／日期／下拉） =====
+document.querySelectorAll('input[data-key],textarea[data-key],select[data-key]').forEach(el=>{
+  if(el.type==='checkbox') return;
+  const k='tk_'+el.dataset.key;
+  const v=load(k); if(v!==null&&v!=='') el.value=v;
+  el.addEventListener(el.tagName==='SELECT'?'change':'input',()=>save(k,el.value));
+});
+// ===== 勾選暫存 =====
+document.querySelectorAll('input[type=checkbox][data-key]').forEach(c=>{
+  c.checked = load('tk_'+c.dataset.key)==='1';
+  c.addEventListener('change',()=>save('tk_'+c.dataset.key, c.checked?'1':'0'));
+});
+
+// ===== 象限檢核 =====
+document.querySelectorAll('.qcell').forEach(q=>{
+  if(load('tk_quad')===q.dataset.q) q.classList.add('sel');
+  q.addEventListener('click',()=>{
+    const was=q.classList.contains('sel');
+    document.querySelectorAll('.qcell').forEach(x=>x.classList.remove('sel'));
+    if(!was){ q.classList.add('sel'); save('tk_quad',q.dataset.q); }
+    else { try{localStorage.removeItem('tk_quad');}catch(e){} }
+  });
+});
+
+// ===== 清空（勾選＋象限；文字保留） =====
+document.getElementById('clearBtn').onclick = ()=>{
+  document.querySelectorAll('input[type=checkbox][data-key]').forEach(c=>{
+    c.checked=false; try{localStorage.removeItem('tk_'+c.dataset.key);}catch(e){}
+  });
+  document.querySelectorAll('.qcell').forEach(x=>x.classList.remove('sel'));
+  try{localStorage.removeItem('tk_quad');}catch(e){}
+};
+
+/* ================================================================
+   🧘 冥想語音引導播放器
+================================================================ */
+const MED = { running:false, paused:false, program:'A', timer:null, resolve:null,
+  timerEnd:0, timerRemain:0, cur:null, wakeLock:null, segIdx:0 };
+
+const medScripts = {
+  A:[ {t:'歡迎來到呼吸覺察練習。請確認手機已經放遠，坐在椅子前半部，背脊自然挺直，雙手放在大腿上，手心向下。',p:14},
+      {t:'閉上眼睛，或者讓視線輕輕落在前方地面。感受身體的重量，沉落在椅子上。雙腳踩實地面。',p:16},
+      {t:'現在跟隨圓圈的節奏，做幾次深呼吸。圓圈脹大時吸氣，停留，然後縮小時呼氣。',p:40,b:1},
+      {t:'把注意力從眉心開始，慢慢放鬆。放鬆牙關，讓上下牙分開。放鬆兩邊肩膀，讓它們自然垂下。放鬆雙手，手指完全攤開。',p:26},
+      {t:'現在進入主體練習。把注意力輕輕放在鼻端，感受氣息的進出。不用控制呼吸，只是觀察。在心中為每一次呼氣數數，數到十，再從一開始。',p:115},
+      {t:'如果發現自己走神了，這很正常。每一次發現並帶回，都是一次有效的訓練。溫柔地把注意力帶回鼻端，繼續數呼氣。',p:105},
+      {t:'現在，把注意力從鼻端放大到整個身體。感受吸氣時，身體微微膨脹；呼氣時，身體輕輕下沉。',p:80},
+      {t:'快結束了。想一想，回到琴前，你最想解決的一個具體問題是什麼？把它在心裡說一遍。',p:35},
+      {t:'現在，動一動手指和腳趾，慢慢睜開眼睛。記住，先望向琴，拉一條慢速長弓，再開始練習。',p:0} ],
+  B:[ {t:'歡迎來到身體掃描練習。請確認手機已經放遠，坐在椅子前半部，背脊自然挺直。',p:18},
+      {t:'閉上眼睛，感受身體的重量沉落在椅子上。今天我們由下往上，逐一放鬆每個部位。方法很簡單：留意那個部位，吸氣時把氣息送過去，呼氣時，讓它鬆開。',p:18},
+      {t:'先留意雙腳。腳掌與地面接觸的感覺。十隻腳趾，逐隻放鬆。呼氣時，讓小腿也一起鬆開。',p:95},
+      {t:'留意大腿和骨盆。感受身體的重量，完全交給椅子。呼氣，讓大腿鬆開。',p:95},
+      {t:'留意腰部和下背。這是拉琴的人最容易疲勞的地方。吸氣時，想像氣息送到那裡；呼氣時，讓腰骨一節一節鬆開。',p:110},
+      {t:'留意兩邊肩膀。比較左右兩邊，是不是有一邊不知不覺升高了？呼氣時，刻意讓它跌下來。',p:110},
+      {t:'留意下巴和牙關。讓下顎像睡覺時一樣自然吊住，上下牙分開，舌頭放下顎。',p:100},
+      {t:'留意面部和眼睛周圍。眉心攤開，眼球在眼窩裡慢慢沉低。',p:90},
+      {t:'最後，由頭到腳，快速掃一遍，感受整個人放鬆了多少。',p:80},
+      {t:'練習到此結束。動一動手指和腳趾，慢慢睜開眼睛。先望向琴，拉一條慢速長弓，再開始練習。',p:0} ],
+  M:[ {t:'微重啟開始。放下弓，手離開琴弦。',p:4},
+      {t:'跟隨圓圈呼吸。第一口氣，肩膀跌下來。',p:16,b:1},
+      {t:'第二口氣，牙關分開。',p:12,b:1},
+      {t:'第三口氣，重量沉落椅子。',p:12,b:1},
+      {t:'好了。拿起弓，重新聽自己的聲音。',p:0} ]
+};
+
+// ---- 語音揀聲 ----
+let medVoice=null;
+function pickVoice(){
+  if(!('speechSynthesis' in window)) { medStatus('⚠️ 此瀏覽器唔支援語音合成'); return; }
+  const vs=speechSynthesis.getVoices();
+  const zh=vs.filter(v=>/^zh|^yue/i.test(v.lang));
+  medVoice = zh.find(v=>/hk|yue|hant.*(hk)/i.test(v.lang+v.name))
+          || zh.find(v=>/cn|cmn-hans|mandarin/i.test(v.lang+v.name))
+          || zh.find(v=>/tw|hant/i.test(v.lang+v.name))
+          || zh[0] || null;
+  medStatus(medVoice? ('語音：'+medVoice.name+'（'+medVoice.lang+'）') : (vs.length? '⚠️ 找不到中文語音，會用系統預設聲' : '語音載入中…'));
+}
+function medStatus(msg){ const el=document.getElementById('medStatus'); if(el) el.textContent=msg; }
+if('speechSynthesis' in window){ speechSynthesis.onvoiceschanged=pickVoice; pickVoice(); }
+
+// ---- 鐘聲（Web Audio 合成） ----
+let AC=null;
+function bell(times){
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==='suspended') AC.resume();
+    const t0=AC.currentTime;
+    for(let n=0;n<(times||1);n++){
+      const base=t0+n*1.6;
+      [523.25, 784.99, 1046.5].forEach((f,i)=>{
+        const o=AC.createOscillator(), g=AC.createGain();
+        o.frequency.value=f; o.type='sine';
+        g.gain.setValueAtTime(0.0001, base);
+        g.gain.exponentialRampToValueAtTime(0.14/(i+1), base+0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, base+3.2);
+        o.connect(g); g.connect(AC.destination);
+        o.start(base); o.stop(base+3.4);
+      });
+    }
+  }catch(e){}
+}
+
+// ---- 呼吸圓圈 ----
+const Breath={ on:false, tids:[],
+  start(){ if(this.on) return; this.on=true; this.step('in'); },
+  step(ph){
+    if(!this.on) return;
+    const c=document.getElementById('medCircle'), l=document.getElementById('medCircleLabel');
+    if(ph==='in'){ l.textContent='吸氣'; c.style.transition='transform 4s ease-in-out'; c.style.transform='scale(1.8)';
+      this.tids.push(setTimeout(()=>this.step('hold'),4000)); }
+    else if(ph==='hold'){ l.textContent='屏息'; this.tids.push(setTimeout(()=>this.step('out'),2000)); }
+    else { l.textContent='呼氣'; c.style.transition='transform 6s ease-in-out'; c.style.transform='scale(0.6)';
+      this.tids.push(setTimeout(()=>this.step('in'),6000)); }
+  },
+  stop(){ this.on=false; this.tids.forEach(clearTimeout); this.tids=[];
+    const c=document.getElementById('medCircle'), l=document.getElementById('medCircleLabel');
+    if(c){ c.style.transition='transform 1.5s ease'; c.style.transform='scale(1)'; }
+    if(l) l.textContent='準備'; }
+};
+
+// ---- BGM ducking ----
+function duck(on){ MED.bgmDuck=on; applyBgmVol(); }
+function applyBgmVol(){
+  if(!ytReady||!ytPlayer||!ytPlayer.setVolume) return;
+  const slider=Number(document.getElementById('bgmVol').value)||0;
+  ytPlayer.setVolume(Math.round(slider*(MED.bgmDuck?0.15:1)));
+}
+
+// ---- 說話（回 Promise） ----
+function speak(text){
+  return new Promise(res=>{
+    try{
+      const u=new SpeechSynthesisUtterance(text);
+      if(medVoice){ u.voice=medVoice; u.lang=medVoice.lang; } else { u.lang='zh-CN'; }
+      u.rate=0.85; u.pitch=1;
+      duck(true);
+      u.onend=()=>{ duck(false); res(); };
+      u.onerror=()=>{ duck(false); res(); };
+      speechSynthesis.speak(u);
+    }catch(e){ duck(false); res(); }
+  });
+}
+
+// ---- 暫停用的計時器 ----
+function pauseWait(sec){
+  MED.timerEnd=Date.now()+sec*1000; MED.timerRemain=sec*1000;
+  return new Promise(res=>{ MED.resolve=res; MED.timer=setTimeout(res, sec*1000); });
+}
+
+// ---- 主流程 ----
+async function medRun(){
+  const script=medScripts[MED.program];
+  for(MED.segIdx=0; MED.segIdx<script.length; MED.segIdx++){
+    if(!MED.running) return;
+    const s=script[MED.segIdx]; MED.cur=s;
+    const sub=document.getElementById('medSub');
+    sub.textContent=s.t;
+    medStatus('第 '+(MED.segIdx+1)+'/'+script.length+' 段・'+(MED.program==='A'?'呼吸覺察':MED.program==='B'?'身體掃描':'微重啟'));
+    if(MED.paused){ await waitResume(); }
+    if(!MED.running) return;
+    if(s.t) await speak(s.t);
+    if(!MED.running) return;
+    if(s.p>0){
+      bell(1);
+      if(s.b) Breath.start();
+      await pauseWait(s.p);
+      Breath.stop();
+      if(!MED.running) return;
+    }
+  }
+  // 完結
+  bell(2);
+  Breath.stop();
+  const sub=document.getElementById('medSub');
+  sub.textContent='✅ 完成。而家做回琴橋接三步：①望向琴 ②慢速長弓1–2分鐘 ③接返難句。';
+  medStatus('冥想完成 🎉');
+  medStopAll(false);
+}
+
+function waitResume(){
+  return new Promise(res=>{
+    const chk=setInterval(()=>{ if(!MED.paused||!MED.running){ clearInterval(chk); res(); } },200);
+  });
+}
+
+// ---- 控制掣 ----
+function medStart(){
+  if(MED.running && MED.paused){ // resume
+    MED.paused=false;
+    try{ speechSynthesis.resume(); }catch(e){}
+    if(MED.timerRemain>0 && MED.resolve){
+      clearTimeout(MED.timer);
+      MED.timer=setTimeout(MED.resolve, MED.timerRemain);
+      MED.timerEnd=Date.now()+MED.timerRemain; MED.timerRemain=0;
+    }
+    if(MED.cur && MED.cur.b) Breath.start();
+    medStatus('繼續…');
+    return;
+  }
+  if(MED.running) return;
+  pickVoice();
+  MED.running=true; MED.paused=false;
+  requestWake();
+  bell(1);
+  medRun();
+}
+function medPause(){
+  if(!MED.running||MED.paused) return;
+  MED.paused=true;
+  try{ speechSynthesis.pause(); }catch(e){}
+  if(MED.timer){ clearTimeout(MED.timer); MED.timerRemain=Math.max(0,MED.timerEnd-Date.now()); }
+  Breath.stop();
+  medStatus('已暫停');
+}
+function medStopAll(runningWas){
+  MED.running=false; MED.paused=false;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  if(MED.timer){ clearTimeout(MED.timer); MED.timer=null; }
+  Breath.stop(); duck(false); releaseWake();
+  document.getElementById('medCircle').style.transform='scale(1)';
+  if(runningWas!==false && !document.getElementById('medSub').textContent.startsWith('✅')){
+    document.getElementById('medSub').textContent='已停止。想再嚟一次就撳「▶️ 開始」。';
+  }
+}
+document.getElementById('medStart').onclick=medStart;
+document.getElementById('medPause').onclick=medPause;
+document.getElementById('medStop').onclick=()=>{ medStopAll(true); };
+
+// ---- Wake Lock（保持螢幕長亮） ----
+async function requestWake(){
+  try{ if(navigator.wakeLock){ MED.wakeLock=await navigator.wakeLock.request('screen'); } }catch(e){}
+}
+function releaseWake(){ try{ if(MED.wakeLock){ MED.wakeLock.release(); } }catch(e){} MED.wakeLock=null; }
+
+// ---- 程序選擇 ----
+document.querySelectorAll('.medp-prog').forEach(b=>{
+  b.addEventListener('click',()=>{
+    if(MED.running){ medStopAll(true); }
+    document.querySelectorAll('.medp-prog').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    MED.program=b.dataset.p;
+    document.getElementById('medSub').textContent='已揀「'+b.textContent+'」，撳「▶️ 開始」。';
+  });
+});
+
+/* ================================================================
+   🎵 YouTube BGM（IFrame Player API）
+================================================================ */
+let ytReady=false, ytPlayer=null, ytPendingId=null, ytDucked=false;
+(function(){ const t=document.createElement('script'); t.src='https://www.youtube.com/iframe_api'; document.head.appendChild(t); })();
+window.onYouTubeIframeAPIReady=function(){
+  ytPlayer=new YT.Player('ytFrame',{
+    height:'170', width:'100%', videoId:'V1Pl8CzNzCw',
+    playerVars:{ playsinline:1, rel:0 },
+    events:{ onReady:()=>{ ytReady=true; applyBgmVol();
+      document.getElementById('bgmNow').textContent='已載入預設：溫柔鋼琴。撳「▶️ 播 BGM」開始。';
+      if(ytPendingId){ ytPlayer.loadVideoById(ytPendingId); ytPendingId=null; } } }
+  });
+};
+function parseYT(v){
+  const m=String(v).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
+  return m?m[1]:String(v).trim();
+}
+function loadBgm(){
+  const sel=document.getElementById('bgmPreset').value;
+  let id = sel==='custom' ? parseYT(document.getElementById('bgmCustom').value) : sel;
+  if(!id){ document.getElementById('bgmNow').textContent='請先貼上連結或 video ID'; return; }
+  if(ytReady){ ytPlayer.loadVideoById(id); document.getElementById('bgmNow').textContent='已載入：'+id; }
+  else { ytPendingId=id; document.getElementById('bgmNow').textContent='播放器準備中…（'+id+'）'; }
+}
+document.getElementById('bgmLoad').onclick=loadBgm;
+document.getElementById('bgmPreset').addEventListener('change',()=>{
+  if(document.getElementById('bgmPreset').value!=='custom') loadBgm();
+});
+document.getElementById('bgmPlay').onclick=()=>{ if(ytReady) ytPlayer.playVideo(); };
+document.getElementById('bgmStop').onclick=()=>{ if(ytReady) ytPlayer.stopVideo(); };
+document.getElementById('bgmVol').addEventListener('input',applyBgmVol);
+
+/* ================================================================
+   🎯 練習選擇器
+================================================================ */
+const modules = {
+  A:{name:'暖身',text:'慢速音階、空弦或簡單練習曲：手暖、耳開；不判斷好壞，只把注意力放回聲音與身體。'},
+  B:{name:'難點攻堅',text:'只練出錯的前後 2 小節：慢練＋節拍器，每 10 分鐘錄音自查；絕不從頭彈起。'},
+  C:{name:'技術整合',text:'把剛修正的動作放進音階、琶音或練習曲驗證，確認不是只在一個段落成立。'},
+  D:{name:'段落整合',text:'把修好的小段接回樂句：用不同起點接入，銜接處反覆；最後不停止走一遍該段。'},
+  E:{name:'音樂性',text:'以接近原速拉一次「音樂」而不是練習：只管樂句、音色與呼吸。'},
+  F:{name:'收尾與記錄',text:'寫下有效／不穩／下次第一步，把明天的起點今天先定好。'}
+};
+const modes = {
+  daily:{name:'日常維持',summary:'穩定推進：精力最好的時間給難點，再用音樂收尾。',weights:[10,30,15,30,10,5],
+    tips:['先攻難點再拉順的：B 模組放最前面，趁專注力最高時用。','錄音自查放在 B 內：拉一段→聽一段→修一段，比連續拉更有效。','D 模組用不同起點接入——練「會接」，而不只是「會拉」。'],safety:null},
+  rehearsal:{name:'排練／樂團日',summary:'以聲部可靠度優先：入拍、休止與音準關係先於個人表現。',weights:[10,20,20,35,10,5],
+    tips:['以排練最新指示為優先：先修聲部問題，再回個人曲目。','入拍點圈出後，從「前一拍」練進入，不要從小節第一拍開始。','D 模組做一次不停止的銜接，模擬排練的連續性。'],safety:null},
+  performance:{name:'演出／試演前',summary:'穩定、銜接與模擬：每天一次不中斷的完整演奏。',weights:[10,20,15,40,10,5],
+    tips:['每天至少一次不中斷的完整模擬；失誤只記錄，不當場修。','開場 30 秒單獨練：上台最緊張的就是開頭。','最後一週減量：穩定與睡眠，優先於新增內容。'],safety:null},
+  foundation:{name:'技術卡關',summary:'重建基本動作：慢、少、準，動作穩了才加速。',weights:[25,30,20,15,5,5],
+    tips:['A 佔最重：根本動作未重建，後面都只是暫時的。','每個修正動作至少在三種情境驗證：音階／練習曲／曲目。','動作崩掉就退回上一步——這是資料，不是失敗。'],safety:null},
+  improvisation:{name:'民謠／即興探索',summary:'耳朵、素材與音樂性：限制帶來自由。',weights:[10,15,20,25,25,5],
+    tips:['先用 3–5 個音限制自己，再慢慢擴充素材。','錄下探索結果，把最喜歡的片段存成素材庫。','耳朵累了就停：即興靠耳朵，硬練會養成壞習慣。'],safety:null},
+  tired:{name:'疲憊或壓力大',summary:'舒適地保持連結：今天的目標是回來，不是進步。',weights:[20,15,10,0,35,20],
+    tips:['今天的目標是「保持連結」，不是進步。','用 🔊語音版微重啟開場，再決定今天適合拉什麼。','拉喜愛的舊曲也可以——音樂的快樂本身就是恢復。'],
+    safety:'今天以舒服為前提：出現痛感、頭暈或情緒更差，就停下休息。保持連結已是收穫，不必推進。'}
+};
+const efficientTaskMap = {
+  A:{title:'讀譜與標記',note:'調性、和聲、樂句高峰與危險點（換把／雙音／換弦）先圈好。'},
+  B:{title:'音準',note:'先校骨架音（空弦、八度），再校內音；錄音聽偏高偏低。'},
+  C:{title:'節奏與節拍',note:'節拍器由慢速起步；複雜節奏先數出、拍出，再上弓。'},
+  D:{title:'換把與指法',note:'確定把位與導指；換把前後兩音先單獨連接再加速。'},
+  E:{title:'運弓與弓法',note:'弓段分配、接觸點與弦平面；先空弦或慢速定型。'},
+  F:{title:'揉弦與音色',note:'在長音上啟動揉弦：持續、寬度與速度可控。'},
+  G:{title:'連接與記憶',note:'從不同起點接入；難的轉折反覆；試一次無譜走段。'},
+  H:{title:'完整驗收',note:'錄音一次不中斷的完整段；只記錄問題，不當場修正。'}
+};
+const taskOrder=['A','B','C','D','E','F','G','H'];
+let checklistStates={};
+let deferredTaskIds=new Set();
+let checklistPrepared=false;
+let checklistTarget='';
+let recommendedTaskIds=new Set();
+
+function loadDeferredTasks(){ try{ deferredTaskIds=new Set(JSON.parse(localStorage.getItem('tk_deferred')||'[]')); }catch(e){ deferredTaskIds=new Set(); } }
+function saveDeferredTasks(){ try{ localStorage.setItem('tk_deferred',JSON.stringify([...deferredTaskIds])); }catch(e){} }
+
+function renderChecklist(){
+  const wrap=document.getElementById('checklistItems');
+  wrap.innerHTML=taskOrder.map(id=>{
+    const t=efficientTaskMap[id]; const st=checklistStates[id]||'';
+    const rec=recommendedTaskIds.has(id)?' <span class="tag">今日推薦</span>':'';
+    const old=deferredTaskIds.has(id)&&st!=='defer'?' <b>（上次延後）</b>':'';
+    const cls=['check-item']; if(st==='done')cls.push('is-done'); if(st==='defer')cls.push('is-defer'); if(recommendedTaskIds.has(id))cls.push('is-recommended');
+    const btn=(s,label,clsB)=>`<button class="status-button ${st===s?clsB:''}" data-task="${id}" data-status="${s}">${label}</button>`;
+    return `<div class="${cls.join(' ')}"><span class="task-letter">${id}</span><div><p class="task-title">${t.title}${rec}</p><p class="task-note">${t.note}${old}</p></div><div class="status-controls">${btn('done','完成','is-done')}${btn('defer','明天再練','is-defer')}${btn('na','不適用','is-na')}</div></div>`;
+  }).join('');
+  const done=taskOrder.filter(id=>checklistStates[id]==='done');
+  const defer=taskOrder.filter(id=>checklistStates[id]==='defer');
+  let summary;
+  if(!checklistPrepared) summary='<strong>尚未開始。</strong> 請先在上方建立這一輪檢核。';
+  else{ summary=`<strong>本輪：${escapeHtml(checklistTarget)}</strong>　完成 ${done.length}／${taskOrder.length}`;
+    if(defer.length) summary+=`　｜　延後：${defer.map(id=>efficientTaskMap[id].title).join('、')}`; }
+  document.getElementById('checklistSummary').innerHTML=summary;
+}
+function prepareChecklist(){
+  checklistTarget=document.getElementById('checklistPiece').value.trim()||'今日選定段落';
+  checklistPrepared=true;
+  renderChecklist();
+  document.getElementById('checklistPriority').innerHTML=`<strong>本輪範圍：</strong><span>${escapeHtml(checklistTarget)}。先做標示「今日推薦」的項目；如有舊的延後項目，可優先處理。</span>`;
+}
+function resetChecklist(){
+  checklistStates={}; checklistPrepared=false; checklistTarget='';
+  renderChecklist();
+  updateChecklistPriority(selectedValue('mode'), document.getElementById('goal').value.trim(), document.getElementById('challenge').value.trim());
+}
+function updateChecklistStatus(taskId,status){
+  checklistStates[taskId]=status;
+  if(status==='defer') deferredTaskIds.add(taskId); else deferredTaskIds.delete(taskId);
+  saveDeferredTasks(); renderChecklist();
+  if(status==='defer'){
+    document.getElementById('checklistPriority').innerHTML=`<strong>已安排明天再練：</strong><span>${escapeHtml(efficientTaskMap[taskId].title)} 已加入下一次的優先提醒。</span>`;
+  }
+}
+function updateChecklistPriority(modeKey='daily',goal='',challenge=''){
+  const base={daily:['B','C','E'],rehearsal:['A','C','G'],performance:['B','E','G','H'],foundation:['B','D','F'],improvisation:['A','F'],tired:['F','G']}[modeKey]||['B','C','E'];
+  recommendedTaskIds=new Set(base);
+  const kw=[['音準','B'],['偏高','B'],['偏低','B'],['節奏','C'],['拍子','C'],['換把','D'],['把位','D'],['指法','D'],['弓','E'],['揉','F'],['音色','F'],['背譜','G'],['記憶','G'],['連接','G'],['讀譜','A']];
+  const matched=[];
+  if(challenge){ for(const [k,v] of kw){ if(challenge.includes(k)&&!recommendedTaskIds.has(v)){ recommendedTaskIds.add(v); matched.push(v);} } }
+  renderChecklist();
+  const names=[...recommendedTaskIds].map(id=>`${id}・${efficientTaskMap[id].title}`).join('、');
+  document.getElementById('checklistPriority').innerHTML=`<strong>今日推薦優先：</strong><span>${names}${challenge?`；已依你寫的難點加選 ${matched.length?matched.join('、'):'相關項'}`:''}。建立本輪檢核後依序處理。</span>`;
+}
+function selectedValue(name){ return document.querySelector(`input[name="${name}"]:checked`).value; }
+function readMinutes(){
+  const custom=Number(document.getElementById('customMinutes').value);
+  return custom>=10&&custom<=180?custom:Number(selectedValue('time'));
+}
+function allocate(total,weights){
+  const raw=weights.map(w=>total*w/100);
+  const mins=raw.map((v,i)=>weights[i]===0?0:Math.max(1,Math.floor(v)));
+  let diff=total-mins.reduce((a,b)=>a+b,0);
+  const order=raw.map((v,i)=>({i,frac:v-Math.floor(v)})).filter(x=>weights[x.i]>0).sort((a,b)=>b.frac-a.frac);
+  let cursor=0;
+  while(diff>0){ mins[order[cursor%order.length].i]++; diff--; cursor++; }
+  while(diff<0){ const target=order.slice().reverse().find(x=>mins[x.i]>1); if(!target) break; mins[target.i]--; diff++; }
+  return mins;
+}
+function modeSpecificText(key,letter,fallback){
+  const copy={
+    rehearsal:{D:'練樂團或室內樂聲部：圈出入拍、休止、音準關係與弓段；最後做一段不停止的銜接。',C:'以容易出錯的調性、節奏型或弓法作整合；優先處理合奏會暴露的技術。'},
+    performance:{B:'處理風險最高的 1–2 個點：先降速、明確設定動作與聽覺提示，再只做必要次數。',D:'先做一小段演出速度修正，再完整模擬一個樂段。模擬時不要停。'},
+    foundation:{A:'以全弓、空弦、左手無聲落指或極簡指型，專注一項根本動作；不要急著求快。',B:'鎖定一個技術成因，如持弓張力、左手框架、換把預備或弓段分配，拆成極短單位。',C:'用慢速音階、節奏變形或簡單練習曲，檢驗新動作是否能穩定重複。',D:'只在簡化曲目中驗證新動作；若動作崩掉，就回到較簡單的情境。'},
+    improvisation:{C:'從一個音階、五聲音階或和聲素材出發，用固定節奏型或短動機練習聽覺反應。',D:'先完整拉一遍曲調，再選兩小節做呼應、變奏或問答；不必追求複雜。',E:'自由探索：限制三至五個音，改變節奏、重音或弓法。錄下最喜歡的 20 秒。'},
+    tired:{A:'選最舒服的空弦或簡單旋律，留意呼吸、肩頸與手指是否能鬆開。',B:'只找一個容易改善的微小點，以慢速、低負荷方式處理。',C:'若仍舒適，可做最簡單的音階或節奏；若不舒服則跳過。',E:'拉喜愛的舊曲或自由音色探索；今天不要求表現。',F:'記下現在的身體與心情，讓明天能從真實狀態開始。'}
+  };
+  return (copy[key]&&copy[key][letter])||fallback;
+}
+function render(){
+  const total=readMinutes();
+  const key=selectedValue('mode');
+  const mode=modes[key];
+  const goal=document.getElementById('goal').value.trim();
+  const challenge=document.getElementById('challenge').value.trim();
+  const minutes=allocate(total,mode.weights);
+  const letters=['A','B','C','D','E','F'];
+  document.getElementById('timeline').innerHTML=letters.map((letter,idx)=>{
+    const min=minutes[idx];
+    const mod=modules[letter];
+    const hidden=min===0;
+    const emphasis=letter==='B'||letter==='D';
+    return `<article class="step ${hidden?'muted':''} ${emphasis&&!hidden?'accent':''}">
+      <div class="step-mark">${letter}</div>
+      <p class="step-time">${hidden?'今天略過':min+' 分鐘'}</p>
+      <h3>${mod.name}</h3>
+      <p>${hidden?'此情境下不必強迫安排；把時間交給更重要的模組。':modeSpecificText(key,letter,mod.text)}</p>
+      ${hidden?'':'<label><input type="checkbox"> 已完成</label>'}
+    </article>`;
+  }).join('');
+  const labelTime=total===105?'90–120 分鐘':`${total} 分鐘`;
+  document.getElementById('resultBadge').textContent=`${labelTime}・${mode.name}`;
+  document.getElementById('resultTitle').textContent='今天的練習流程';
+  document.getElementById('resultSummary').textContent=mode.summary;
+  document.getElementById('goalDisplay').textContent=goal||'以一個小而清楚的目標開始：例如一段慢速、準確且放鬆的八小節。';
+  document.getElementById('challengeDisplay').textContent=challenge?`優先處理：${challenge}`:'提示：先找出一個最值得花時間的難點。';
+  updateChecklistPriority(key,goal,challenge);
+  const tipsList=mode.tips.slice();
+  if(total>=60) tipsList.push('⏸️ 60 分鐘以上：建議 B 模組後到「🧘 冥想休息卡」開 🔊語音引導（5–10 分鐘），完結後用回琴橋接三步回去。');
+  if(key==='tired') tipsList.push('🧘 全程用「冥想休息卡」語音版節奏：練一段、冥想一段，不硬撐。');
+  document.getElementById('tips').innerHTML=tipsList.map(t=>`<div class="tip">${t}</div>`).join('');
+  const safety=document.getElementById('safety');
+  safety.hidden=!mode.safety;
+  safety.textContent=mode.safety||'';
+  document.getElementById('result').hidden=false;
+  document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
+}
+document.getElementById('generate').addEventListener('click',render);
+document.querySelectorAll('input[name="time"]').forEach(input=>input.addEventListener('change',()=>{ document.getElementById('customMinutes').value=''; }));
+
+function escapeHtml(value){ return String(value).replace(/[&<>"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[char])); }
+function formatDate(date){ return new Intl.DateTimeFormat('zh-TW',{year:'numeric',month:'long',day:'numeric'}).format(date); }
+function finishSentence(value){ return `${String(value).trim().replace(/[。！？!?]+$/u,'')}。`; }
+function dateAddDays(date,days){ const result=new Date(date); result.setDate(result.getDate()+days); return result; }
+function weekWindow(start,end,index,count){
+  const totalDays=Math.max(1,Math.ceil((end-start)/86400000));
+  const from=dateAddDays(start,Math.round(totalDays*index/count));
+  const to=dateAddDays(start,Math.round(totalDays*(index+1)/count));
+  return `${formatDate(from)} 至 ${formatDate(to)}`;
+}
+const roadmapContent={
+  repertoire:[
+    ['拆解與標記','把曲目依樂段、換把、弓法與高風險節點拆開；決定每週要新增或背熟的範圍。'],
+    ['慢速累積','以短段落、節拍器與交錯回訪建立可靠音準、節奏和記憶提示；每週回顧舊段落。'],
+    ['連接與穩定','把小段落串成大樂句，加入表情、速度與不同起點的測試，避免只會從頭開始。'],
+    ['模擬與交付','進行錄影、在他人面前演奏或不中斷 run-through；依結果只修正少數最高風險點。']],
+  technique:[
+    ['建立基準','找出目前最常見的技術問題與舒適速度；選一個可觀察的動作或音色焦點。'],
+    ['孤立重建','在低負荷與慢速下反覆建立新協調：例如空弦、單一指型、換把預備或特定弓法。'],
+    ['整合測試','把新動作帶入音階、琶音、練習曲與簡單曲目，確認它不是只在單一練習中成立。'],
+    ['可重現驗收','在不同速度、不同段落與輕微壓力下測試；記錄哪種提示能讓動作與聲音穩定重現。']],
+  performance:[
+    ['盤點與規劃','確認曲目、日期、舞台條件與最高風險段落；建立可執行的每週優先順序。'],
+    ['精修與記憶','以短段落處理音準、節奏、動作與詮釋，並安排固定的舊段落回顧。'],
+    ['壓力模擬','每週安排一次不中斷演奏、錄影或在熟人前演出，將失誤資料轉為下一週的少數修正項。'],
+    ['減量與交付','保留清楚的暖身和起始提示，減少最後一週的大幅改動，以穩定與恢復為優先。']],
+  ensemble:[
+    ['讀譜與定位','標出入拍、休止、節拍變化、主題交接與關鍵音準關係，確認你在整體織度中的角色。'],
+    ['聲部可靠度','先讓節奏、弓段、指法與音準能在慢速下穩定，再加入伴奏或錄音素材。'],
+    ['合奏預演','從排練可能出錯的前一拍或前一小節進入；練習跟隨指揮、呼吸與聆聽其他聲部。'],
+    ['排練回饋整合','將每次排練的 1–3 項回饋寫成下一週的具體任務，最後以完整聲部連接驗收。']],
+  open:[
+    ['定義與拆解','把目標寫成能觀察的成果，列出必須先建立的 2–4 個子能力或音樂任務。'],
+    ['核心累積','把可控制的練習時間放在最能推動成果的子任務，避免同時追求太多方向。'],
+    ['整合與回饋','將各子任務放回真實音樂情境，透過錄音、教師或同伴回饋檢查是否有效。'],
+    ['驗收與下一輪','依成功標準測試成果，記錄哪些策略可延續，並決定下一個週期只保留的少數重點。']]
+};
+function taskNames(letters){ return letters.map(l=>`${l}・${efficientTaskMap[l].title}`).join('、'); }
+function buildRoadmap(){
+  const type=document.getElementById('planType').value;
+  const goal=document.getElementById('planGoal').value.trim()||'完成我設定的主要音樂目標';
+  const success=document.getElementById('planSuccess').value.trim()||'能以我預先設定的音準、節奏、音色或完整度標準完成一次驗收';
+  const days=Math.min(7,Math.max(1,Number(document.getElementById('planDays').value)||5));
+  const minutes=Math.min(180,Math.max(10,Number(document.getElementById('planMinutes').value)||30));
+  const today=new Date(); today.setHours(0,0,0,0);
+  const dateInput=document.getElementById('planDate').value;
+  let deadline=dateInput?new Date(`${dateInput}T00:00:00`):dateAddDays(today,84);
+  if(deadline<=today) deadline=dateAddDays(today,7);
+  const weeks=Math.max(1,Math.ceil((deadline-today)/604800000));
+  const weeklyMinutes=days*minutes;
+  const content=roadmapContent[type];
+  const count=Math.min(4,weeks);
+  const pickIndexes=count===1?[3]:count===2?[0,3]:count===3?[0,1,3]:[0,1,2,3];
+  document.getElementById('roadmapOverview').innerHTML=`
+    <article class="overview-card"><p class="label">你的主要目標</p><p class="value">${escapeHtml(goal)}</p></article>
+    <article class="overview-card"><p class="label">目標日期</p><p class="value">${formatDate(deadline)}</p></article>
+    <article class="overview-card"><p class="label">可用週數</p><p class="value">約 ${weeks} 週</p></article>
+    <article class="overview-card"><p class="label">每週投入</p><p class="value">${weeklyMinutes} 分鐘</p></article>`;
+  document.getElementById('outcomeGoal').textContent=`在 ${formatDate(deadline)} 前，${finishSentence(goal)}成功標準：${finishSentence(success)}`;
+  document.getElementById('processGoal').textContent=`每週安排 ${days} 天、每次約 ${minutes} 分鐘（合計約 ${weeklyMinutes} 分鐘），每週安排一次可聽見或可錄下的驗收，並依回顧調整下一週。`;
+  document.getElementById('milestoneGrid').innerHTML=pickIndexes.map((contentIndex,displayIndex)=>{
+    const phase=content[contentIndex];
+    const win=weekWindow(today,deadline,displayIndex,count);
+    return `<article class="milestone"><div class="milestone-number">${displayIndex+1}</div><p class="milestone-window">${win}</p><h3>${phase[0]}</h3><p>${phase[1]}</p></article>`;
+  }).join('');
+  const currentPhase=content[pickIndexes[0]];
+  document.getElementById('weeklyCheck').textContent=`本週先做：${currentPhase[1]}本週結束前，以「${success}」中的一小部分作驗收，而非只計算練了多久。`;
+  const roadmapTaskMap={repertoire:['A','D','E','G'],technique:['B','C','F','H'],performance:['A','D','E','F','G'],ensemble:['A','C','D','E','G'],open:['A','B','D','F','G']};
+  const roadmapTasks=roadmapTaskMap[type]||roadmapTaskMap.open;
+  document.getElementById('roadmapChecklistLink').innerHTML=`<strong>本目標的練琴卡優先項：</strong>${escapeHtml(taskNames(roadmapTasks))}。<a href="#efficientChecklist">前往高效練琴檢核卡</a>`;
+  document.getElementById('roadmapResult').hidden=false;
+  document.getElementById('roadmapResult').scrollIntoView({behavior:'smooth',block:'start'});
+}
+document.getElementById('generateRoadmap').addEventListener('click',buildRoadmap);
+document.getElementById('prepareChecklist').addEventListener('click',prepareChecklist);
+document.getElementById('resetChecklist').addEventListener('click',resetChecklist);
+document.getElementById('checklistItems').addEventListener('click',event=>{ const button=event.target.closest('button[data-task]'); if(button) updateChecklistStatus(button.dataset.task,button.dataset.status); });
+
+// ===== PDF（當前分頁，自動分頁） =====
+const names={'s1':'小提琴一日練習流程','s2':'冥想休息卡','s3':'小提琴心智練習檢查清單','s4':'小提琴練習選擇器','s5':'啟動急救卡'};
+document.getElementById('pdfBtn').onclick=async function(){
+  const btn=this;
+  if(typeof html2canvas==='undefined'||!window.jspdf){
+    alert('❌ 程式庫載入失敗（網路問題）。\n請改用「🖨️ 列印」→ 選「另存成 PDF」。'); return;
+  }
+  const orig=btn.textContent; btn.textContent='⏳ 生成中…'; btn.disabled=true;
+  const sheet=document.querySelector('.sheet.active');
+  try{
+    const canvas=await html2canvas(sheet,{scale:2,useCORS:true});
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF('p','mm','a4');
+    const pw=210,ph=297,m=8,imgW=pw-m*2;
+    const pageHpx=canvas.width*(ph-m*2)/imgW;
+    let y=0,page=0;
+    while(y<canvas.height){
+      const sliceH=Math.min(pageHpx,canvas.height-y);
+      const c=document.createElement('canvas');
+      c.width=canvas.width; c.height=sliceH;
+      c.getContext('2d').drawImage(canvas,0,y,canvas.width,sliceH,0,0,canvas.width,sliceH);
+      if(page>0) pdf.addPage();
+      pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',m,m,imgW,sliceH*imgW/canvas.width);
+      y+=sliceH; page++;
+    }
+    pdf.save(names[sheet.id]+'.pdf');
+    btn.textContent='✅ 已儲存！'; setTimeout(()=>btn.textContent=orig,2000);
+  }catch(e){
+    alert('❌ 生成失敗：'+e.message+'\n備案：按「🖨️ 列印」→ 選「另存成 PDF」');
+  }
+  btn.disabled=false;
+};
+document.getElementById('printBtn').onclick=()=>window.print();
+document.getElementById('printAllBtn').onclick=()=>{ document.body.classList.add('printall'); window.print(); };
+window.addEventListener('afterprint',()=>document.body.classList.remove('printall'));
+
+// ===== 初始化 =====
+loadDeferredTasks();
+if(!document.getElementById('planDate').value){
+  document.getElementById('planDate').value=dateAddDays(new Date(),84).toISOString().slice(0,10);
+}
+renderChecklist();
+updateChecklistPriority();
+</script>
+</body>
+</html>
